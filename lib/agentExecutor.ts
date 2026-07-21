@@ -148,8 +148,27 @@ export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: str
     const txHash = fakeHash(`agent-${rule.id}-${Date.now()}`);
     const feeJobId = `MOCK-FEE-${rule.id.slice(0, 8)}`;
     const reputationTxHash = fakeHash(`rep-${rule.id}-${Date.now()}`);
-    console.log(`[Agent] MOCK fire rule=${rule.id} rate=${rate} recipient=${recipientAddress} memo="${memo}"`);
-    return { txHash, arcScanUrl: arcScan.tx(txHash), mode: 'mock', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
+    const res: FireResult = { txHash, arcScanUrl: arcScan.tx(txHash), mode: 'mock', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
+    if (rule.notifyPhone) {
+      try {
+        const { sendWhatsAppExecutionReport } = await import('./whatsapp');
+        await sendWhatsAppExecutionReport(rule.notifyPhone, {
+          recipient: recipientAddress,
+          amount: rule.amount,
+          pair: rule.pair,
+          rate,
+          bestProvider: quoteShop.bestProvider,
+          providersChecked: quoteShop.providersChecked,
+          txHash: res.txHash,
+          arcScanUrl: res.arcScanUrl,
+          mode: 'mock',
+          memo,
+        });
+      } catch (err) {
+        console.warn('[Agent] WhatsApp notification failed in mock mode (non-fatal):', err);
+      }
+    }
+    return res;
   }
 
   const {
@@ -202,5 +221,29 @@ export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: str
     console.warn('[Agent] Onchain execution log failed (non-fatal):', e);
   }
 
-  return { txHash, arcScanUrl, mode: 'real', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
+  const result: FireResult = { txHash: mock ? fakeHash(`agent-${rule.id}-${Date.now()}`) : (undefined as any), arcScanUrl: mock ? arcScan.tx(fakeHash(`agent-${rule.id}-${Date.now()}`)) : (undefined as any), mode: mock ? 'mock' : 'real', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
+
+  if (rule.notifyPhone) {
+    try {
+      const { sendWhatsAppExecutionReport } = await import('./whatsapp');
+      await sendWhatsAppExecutionReport(rule.notifyPhone, {
+        recipient: recipientAddress,
+        amount: rule.amount,
+        pair: rule.pair,
+        rate: rate,
+        bestProvider: quoteShop.bestProvider,
+        providersChecked: quoteShop.providersChecked,
+        txHash: result.txHash,
+        arcScanUrl: result.arcScanUrl,
+        mode: result.mode,
+        memo,
+      });
+    } catch (err) {
+      console.warn('[Agent] WhatsApp notification failed (non-fatal):', err);
+    }
+  }
+
+  return mock
+    ? result
+    : { txHash: (result as any).txHash || (await import('./config')).arcScan.tx('0x'), arcScanUrl: (result as any).arcScanUrl || '', mode: 'real', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
 }

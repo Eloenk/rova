@@ -47,6 +47,8 @@ export interface AgentRule {
 
   custodyMode: CustodyMode;
   sourceWallet: string;          // Circle-managed wallet OR the user's connected address
+  notifyPhone?: string;          // Optional WhatsApp phone number to send execution reports/alerts
+  sourceChannel?: 'web' | 'whatsapp';
 }
 
 export interface AgentExecution {
@@ -93,6 +95,8 @@ export interface StandingIntent {
   lastRunAt?: string;
   lastKnownBalance?: number; // for on_receive — balance as of the last check
   runCount: number;
+  notifyPhone?: string;
+  sourceChannel?: 'web' | 'whatsapp';
 }
 
 const rules = new Map<string, AgentRule>();
@@ -113,9 +117,16 @@ export function createRule(input: Omit<AgentRule, 'id' | 'createdAt' | 'status'>
   return rule;
 }
 
+export function addRule(rule: AgentRule): AgentRule {
+  rules.set(rule.id, rule);
+  return rule;
+}
+
 export function listRules(): AgentRule[] {
   return Array.from(rules.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
+
+export const getRules = listRules;
 
 export function getRule(id: string): AgentRule | undefined {
   return rules.get(id);
@@ -155,9 +166,16 @@ export function createStandingIntent(input: Omit<StandingIntent, 'id' | 'created
   return intent;
 }
 
+export function addStandingIntent(intent: StandingIntent): StandingIntent {
+  standingIntents.set(intent.id, intent);
+  return intent;
+}
+
 export function listStandingIntents(): StandingIntent[] {
   return Array.from(standingIntents.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
+
+export const getStandingIntents = listStandingIntents;
 
 export function getStandingIntent(id: string): StandingIntent | undefined {
   return standingIntents.get(id);
