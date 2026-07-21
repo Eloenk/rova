@@ -68,6 +68,32 @@ export async function createAgentWallets(name: string) {
   };
 }
 
+// ── Single wallet creation (email onboarding) ──────────────────────────────────
+// Simpler than createAgentWallets — one SCA wallet, no ERC-8004 owner/validator
+// pair, for recipients/users who onboard by email rather than connecting their
+// own wallet. Circle holds the key server-side (HSM); the user never sees a
+// seed phrase.
+
+export async function createSingleWallet(label: string) {
+  const client = getCircleClient();
+
+  const setResp = await client.createWalletSet({ name: `Rova — ${label}` });
+  const walletSetId = setResp.data?.walletSet?.id;
+  if (!walletSetId) throw new Error('Failed to create Circle wallet set');
+
+  const walletsResp = await client.createWallets({
+    blockchains: [ARC_TESTNET.circleBlockchain],
+    count: 1,
+    walletSetId,
+    accountType: 'SCA',
+  });
+
+  const wallet = walletsResp.data?.wallets?.[0];
+  if (!wallet?.address || !wallet?.id) throw new Error('Failed to create wallet');
+
+  return { address: wallet.address, walletId: wallet.id, walletSetId };
+}
+
 // ── Execute and confirm ────────────────────────────────────────────────────────
 // Polls until confirmed. Arc finality is sub-second so this is fast.
 
@@ -361,43 +387,4 @@ export async function completeErc8183Job(
     abiFunctionSignature: 'complete(uint256,bytes32,bytes)',
     abiParameters:        [jobId, reasonHash, '0x'],
   });
-}
-
-export async function getErc8183JobId(txHash: string): Promise<string> {
-  const { createPublicClient, http, decodeEventLog, parseAbi } = await import('viem');
-  const { arcTestnet } = await import('./arcChain');
-
-  const client = createPublicClient({
-    chain: arcTestnet,
-    transport: http(ARC_TESTNET.rpc),
-  });
-
-  const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
-
-  const abi = parseAbi([
-    'event JobCreated(uint256 indexed id, address indexed client, address indexed provider, address indexed evaluator, string description, address hook)'
-  ]);
-
-  for (const log of receipt.logs) {
-    try {
-      const decoded = decodeEventLog({
-        abi,
-        eventName: 'JobCreated',
-        topics: log.topics,
-        data: log.data,
-      });
-      if (decoded.args && decoded.args.id !== undefined) {
-        return decoded.args.id.toString();
-      }
-    } catch {
-      // Continue
-    }
-  }
-
-  // Fallback: If not found, use a numeric representation of the txHash to prevent ABI parser crash
-  try {
-    return BigInt(txHash).toString();
-  } catch {
-    return String(Date.now());
-  }
 }

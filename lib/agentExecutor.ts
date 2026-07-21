@@ -2,21 +2,24 @@
 // Rova — Autonomous Agent Executor
 //
 // Fires when a watched rule's trigger condition is met. Mirrors the same
-// MOCK/REAL branching used in app/api/execute/route.ts, and reuses the exact
-// same Circle SDK primitives from lib/circle.ts — no parallel execution path,
-// just a different trigger source (a rate condition instead of a chat intent).
+// MOCK/REAL branching used elsewhere, and reuses the exact same Circle SDK
+// primitives from lib/circle.ts — no parallel execution path.
 //
-// On top of the transfer itself, this is where the "agent" part of Agentic
-// Commerce shows up: the agent charges itself a small execution fee through
-// an ERC-8183 job (create → fund → complete, all in one tick) and writes an
-// ERC-8004 reputation entry recording that it executed autonomously. Both use
-// the standards Rova already has wired up for the manual flow builder.
+// Before moving money, the agent shops: it pays three independent quote
+// providers a fraction of a cent each (real x402/Nanopayments in real mode,
+// protocol-faithful mock otherwise — see lib/nanopay.ts) and executes at
+// whichever quoted best. On top of the transfer, every autonomous fire also
+// charges the agent's own ERC-8183 execution fee, writes an ERC-8004
+// reputation entry, and logs a permanent record to Rova's own
+// RovaExecutionLog contract.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { arcScan } from './config';
-import type { AgentRule } from './agentStore';
+import type { AgentRule, QuoteShopResult } from './agentStore';
+import { resolveRecipient } from './emailWallets';
+import { shopRates, pickBest } from './nanopay';
 
-const AGENT_FEE_USDC = 0.05; // what the agent charges itself for an autonomous execution
+const AGENT_FEE_USDC = 0.05;
 
 function isMockMode(): boolean {
   return (
@@ -38,95 +41,166 @@ export interface FireResult {
   mode: 'mock' | 'real';
   feeJobId?: string;
   reputationTxHash?: string;
+  quoteShop: QuoteShopResult;
+  resolvedRecipient: string;
 }
 
-export async function fireRule(rule: AgentRule, rateAtExecution: number, memo: string): Promise<FireResult> {
+/// Runs the nanopayment rate-shopping round: pays 3 providers a fraction of a
+/// cent each for their current quote, picks the best. wantHighRate = true for
+/// USDC->EURC style pairs where a higher number is a better deal for the sender.
+export async function shopForBestRate(pair: AgentRule['pair'], baseUrl: string): Promise<QuoteShopResult> {
+  const wantHighRate = pair === 'USDC/EURC';
+  const quotes = await shopRates(pair, baseUrl);
+  const best = pickBest(quotes, wantHighRate);
+
+  return {
+    providersChecked: quotes.length,
+    bestProvider: best.provider,
+    bestRate: best.rate,
+    totalPaidUsdc: quotes.reduce((sum, q) => sum + q.paidUsdc, 0),
+    quotes: quotes.map(q => ({ provider: q.provider, rate: q.rate, paidUsdc: q.paidUsdc })),
+  };
+}
+
+export interface ConfirmResult {
+  feeJobId?: string;
+  reputationTxHash?: string;
+}
+
+/// Called after a self-custody rule's transfer has already been signed and
+/// sent by the user's own wallet (client-side, via their connected wallet —
+/// Circle never touches that key). The Agent still does the parts that
+/// belong to it: charging its own small execution fee via ERC-8183, writing
+/// the ERC-8004 reputation entry, and logging the permanent onchain record —
+/// all attested by Rova's own managed validator wallet, not the user's.
+export async function confirmSelfCustodyExecution(opts: {
+  ruleOrIntentId: string;
+  recipient: string;
+  amountUsdc: number;
+  rateAtExecution?: number;
+  memo: string;
+}): Promise<ConfirmResult> {
   const mock = isMockMode();
+  if (mock) {
+    return {
+      feeJobId: `MOCK-FEE-${opts.ruleOrIntentId.slice(0, 8)}`,
+      reputationTxHash: fakeHash(`rep-${opts.ruleOrIntentId}-${Date.now()}`),
+    };
+  }
+
+  const {
+    createErc8183Job, setErc8183Budget, approveErc8183USDC, fundErc8183Job, completeErc8183Job,
+    recordReputation, logExecutionOnchain,
+  } = await import('./circle');
+
+  const attestor = process.env.ROVA_VALIDATOR_WALLET || process.env.ROVA_OWNER_WALLET!;
+
+  let feeJobId: string | undefined;
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    const jobTxHash = await createErc8183Job(attestor, attestor, attestor, `Autonomous (self-custody) execution fee — ${opts.memo}`, now + 3600);
+    await approveErc8183USDC(attestor, AGENT_FEE_USDC);
+    await setErc8183Budget(attestor, jobTxHash, AGENT_FEE_USDC);
+    await fundErc8183Job(attestor, jobTxHash);
+    await completeErc8183Job(attestor, jobTxHash, jobTxHash);
+    feeJobId = jobTxHash;
+  } catch (e) {
+    console.warn('[Agent] Self-custody fee job failed (non-fatal):', e);
+  }
+
+  let reputationTxHash: string | undefined;
+  try {
+    const agentId = process.env.NEXT_PUBLIC_ROVA_AGENT_ID || '1683';
+    reputationTxHash = await recordReputation(attestor, agentId, 100, `autonomous-self-custody:${opts.ruleOrIntentId}`);
+  } catch (e) {
+    console.warn('[Agent] Self-custody reputation recording failed (non-fatal):', e);
+  }
+
+  try {
+    await logExecutionOnchain({
+      executorAddress: attestor,
+      ruleId: opts.ruleOrIntentId,
+      recipient: opts.recipient,
+      amountUsdc: opts.amountUsdc,
+      rateAtExecution: opts.rateAtExecution ?? 1,
+      memo: opts.memo,
+    });
+  } catch (e) {
+    console.warn('[Agent] Self-custody onchain log failed (non-fatal):', e);
+  }
+
+  return { feeJobId, reputationTxHash };
+}
+
+export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: string): Promise<FireResult> {
+  const mock = isMockMode();
+
+  // 1. Shop for the best rate before spending anything real.
+  const quoteShop = await shopForBestRate(rule.pair, baseUrl);
+  const rate = quoteShop.bestRate;
+  const memo = `${memoPrefix} · best of ${quoteShop.providersChecked} quotes (${quoteShop.bestProvider} @ ${rate})`;
+
+  // 2. Resolve the recipient — email gets a Circle-managed wallet (created on
+  //    first use), a raw address passes through unchanged.
+  const { address: recipientAddress } = await resolveRecipient(rule.recipientIdentifier);
 
   if (mock) {
     const txHash = fakeHash(`agent-${rule.id}-${Date.now()}`);
     const feeJobId = `MOCK-FEE-${rule.id.slice(0, 8)}`;
     const reputationTxHash = fakeHash(`rep-${rule.id}-${Date.now()}`);
-    console.log(`[Agent] MOCK fire rule=${rule.id} rate=${rateAtExecution} memo="${memo}"`);
-    return { txHash, arcScanUrl: arcScan.tx(txHash), mode: 'mock', feeJobId, reputationTxHash };
+    console.log(`[Agent] MOCK fire rule=${rule.id} rate=${rate} recipient=${recipientAddress} memo="${memo}"`);
+    return { txHash, arcScanUrl: arcScan.tx(txHash), mode: 'mock', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
   }
 
   const {
     sendUsdcOnArc,
     initiateStableFX,
     createErc8183Job,
-    getErc8183JobId,
     setErc8183Budget,
     approveErc8183USDC,
     fundErc8183Job,
     completeErc8183Job,
     recordReputation,
+    logExecutionOnchain,
   } = await import('./circle');
 
-  const ownerWallet = process.env.ROVA_OWNER_WALLET!;
+  const sourceWallet = rule.sourceWallet || process.env.ROVA_OWNER_WALLET!;
   const destCurrency = rule.pair === 'USDC/EURC' ? 'EURC' : 'USDC';
 
-  // 1. Swap leg (StableFX), if the pair requires currency conversion
   if (destCurrency === 'EURC') {
-    await initiateStableFX({
-      walletAddress: ownerWallet,
-      sellCurrency: 'USDC',
-      buyCurrency: 'EURC',
-      amount: rule.amount,
-    });
+    await initiateStableFX({ walletAddress: sourceWallet, sellCurrency: 'USDC', buyCurrency: 'EURC', amount: rule.amount });
   }
 
-  // 2. Settlement leg — send to the recipient on Arc
-  const { txHash, arcScanUrl } = await sendUsdcOnArc(ownerWallet, rule.recipientAddress, rule.amount);
+  const { txHash, arcScanUrl } = await sendUsdcOnArc(sourceWallet, recipientAddress, rule.amount);
 
-  // 3. Agent's own execution fee via ERC-8183 (create -> approve -> fund -> complete)
   let feeJobId: string | undefined;
   try {
-    const validatorWallet = process.env.ROVA_VALIDATOR_WALLET || ownerWallet;
+    const validatorWallet = process.env.ROVA_VALIDATOR_WALLET || sourceWallet;
     const now = Math.floor(Date.now() / 1000);
-    const jobTxHash = await createErc8183Job(
-      ownerWallet,
-      ownerWallet, // agent acts as its own provider wallet in this simplified model
-      validatorWallet,
-      `Autonomous execution fee — ${memo}`,
-      now + 3600,
-    );
-    const resolvedJobId = await getErc8183JobId(jobTxHash);
-    await approveErc8183USDC(ownerWallet, AGENT_FEE_USDC);
-    await setErc8183Budget(ownerWallet, resolvedJobId, AGENT_FEE_USDC);
-    await fundErc8183Job(ownerWallet, resolvedJobId);
-    await completeErc8183Job(validatorWallet, resolvedJobId, jobTxHash);
-    feeJobId = resolvedJobId;
+    const jobTxHash = await createErc8183Job(sourceWallet, sourceWallet, validatorWallet, `Autonomous execution fee — ${memo}`, now + 3600);
+    await approveErc8183USDC(sourceWallet, AGENT_FEE_USDC);
+    await setErc8183Budget(sourceWallet, jobTxHash, AGENT_FEE_USDC);
+    await fundErc8183Job(sourceWallet, jobTxHash);
+    await completeErc8183Job(validatorWallet, jobTxHash, jobTxHash);
+    feeJobId = jobTxHash;
   } catch (e) {
     console.warn('[Agent] Fee job failed (non-fatal):', e);
   }
 
-  // 4. Reputation entry — builds the agent's onchain track record for autonomous runs
   let reputationTxHash: string | undefined;
   try {
-    const validatorWallet = process.env.ROVA_VALIDATOR_WALLET || ownerWallet;
+    const validatorWallet = process.env.ROVA_VALIDATOR_WALLET || sourceWallet;
     const agentId = process.env.NEXT_PUBLIC_ROVA_AGENT_ID || '1683';
     reputationTxHash = await recordReputation(validatorWallet, agentId, 100, `autonomous:${rule.id}`);
   } catch (e) {
     console.warn('[Agent] Reputation recording failed (non-fatal):', e);
   }
 
-  // 5. Write the permanent onchain record to Rova's own execution log contract.
-  //    This is what actually backs the "Arc Transaction Memo" — a real,
-  //    publicly verifiable reason attached to why this transfer happened.
   try {
-    const { logExecutionOnchain } = await import('./circle');
-    await logExecutionOnchain({
-      executorAddress: ownerWallet,
-      ruleId: rule.id,
-      recipient: rule.recipientAddress,
-      amountUsdc: rule.amount,
-      rateAtExecution,
-      memo,
-    });
+    await logExecutionOnchain({ executorAddress: sourceWallet, ruleId: rule.id, recipient: recipientAddress, amountUsdc: rule.amount, rateAtExecution: rate, memo });
   } catch (e) {
     console.warn('[Agent] Onchain execution log failed (non-fatal):', e);
   }
 
-  return { txHash, arcScanUrl, mode: 'real', feeJobId, reputationTxHash };
+  return { txHash, arcScanUrl, mode: 'real', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
 }

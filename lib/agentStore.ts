@@ -1,33 +1,60 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Rova — Agent Store
+//
+// Two kinds of automation live here:
+//   AgentRule       — a single-transfer rule with a rate or date trigger
+//                      (the original "Agent" tab feature)
+//   StandingIntent  — an arbitrary Command Hub plan ("send 100 split between
+//                      supplier and savings") saved to re-run on a recurring
+//                      schedule or whenever an incoming payment is detected
+//
+// Both share the same watcher tick and the same custody model:
+//   managed      — recipient/source is a Circle-managed wallet (email
+//                   onboarding). The Agent can sign and fire fully
+//                   autonomously, no human present.
+//   self_custody — source is the user's own connected wallet (MetaMask via
+//                   wagmi). Circle never holds that key, so the Agent can't
+//                   sign unattended — it detects the trigger, marks the rule
+//                   "ready_to_execute", and waits for the user to approve
+//                   with one tap in the UI. This is a real custody boundary,
+//                   not a simplification — the point is the rule engine
+//                   still does 100% of the watching either way.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import type { FxPair } from './rates';
-import { getSupabaseClient, isSupabaseConfigured } from './supabase';
+import type { FlowPlan } from './types';
 
 export type TriggerType = 'rate_gte' | 'rate_lte' | 'by_date';
+export type CustodyMode = 'managed' | 'self_custody';
+export type RecipientType = 'email' | 'wallet';
+export type RuleStatus = 'active' | 'ready_to_execute' | 'fired' | 'cancelled' | 'expired';
 
 export interface AgentRule {
   id: string;
   createdAt: string;
-  status: 'active' | 'fired' | 'cancelled' | 'expired';
+  status: RuleStatus;
 
-  // What to move
   recipientLabel: string;
-  recipientAddress: string;
+  recipientIdentifier: string;   // raw input — email or 0x address
+  recipientType: RecipientType;
   amount: number;
   pair: FxPair;
 
-  // When to fire
   triggerType: TriggerType;
-  triggerValue: number;       // target rate for rate_gte / rate_lte
-  byDate?: string;            // ISO date, used for by_date (or as a hard deadline alongside a rate trigger)
+  triggerValue: number;
+  byDate?: string;
+  toleranceBps: number;
 
-  // Tolerance band
-  toleranceBps: number; // basis points, default 10 (=0.10%)
+  custodyMode: CustodyMode;
+  sourceWallet: string;          // Circle-managed wallet OR the user's connected address
 }
 
 export interface AgentExecution {
   id: string;
-  ruleId: string;
+  ruleId?: string;
+  standingIntentId?: string;
   firedAt: string;
-  rateAtExecution: number;
+  rateAtExecution?: number;
   mode: 'mock' | 'real';
   txHash: string;
   arcScanUrl: string;
@@ -35,11 +62,42 @@ export interface AgentExecution {
   feeAmountUsdc: number;
   reputationTxHash?: string;
   memo: string;
+  quoteShop?: QuoteShopResult;
 }
 
-// In-memory fallback
-const rulesMap = new Map<string, AgentRule>();
-const executionsArray: AgentExecution[] = [];
+export interface QuoteShopResult {
+  providersChecked: number;
+  bestProvider: string;
+  bestRate: number;
+  totalPaidUsdc: number;
+  quotes: { provider: string; rate: number; paidUsdc: number }[];
+}
+
+// ── Standing Intents (Command Hub automation) ──────────────────────────────────
+
+export type RecurringInterval = 'daily' | 'weekly' | 'monthly';
+
+export type StandingTrigger =
+  | { type: 'recurring'; interval: RecurringInterval }
+  | { type: 'on_receive'; minAmountUsdc: number };
+
+export interface StandingIntent {
+  id: string;
+  createdAt: string;
+  status: 'active' | 'ready_to_execute' | 'cancelled';
+  intentText: string;
+  plan: FlowPlan;
+  trigger: StandingTrigger;
+  custodyMode: CustodyMode;
+  sourceWallet: string;
+  lastRunAt?: string;
+  lastKnownBalance?: number; // for on_receive — balance as of the last check
+  runCount: number;
+}
+
+const rules = new Map<string, AgentRule>();
+const standingIntents = new Map<string, StandingIntent>();
+const executions: AgentExecution[] = [];
 
 let counter = 0;
 function nextId(prefix: string) {
@@ -47,259 +105,92 @@ function nextId(prefix: string) {
   return `${prefix}_${Date.now().toString(36)}${counter}`;
 }
 
-export async function createRule(input: Omit<AgentRule, 'id' | 'createdAt' | 'status'>): Promise<AgentRule> {
-  const rule: AgentRule = {
-    ...input,
-    id: nextId('rule'),
-    createdAt: new Date().toISOString(),
-    status: 'active',
-  };
+// ── AgentRule CRUD ──────────────────────────────────────────────────────────────
 
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseClient() as any;
-    if (supabase) {
-      const { error } = await supabase.from('rova_rules').insert({
-        id: rule.id,
-        created_at: rule.createdAt,
-        status: rule.status,
-        recipient_label: rule.recipientLabel,
-        recipient_address: rule.recipientAddress,
-        amount: rule.amount,
-        pair: rule.pair,
-        trigger_type: rule.triggerType,
-        trigger_value: rule.triggerValue,
-        by_date: rule.byDate || null,
-        tolerance_bps: rule.toleranceBps,
-      });
-      if (error) {
-        console.error('[agentStore] Supabase createRule error:', error);
-      } else {
-        return rule;
-      }
-    }
-  }
-
-  // Fallback / In-Memory
-  rulesMap.set(rule.id, rule);
+export function createRule(input: Omit<AgentRule, 'id' | 'createdAt' | 'status'>): AgentRule {
+  const rule: AgentRule = { ...input, id: nextId('rule'), createdAt: new Date().toISOString(), status: 'active' };
+  rules.set(rule.id, rule);
   return rule;
 }
 
-export async function listRules(): Promise<AgentRule[]> {
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseClient() as any;
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('rova_rules')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) {
-        console.error('[agentStore] Supabase listRules error:', error);
-      } else if (data) {
-        return data.map((r: any) => ({
-          id: r.id,
-          createdAt: r.created_at,
-          status: r.status,
-          recipientLabel: r.recipient_label,
-          recipientAddress: r.recipient_address,
-          amount: Number(r.amount),
-          pair: r.pair as FxPair,
-          triggerType: r.trigger_type as TriggerType,
-          triggerValue: Number(r.trigger_value),
-          byDate: r.by_date || undefined,
-          toleranceBps: r.tolerance_bps,
-        }));
-      }
-    }
-  }
-
-  // Fallback
-  return Array.from(rulesMap.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export function listRules(): AgentRule[] {
+  return Array.from(rules.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export async function getRule(id: string): Promise<AgentRule | undefined> {
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseClient() as any;
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('rova_rules')
-        .select('*')
-        .eq('id', id)
-        .single();
-      if (error) {
-        console.error('[agentStore] Supabase getRule error:', error);
-      } else if (data) {
-        return {
-          id: data.id,
-          createdAt: data.created_at,
-          status: data.status,
-          recipientLabel: data.recipient_label,
-          recipientAddress: data.recipient_address,
-          amount: Number(data.amount),
-          pair: data.pair as FxPair,
-          triggerType: data.trigger_type as TriggerType,
-          triggerValue: Number(data.trigger_value),
-          byDate: data.by_date || undefined,
-          toleranceBps: data.tolerance_bps,
-        };
-      }
-    }
-  }
-
-  // Fallback
-  return rulesMap.get(id);
+export function getRule(id: string): AgentRule | undefined {
+  return rules.get(id);
 }
 
-export async function updateRuleStatus(id: string, status: AgentRule['status']): Promise<AgentRule | undefined> {
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseClient() as any;
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('rova_rules')
-        .update({ status })
-        .eq('id', id)
-        .select()
-        .single();
-      if (error) {
-        console.error('[agentStore] Supabase updateRuleStatus error:', error);
-      } else if (data) {
-        return {
-          id: data.id,
-          createdAt: data.created_at,
-          status: data.status,
-          recipientLabel: data.recipient_label,
-          recipientAddress: data.recipient_address,
-          amount: Number(data.amount),
-          pair: data.pair as FxPair,
-          triggerType: data.trigger_type as TriggerType,
-          triggerValue: Number(data.trigger_value),
-          byDate: data.by_date || undefined,
-          toleranceBps: data.tolerance_bps,
-        };
-      }
-    }
-  }
-
-  // Fallback
-  const r = rulesMap.get(id);
+export function updateRuleStatus(id: string, status: RuleStatus): AgentRule | undefined {
+  const r = rules.get(id);
   if (!r) return undefined;
   r.status = status;
-  rulesMap.set(id, r);
+  rules.set(id, r);
   return r;
 }
 
-export async function deleteRule(id: string): Promise<boolean> {
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseClient() as any;
-    if (supabase) {
-      const { error } = await supabase
-        .from('rova_rules')
-        .delete()
-        .eq('id', id);
-      if (error) {
-        console.error('[agentStore] Supabase deleteRule error:', error);
-        return false;
-      }
-      return true;
-    }
-  }
-
-  // Fallback
-  return rulesMap.delete(id);
+export function deleteRule(id: string): boolean {
+  return rules.delete(id);
 }
 
-export async function getActiveRules(): Promise<AgentRule[]> {
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseClient() as any;
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('rova_rules')
-        .select('*')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-      if (error) {
-        console.error('[agentStore] Supabase getActiveRules error:', error);
-      } else if (data) {
-        return data.map((r: any) => ({
-          id: r.id,
-          createdAt: r.created_at,
-          status: r.status,
-          recipientLabel: r.recipient_label,
-          recipientAddress: r.recipient_address,
-          amount: Number(r.amount),
-          pair: r.pair as FxPair,
-          triggerType: r.trigger_type as TriggerType,
-          triggerValue: Number(r.trigger_value),
-          byDate: r.by_date || undefined,
-          toleranceBps: r.tolerance_bps,
-        }));
-      }
-    }
-  }
-
-  // Fallback
-  return (await listRules()).filter(r => r.status === 'active');
+export function getActiveRules(): AgentRule[] {
+  return listRules().filter(r => r.status === 'active');
 }
 
-export async function recordExecution(exec: Omit<AgentExecution, 'id'>): Promise<AgentExecution> {
+export function getRulesReadyToExecute(): AgentRule[] {
+  return listRules().filter(r => r.status === 'ready_to_execute');
+}
+
+// ── StandingIntent CRUD ─────────────────────────────────────────────────────────
+
+export function createStandingIntent(input: Omit<StandingIntent, 'id' | 'createdAt' | 'status' | 'runCount'>): StandingIntent {
+  const intent: StandingIntent = {
+    ...input,
+    id: nextId('intent'),
+    createdAt: new Date().toISOString(),
+    status: 'active',
+    runCount: 0,
+  };
+  standingIntents.set(intent.id, intent);
+  return intent;
+}
+
+export function listStandingIntents(): StandingIntent[] {
+  return Array.from(standingIntents.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function getStandingIntent(id: string): StandingIntent | undefined {
+  return standingIntents.get(id);
+}
+
+export function updateStandingIntent(id: string, patch: Partial<StandingIntent>): StandingIntent | undefined {
+  const i = standingIntents.get(id);
+  if (!i) return undefined;
+  const updated = { ...i, ...patch };
+  standingIntents.set(id, updated);
+  return updated;
+}
+
+export function deleteStandingIntent(id: string): boolean {
+  return standingIntents.delete(id);
+}
+
+export function getActiveStandingIntents(): StandingIntent[] {
+  return listStandingIntents().filter(i => i.status === 'active');
+}
+
+export function getStandingIntentsReadyToExecute(): StandingIntent[] {
+  return listStandingIntents().filter(i => i.status === 'ready_to_execute');
+}
+
+// ── Executions log ──────────────────────────────────────────────────────────────
+
+export function recordExecution(exec: Omit<AgentExecution, 'id'>): AgentExecution {
   const full: AgentExecution = { ...exec, id: nextId('exec') };
-
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseClient() as any;
-    if (supabase) {
-      const { error } = await supabase.from('rova_executions').insert({
-        id: full.id,
-        rule_id: full.ruleId,
-        fired_at: full.firedAt,
-        rate_at_execution: full.rateAtExecution,
-        mode: full.mode,
-        tx_hash: full.txHash,
-        arc_scan_url: full.arcScanUrl,
-        fee_job_id: full.feeJobId || null,
-        fee_amount_usdc: full.feeAmountUsdc,
-        reputation_tx_hash: full.reputationTxHash || null,
-        memo: full.memo,
-      });
-      if (error) {
-        console.error('[agentStore] Supabase recordExecution error:', error);
-      } else {
-        return full;
-      }
-    }
-  }
-
-  // Fallback
-  executionsArray.unshift(full);
+  executions.unshift(full);
   return full;
 }
 
-export async function listExecutions(): Promise<AgentExecution[]> {
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseClient() as any;
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('rova_executions')
-        .select('*')
-        .order('fired_at', { ascending: false });
-      if (error) {
-        console.error('[agentStore] Supabase listExecutions error:', error);
-      } else if (data) {
-        return data.map((e: any) => ({
-          id: e.id,
-          ruleId: e.rule_id,
-          firedAt: e.fired_at,
-          rateAtExecution: Number(e.rate_at_execution),
-          mode: e.mode as 'mock' | 'real',
-          txHash: e.tx_hash,
-          arcScanUrl: e.arc_scan_url,
-          feeJobId: e.fee_job_id || undefined,
-          feeAmountUsdc: Number(e.fee_amount_usdc),
-          reputationTxHash: e.reputation_tx_hash || undefined,
-          memo: e.memo,
-        }));
-      }
-    }
-  }
-
-  // Fallback
-  return executionsArray;
+export function listExecutions(): AgentExecution[] {
+  return executions;
 }

@@ -5,7 +5,6 @@ import { sha256 } from '@/lib/crypto';
 import type { ApiResponse } from '@/lib/types';
 import { callAI, AIProvider } from '@/lib/ai-provider';
 import { getFailsafePlan } from '@/lib/failsafe';
-import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 
 function err(status: number, code: string, message: string, detail?: string): NextResponse<ApiResponse> {
   return NextResponse.json({ ok: false, error: { code, message, ...(detail ? { detail } : {}) } }, { status });
@@ -87,28 +86,10 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse>>
     const { valid, errors, plan } = validateFlowPlan(parsed);
     if (!valid || !plan) return err(502, 'INVALID_PLAN_SCHEMA', 'AI brain returned malformed logic', errors.join('; '));
 
-    const processingMs = Date.now() - start;
-    if (isSupabaseConfigured()) {
-      const supabase = getSupabaseClient() as any;
-      if (supabase) {
-        try {
-          await supabase.from('rova_intents').upsert({
-            intent_hash: intentHash,
-            intent,
-            plan,
-            model: providerToUse,
-            processing_ms: processingMs
-          });
-        } catch (dbErr) {
-          console.error('[AI Route] Supabase intent log error:', dbErr);
-        }
-      }
-    }
-
     return NextResponse.json({
       ok: true,
       plan,
-      meta: { model: providerToUse, processingMs, intentHash, arcChainId: 5042002 },
+      meta: { model: providerToUse, processingMs: Date.now() - start, intentHash, arcChainId: 5042002 },
     });
   } catch {
     return err(502, 'PARSE_ERROR', 'AI response could not be understood as a financial plan.');

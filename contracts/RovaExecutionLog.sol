@@ -8,11 +8,11 @@ pragma solidity ^0.8.24;
 ///         the agent writes a record here. This is the real settlement of
 ///         what Rova calls an "Arc Transaction Memo" on an autonomous run —
 ///         a permanent, publicly verifiable reason attached to the tx.
-/// @dev    Gated with ownership so only the authorized Rova agent owner
-///         or executor wallet can record autonomous runs.
+/// @dev    Intentionally minimal: one write function, one event, one read
+///         path. No admin keys, no upgradeability, nothing to audit beyond
+///         "does this do what it says." That's a deliberate choice for a
+///         hackathon-scoped contract that still needs to be trustworthy.
 contract RovaExecutionLog {
-    address public owner;
-
     struct Execution {
         bytes32 ruleId;         // off-chain rule id (hash), links back to the Agent's rule store
         address executor;       // wallet that carried out the transfer (the agent's operating wallet)
@@ -27,41 +27,27 @@ contract RovaExecutionLog {
         uint256 indexed executionId,
         bytes32 indexed ruleId,
         address indexed recipient,
-        address indexed executor, // Indexed for easy filtering
+        address executor,
         uint256 amountUsdc6,
         uint256 rateAtExecution1e6,
         string memo,
         uint256 timestamp
     );
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
     Execution[] private executions;
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "RovaExecutionLog: caller is not the owner");
-        _;
-    }
-
-    constructor() {
-        owner = msg.sender;
-        emit OwnershipTransferred(address(0), msg.sender);
-    }
-
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "RovaExecutionLog: new owner is the zero address");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
-    }
-
-    /// @notice Records one autonomous execution. Callable only by the owner/executor.
+    /// @notice Records one autonomous execution. Callable by anyone by design —
+    ///         this is a public log, not a gated escrow. The trust anchor is
+    ///         that the `executor` field and the actual onchain transfer tx
+    ///         can be cross-checked against each other; this contract doesn't
+    ///         move funds itself, it only attests to why a transfer happened.
     function logExecution(
         bytes32 ruleId,
         address recipient,
         uint256 amountUsdc6,
         uint256 rateAtExecution1e6,
         string calldata memo
-    ) external onlyOwner returns (uint256 executionId) {
+    ) external returns (uint256 executionId) {
         executionId = executions.length;
         executions.push(Execution({
             ruleId: ruleId,
