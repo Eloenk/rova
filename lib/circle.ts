@@ -1,4 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
 // Rova — Circle SDK Client
 //
 // Uses @circle-fin/developer-controlled-wallets v10.x
@@ -10,7 +9,6 @@
 //   - Keys never leave Circle's HSM — no private key management needed
 //
 // Docs: https://developers.circle.com/wallets/dev-controlled.md
-// ─────────────────────────────────────────────────────────────────────────────
 
 import { initiateDeveloperControlledWalletsClient } from '@circle-fin/developer-controlled-wallets';
 import { ARC_TESTNET, TOKENS, ERC8004, ERC8183, ROVA_EXECUTION_LOG, GAS, arcScan } from './config';
@@ -29,7 +27,7 @@ export function getCircleClient() {
     throw new Error(
       'CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET are required.\n' +
       'Get them free at: https://console.circle.com\n' +
-      'Or set ROVA_MOCK_MODE=true to skip real transactions.'
+      'Or set mock_mode: true in config.yaml for testing.'
     );
   }
 

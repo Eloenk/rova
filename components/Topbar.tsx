@@ -28,10 +28,7 @@ export default function Topbar() {
       <span style={{ width:1, height:16, background:'var(--border2)', flexShrink:0 }}/>
       <span style={{ fontSize:12, color:'var(--subtle)' }}>{meta.sub}</span>
       <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
-        <div className="glass-panel" style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 12px', borderRadius:8, fontSize:11, fontWeight:600, color:'#fff', boxShadow: '0 0 10px rgba(0,0,0,0.2)' }}>
-          <span className="animate-pulse-glow" style={{ width:6, height:6, borderRadius:'50%', background:'var(--teal)', display:'inline-block' }}/>
-          Arc Testnet
-        </div>
+
         {isValidated && (
           <div style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 10px', borderRadius:6, background:'rgba(20,241,149,0.1)', border:'1px solid rgba(20,241,149,0.2)', fontSize:10, fontWeight:700, color:'var(--teal)' }}>
             🛡️ NODE VERIFIED

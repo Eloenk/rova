@@ -18,16 +18,13 @@ import { arcScan } from './config';
 import type { AgentRule, QuoteShopResult } from './agentStore';
 import { resolveRecipient } from './emailWallets';
 import { shopRates, pickBest } from './nanopay';
+import { getIsMockMode } from './ai-provider';
 
 const AGENT_FEE_USDC = 0.05;
 
 function isMockMode(): boolean {
-  return (
-    process.env.ROVA_MOCK_MODE === 'true' ||
-    !process.env.CIRCLE_API_KEY ||
-    !process.env.CIRCLE_ENTITY_SECRET ||
-    !process.env.ROVA_OWNER_WALLET
-  );
+  if (getIsMockMode()) return true;
+  return false;
 }
 
 function fakeHash(seed: string): string {

@@ -1,9 +1,74 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Anthropic from '@anthropic-ai/sdk';
+import fs from 'fs';
+import path from 'path';
+import yaml from 'js-yaml';
 import { ROVA_SYSTEM_PROMPT, ROVA_MODEL, MAX_TOKENS, TEMPERATURE } from './prompt';
 
 let _genAI: GoogleGenerativeAI | null = null;
 let _anthropic: Anthropic | null = null;
+
+export interface RovaAIConfig {
+  ai: {
+    provider: 'gemini' | 'anthropic' | 'auto';
+    model: string;
+    temperature: number;
+    max_tokens: number;
+  };
+  database?: {
+    supabase_enabled: boolean;
+  };
+  execution?: {
+    mock_mode?: boolean;
+    fallback_to_mock?: boolean;
+  };
+}
+
+const defaultConfig: RovaAIConfig = {
+  ai: {
+    provider: 'gemini',
+    model: ROVA_MODEL || 'gemini-2.0-flash',
+    temperature: TEMPERATURE || 0.1,
+    max_tokens: MAX_TOKENS || 8192,
+  },
+  execution: {
+    mock_mode: false,
+    fallback_to_mock: false,
+  },
+};
+
+export function getRovaConfig(): RovaAIConfig {
+  try {
+    const configPath = path.join(process.cwd(), 'config.yaml');
+    if (fs.existsSync(configPath)) {
+      const fileContents = fs.readFileSync(configPath, 'utf8');
+      const parsed = yaml.load(fileContents) as RovaAIConfig;
+      if (parsed && parsed.ai) {
+        return {
+          ai: {
+            provider: parsed.ai.provider || defaultConfig.ai.provider,
+            model: parsed.ai.model || defaultConfig.ai.model,
+            temperature: parsed.ai.temperature ?? defaultConfig.ai.temperature,
+            max_tokens: parsed.ai.max_tokens ?? defaultConfig.ai.max_tokens,
+          },
+          database: parsed.database,
+          execution: parsed.execution || defaultConfig.execution,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('[AI Provider] Error loading config.yaml, using defaults:', err);
+  }
+  return defaultConfig;
+}
+
+export function getIsMockMode(): boolean {
+  const config = getRovaConfig();
+  if (config.execution && typeof config.execution.mock_mode === 'boolean') {
+    return config.execution.mock_mode;
+  }
+  return false;
+}
 
 function getGemini() {
   if (_genAI) return _genAI;
@@ -29,15 +94,19 @@ interface AIResult {
 }
 
 export async function callAI(intent: string, forceProvider?: AIProvider): Promise<AIResult> {
-  // 1. Try Anthropic (Primary as requested)
-  if (!forceProvider || forceProvider === 'anthropic') {
+  const config = getRovaConfig();
+  const targetProvider = forceProvider || (config.ai.provider === 'auto' ? 'anthropic' : config.ai.provider);
+  const targetModel = config.ai.model || (targetProvider === 'anthropic' ? 'claude-3-5-sonnet-20240620' : ROVA_MODEL);
+
+  // 1. Try Anthropic if specified or selected
+  if (targetProvider === 'anthropic' || (config.ai.provider === 'auto' && !forceProvider)) {
     const anthropic = getAnthropic();
     if (anthropic) {
       try {
         const msg = await anthropic.messages.create({
-          model: "claude-3-5-sonnet-20240620",
-          max_tokens: MAX_TOKENS,
-          temperature: TEMPERATURE,
+          model: targetModel,
+          max_tokens: config.ai.max_tokens,
+          temperature: config.ai.temperature,
           system: ROVA_SYSTEM_PROMPT,
           messages: [{ role: "user", content: `User Intent: ${intent}\n\nReturn EXACT minified JSON only.` }],
         });
@@ -45,16 +114,26 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
         if (text) return { text, provider: 'anthropic' };
       } catch (e: any) {
         console.error('[AI Provider] Anthropic failed:', e.message);
-        if (forceProvider === 'anthropic') throw e;
+        if (forceProvider === 'anthropic' || targetProvider === 'anthropic') {
+          // If gemini key is available, fallback to gemini before erroring
+          const gemini = getGemini();
+          if (!gemini) throw e;
+        }
       }
     }
   }
 
-  // 2. Try Gemini (Secondary/Fallback)
+  // 2. Try Gemini
   const gemini = getGemini();
   if (gemini) {
     try {
-      const model = gemini.getGenerativeModel({ model: ROVA_MODEL });
+      const model = gemini.getGenerativeModel({
+        model: targetProvider === 'gemini' ? targetModel : ROVA_MODEL,
+        generationConfig: {
+          temperature: config.ai.temperature,
+          maxOutputTokens: config.ai.max_tokens,
+        },
+      });
       const result = await model.generateContent(`${ROVA_SYSTEM_PROMPT}\n\nUser Intent: ${intent}`);
       const text = result.response.text();
       return { text, provider: 'gemini' };
@@ -64,7 +143,7 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
     }
   }
 
-  throw new Error('No AI Providers available or configured correctly.');
+  throw new Error('No AI Providers available or configured correctly in environment / config.yaml.');
 }
 
 export async function generateFlowPlan(intent: string): Promise<import('./types').FlowPlan> {

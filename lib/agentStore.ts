@@ -23,6 +23,7 @@
 
 import type { FxPair } from './rates';
 import type { FlowPlan } from './types';
+import { getSupabaseClient } from './supabase';
 
 export type TriggerType = 'rate_gte' | 'rate_lte' | 'by_date';
 export type CustodyMode = 'managed' | 'self_custody';
@@ -114,6 +115,14 @@ function nextId(prefix: string) {
 export function createRule(input: Omit<AgentRule, 'id' | 'createdAt' | 'status'>): AgentRule {
   const rule: AgentRule = { ...input, id: nextId('rule'), createdAt: new Date().toISOString(), status: 'active' };
   rules.set(rule.id, rule);
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    (supabase as any).from('agent_rules').insert([rule]).then(({ error }: any) => {
+      if (error) console.error('[AgentStore] Supabase rule insert error:', error.message);
+    });
+  }
+
   return rule;
 }
 
@@ -137,10 +146,24 @@ export function updateRuleStatus(id: string, status: RuleStatus): AgentRule | un
   if (!r) return undefined;
   r.status = status;
   rules.set(id, r);
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    (supabase as any).from('agent_rules').update({ status }).eq('id', id).then(({ error }: any) => {
+      if (error) console.error('[AgentStore] Supabase rule update error:', error.message);
+    });
+  }
+
   return r;
 }
 
 export function deleteRule(id: string): boolean {
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    (supabase as any).from('agent_rules').delete().eq('id', id).then(({ error }: any) => {
+      if (error) console.error('[AgentStore] Supabase rule delete error:', error.message);
+    });
+  }
   return rules.delete(id);
 }
 
@@ -163,6 +186,14 @@ export function createStandingIntent(input: Omit<StandingIntent, 'id' | 'created
     runCount: 0,
   };
   standingIntents.set(intent.id, intent);
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    (supabase as any).from('standing_intents').insert([intent]).then(({ error }: any) => {
+      if (error) console.error('[AgentStore] Supabase standing intent insert error:', error.message);
+    });
+  }
+
   return intent;
 }
 
@@ -186,10 +217,24 @@ export function updateStandingIntent(id: string, patch: Partial<StandingIntent>)
   if (!i) return undefined;
   const updated = { ...i, ...patch };
   standingIntents.set(id, updated);
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    (supabase as any).from('standing_intents').update(patch).eq('id', id).then(({ error }: any) => {
+      if (error) console.error('[AgentStore] Supabase standing intent update error:', error.message);
+    });
+  }
+
   return updated;
 }
 
 export function deleteStandingIntent(id: string): boolean {
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    (supabase as any).from('standing_intents').delete().eq('id', id).then(({ error }: any) => {
+      if (error) console.error('[AgentStore] Supabase standing intent delete error:', error.message);
+    });
+  }
   return standingIntents.delete(id);
 }
 
@@ -206,6 +251,14 @@ export function getStandingIntentsReadyToExecute(): StandingIntent[] {
 export function recordExecution(exec: Omit<AgentExecution, 'id'>): AgentExecution {
   const full: AgentExecution = { ...exec, id: nextId('exec') };
   executions.unshift(full);
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    (supabase as any).from('agent_executions').insert([full]).then(({ error }: any) => {
+      if (error) console.error('[AgentStore] Supabase execution insert error:', error.message);
+    });
+  }
+
   return full;
 }
 

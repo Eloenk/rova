@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { FlowPlan } from './types';
+import { getIsMockMode } from './ai-provider';
 
 export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, ownerWalletOverride?: string) {
   const { sendUsdcOnArc, initiateStableFX, appKitBridge, createErc8183Job } = await import('./circle');
@@ -76,12 +77,8 @@ export function executeFlowPlanMock(plan: FlowPlan, intentHash: string) {
 }
 
 export function isMockMode(): boolean {
-  return (
-    process.env.ROVA_MOCK_MODE === 'true' ||
-    !process.env.CIRCLE_API_KEY ||
-    !process.env.CIRCLE_ENTITY_SECRET ||
-    !process.env.ROVA_OWNER_WALLET
-  );
+  if (getIsMockMode()) return true;
+  return false;
 }
 
 /// Single entry point both /api/execute and the Agent's standing-intent runner call.

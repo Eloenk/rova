@@ -30,7 +30,7 @@ export default function HistoryView() {
       {/* Header */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '36px' }}>
         <div>
-          <span className="mono-tag" style={{ color: 'var(--mint)', marginBottom: '8px', display: 'block', fontSize: '11px' }}>Arc Testnet</span>
+          <span className="mono-tag" style={{ color: 'var(--mint)', marginBottom: '8px', display: 'block', fontSize: '11px' }}>Operational</span>
           <h1 style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.03em' }} className="text-gradient">Ledger</h1>
           <p style={{ color: 'var(--muted)', fontSize: '15px', marginTop: '6px' }}>Every transaction, with Arc Transaction Memos attached.</p>
         </div>

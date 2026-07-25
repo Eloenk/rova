@@ -27,11 +27,10 @@ function withinTolerance(rule: AgentRule, indicative: number, firm: number): boo
   return drift <= rule.toleranceBps / 10000;
 }
 
+import { getIsMockMode } from '@/lib/ai-provider';
+
 async function getWalletBalance(walletAddress: string): Promise<number | null> {
-  const mock =
-    process.env.ROVA_MOCK_MODE === 'true' ||
-    !process.env.CIRCLE_API_KEY ||
-    !process.env.CIRCLE_ENTITY_SECRET;
+  const mock = getIsMockMode();
   if (mock) return null; // on-receive detection needs a real chain read; skipped in mock mode
   try {
     const { getAgentBalance } = await import('@/lib/circle');

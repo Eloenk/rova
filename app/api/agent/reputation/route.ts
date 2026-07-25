@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { arcScan } from '@/lib/config';
+import { getIsMockMode } from '@/lib/ai-provider';
 
 export async function POST(req: NextRequest) {
   try {
     const { score, tag, intentHash, totalAmount } = await req.json();
 
-    const isMock =
-      process.env.ROVA_MOCK_MODE === 'true' ||
-      !process.env.CIRCLE_API_KEY ||
-      !process.env.CIRCLE_ENTITY_SECRET ||
-      !process.env.ROVA_VALIDATOR_WALLET;
+    const isMock = getIsMockMode();
 
     if (isMock) {
       // Mock reputation recording — returns a plausible fake tx

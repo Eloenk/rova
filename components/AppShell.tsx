@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Sidebar from '@/components/layout/Sidebar';
@@ -10,6 +11,7 @@ const FeedbackWidget = dynamic(() => import('@/components/FeedbackWidget'), { ss
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLanding = pathname === '/';
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (isLanding) {
     return <>{children}</>;
@@ -17,9 +19,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--background)' }}>
-      <Sidebar />
+      <Sidebar mobileOpen={mobileMenuOpen} onCloseMobile={() => setMobileMenuOpen(false)} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-        <Topbar />
+        <Topbar onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)} isMobileOpen={mobileMenuOpen} />
         <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
           {children}
         </main>

@@ -73,11 +73,11 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{ padding: '32px 40px', maxWidth: '1200px', margin: '0 auto' }} className="animate-fade-up">
+    <div className="animate-fade-up max-w-7xl mx-auto w-full px-4 sm:px-8 py-6">
 
       {/* Header */}
       <header style={{ marginBottom: '40px' }}>
-        <span className="mono-tag" style={{ color: 'var(--mint)', marginBottom: '8px', display: 'block', fontSize: '11px' }}>Arc Testnet • Operational</span>
+        <span className="mono-tag" style={{ color: 'var(--mint)', marginBottom: '8px', display: 'block', fontSize: '11px' }}>Operational</span>
         <h1 style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }} className="text-gradient">
           Command Hub
         </h1>
@@ -179,27 +179,27 @@ export default function Dashboard() {
       {/* Email / wallet onboarding prompt if not connected */}
       {!isConnected && (
         <div className="glass-panel" style={{ padding: '28px 32px', borderRadius: '24px', marginBottom: '40px', border: '1px solid rgba(191,255,0,0.15)', background: 'rgba(191,255,0,0.03)' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: '#fff' }}>Connect to get started</h3>
-          <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '20px' }}>Use your wallet or just your email address — no crypto experience needed.</p>
+          <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: '#fff' }}>Get Started with Rova</h3>
+          <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '20px' }}>Choose your preferred wallet mode: automated agent execution via Circle or direct Web3 self-custody.</p>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <div className="glass-card" style={{ flex: 1, minWidth: '200px', padding: '20px', borderRadius: '16px', border: '1px solid rgba(180,244,215,0.15)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                 <Globe size={18} color="var(--mint)" />
-                <span style={{ fontWeight: 700, fontSize: '14px' }}>Email Login</span>
+                <span style={{ fontWeight: 700, fontSize: '14px' }}>Circle Programmable Wallet</span>
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '16px' }}>Powered by Circle Programmable Wallets. Sign up with your email and a wallet is created for you automatically.</p>
+              <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '16px' }}>Developer-controlled HSM wallets on Arc. Best for automated 24/7 background triggers and agent execution.</p>
               <Link href="/send" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: 'var(--mint)', textDecoration: 'none' }}>
-                Get started <ArrowRight size={14} />
+                Open Send Hub <ArrowRight size={14} />
               </Link>
             </div>
             <div className="glass-card" style={{ flex: 1, minWidth: '200px', padding: '20px', borderRadius: '16px', border: '1px solid rgba(180,244,215,0.15)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                 <Shield size={18} color="#BFFF00" />
-                <span style={{ fontWeight: 700, fontSize: '14px' }}>Web3 Wallet</span>
+                <span style={{ fontWeight: 700, fontSize: '14px' }}>Web3 Self-Custody</span>
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '16px' }}>Already have MetaMask or another wallet? Connect it directly to Arc Testnet.</p>
+              <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '16px' }}>Connect MetaMask or any Web3 wallet directly to sign transactions on Arc with single-tap approval.</p>
               <Link href="/send" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#BFFF00', textDecoration: 'none' }}>
-                Connect wallet <ArrowRight size={14} />
+                Connect Wallet <ArrowRight size={14} />
               </Link>
             </div>
           </div>
@@ -207,14 +207,14 @@ export default function Dashboard() {
       )}
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '40px' }}>
-        <StatTile label="USDC Balance" value={isConnected ? `$${usdcBalance ?? '0.00'}` : '—'} sub="On Arc Testnet" icon={<TrendingUp size={24} />} />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
+        <StatTile label="USDC Balance" value={isConnected ? `$${usdcBalance ?? '0.00'}` : '$0.00'} sub="USDC Balance" icon={<TrendingUp size={24} />} />
         <StatTile label="Total Sent" value={`$${totalVolumeUsdc().toLocaleString()}`} sub="All-time volume" icon={<Send size={24} />} />
         <StatTile label="Transactions" value={String(totalExecuted())} sub="Settled on Arc" icon={<Zap size={24} />} />
       </div>
 
       {/* Quick actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '40px' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
         <Link href="/send" style={{ textDecoration: 'none' }}>
           <div className="glass-panel cyber-button" style={{ padding: '24px', borderRadius: '20px', cursor: 'pointer', border: '1px solid rgba(191,255,0,0.15)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>

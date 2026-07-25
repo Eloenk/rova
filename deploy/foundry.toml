@@ -1,0 +1,11 @@
+[profile.default]
+src = "contracts"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.24"
+
+[rpc_endpoints]
+arc_testnet = "https://testnet.arc.network/rpc"
+
+[etherscan]
+arc_testnet = { key = "none", url = "https://testnet.arcscan.app/api" }

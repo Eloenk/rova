@@ -1,10 +1,8 @@
-// ─────────────────────────────────────────────────────────────────────────────
 // Rova — WhatsApp Messaging Integration
 //
 // Supports outbound messaging via Meta WhatsApp Cloud API or Twilio WhatsApp API.
 // Formats natural-language execution reports (with Nanopayment rate breakdown
 // and ArcScan explorer links) and self-custody approval alerts.
-// ─────────────────────────────────────────────────────────────────────────────
 
 export interface OutboundMessageResult {
   success: boolean;
@@ -59,7 +57,7 @@ export async function sendWhatsAppMessage(toPhone: string, text: string): Promis
   const provider = getProvider();
 
   if (provider === 'mock') {
-    console.log(`[WhatsApp Mock Outbound] to=${phone}:\n${text}\n---`);
+    console.log(`[WhatsApp Mock Outbound] to=${phone}:\n${text}`);
     return { success: true, messageId: `mock-wa-${Date.now()}`, provider: 'mock' };
   }
 

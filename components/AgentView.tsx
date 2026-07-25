@@ -182,10 +182,10 @@ export default function AgentView() {
 
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' }}>
         <div>
-          <span className="mono-tag" style={{ color: 'var(--mint)', marginBottom: '8px', display: 'block', fontSize: '11px' }}>Autonomous · Arc Testnet</span>
+          <span className="mono-tag" style={{ color: 'var(--mint)', marginBottom: '8px', display: 'block', fontSize: '11px' }}>Autonomous</span>
           <h1 style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.03em' }} className="text-gradient">Agent</h1>
           <p style={{ color: 'var(--muted)', fontSize: '15px', marginTop: '6px' }}>
-            Shops three rate providers before every move, then executes on its own — or waits for your one-tap approval if you're using your own wallet.
+            Shops three rate providers before every move, then executes on its own, or waits for your one-tap approval if you're using your own wallet.
           </p>
         </div>
         <button onClick={() => setShowForm(s => !s)} style={{ padding: '12px 20px', borderRadius: '12px', background: 'var(--lime)', color: '#000', fontWeight: 800, border: 'none', cursor: 'pointer', fontSize: '13px' }}>
@@ -215,7 +215,7 @@ export default function AgentView() {
               <div key={r.id} className="glass-panel" style={{ padding: '16px 20px', borderRadius: '16px', border: '1px solid rgba(251,191,36,0.3)', background: 'rgba(251,191,36,0.04)', display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>{r.amount} USDC → {r.recipientLabel}</p>
-                  <p style={{ fontSize: '11px', color: 'var(--subtle)' }}>Trigger condition met — your wallet needs to sign this one.</p>
+                  <p style={{ fontSize: '11px', color: 'var(--subtle)' }}>Trigger condition met: your wallet needs to sign this one.</p>
                 </div>
                 <button onClick={() => approveRule(r)} disabled={approvingId === r.id} style={approveBtnStyle}>
                   {approvingId === r.id ? 'Confirm in wallet...' : 'Approve & Send'}
@@ -226,7 +226,7 @@ export default function AgentView() {
               <div key={i.id} className="glass-panel" style={{ padding: '16px 20px', borderRadius: '16px', border: '1px solid rgba(251,191,36,0.3)', background: 'rgba(251,191,36,0.04)', display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>"{i.intentText}"</p>
-                  <p style={{ fontSize: '11px', color: 'var(--subtle)' }}>Standing instruction is due — your wallet needs to sign this one.</p>
+                  <p style={{ fontSize: '11px', color: 'var(--subtle)' }}>Standing instruction is due: your wallet needs to sign this one.</p>
                 </div>
                 <button onClick={() => approveIntent(i)} disabled={approvingId === i.id} style={approveBtnStyle}>
                   {approvingId === i.id ? 'Confirm in wallet...' : 'Approve & Send'}
@@ -249,18 +249,13 @@ export default function AgentView() {
             </Field>
           </div>
 
-          <Field label="Recipient">
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-              <ModeTab active={recipientMode === 'wallet'} onClick={() => setRecipientMode('wallet')} icon={<Wallet size={13} />} label="Wallet address" />
-              <ModeTab active={recipientMode === 'email'} onClick={() => setRecipientMode('email')} icon={<Mail size={13} />} label="Email" />
-            </div>
+          <Field label="Recipient Wallet Address">
             <input
               value={recipientIdentifier}
               onChange={e => setRecipientIdentifier(e.target.value)}
-              placeholder={recipientMode === 'wallet' ? '0x...' : 'recipient@email.com'}
+              placeholder="0x..."
               style={inputStyle}
             />
-            {recipientMode === 'email' && <p style={{ fontSize: '11px', color: 'var(--subtle)', marginTop: '4px' }}>A Circle-managed wallet is created for them automatically on first send.</p>}
           </Field>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>

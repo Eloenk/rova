@@ -2,16 +2,7 @@
 pragma solidity ^0.8.24;
 
 /// @title RovaExecutionLog
-/// @notice Onchain audit trail for Rova's autonomous Agent. Every time an
-///         armed rule fires (a StableFX rate condition or deadline is met
-///         and Rova executes a transfer without a human clicking "send"),
-///         the agent writes a record here. This is the real settlement of
-///         what Rova calls an "Arc Transaction Memo" on an autonomous run —
-///         a permanent, publicly verifiable reason attached to the tx.
-/// @dev    Intentionally minimal: one write function, one event, one read
-///         path. No admin keys, no upgradeability, nothing to audit beyond
-///         "does this do what it says." That's a deliberate choice for a
-///         hackathon-scoped contract that still needs to be trustworthy.
+
 contract RovaExecutionLog {
     struct Execution {
         bytes32 ruleId;         // off-chain rule id (hash), links back to the Agent's rule store

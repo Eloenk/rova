@@ -12,6 +12,8 @@
 // change any call site.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { getIsMockMode } from './ai-provider';
+
 interface WalletRecord {
   address: string;
   walletId: string;
@@ -50,10 +52,7 @@ export async function resolveRecipient(identifier: string): Promise<{ address: s
   const existing = emailToWallet.get(key);
   if (existing) return { address: existing.address, isNewWallet: false };
 
-  const mock =
-    process.env.ROVA_MOCK_MODE === 'true' ||
-    !process.env.CIRCLE_API_KEY ||
-    !process.env.CIRCLE_ENTITY_SECRET;
+  const mock = getIsMockMode();
 
   if (mock) {
     // Deterministic fake address so the same email always mocks to the same

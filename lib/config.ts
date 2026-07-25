@@ -1,4 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
 // Rova — Arc & Circle Configuration
 //
 // Sources:
@@ -7,7 +6,6 @@
 //   https://developers.circle.com/cctp/references/contract-addresses.md
 //   https://developers.circle.com/stablefx.md
 //   https://developers.circle.com/gateway.md
-// ─────────────────────────────────────────────────────────────────────────────
 
 // ── Arc Testnet Network ────────────────────────────────────────────────────────
 export const ARC_TESTNET = {

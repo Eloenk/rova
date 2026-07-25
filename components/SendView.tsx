@@ -67,7 +67,7 @@ export default function SendView() {
 
       {/* Header */}
       <header style={{ marginBottom: '36px' }}>
-        <span className="mono-tag" style={{ color: 'var(--mint)', marginBottom: '8px', display: 'block', fontSize: '11px' }}>Arc Testnet</span>
+        <span className="mono-tag" style={{ color: 'var(--mint)', marginBottom: '8px', display: 'block', fontSize: '11px' }}>Operational</span>
         <h1 style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.03em' }} className="text-gradient">Send & Swap</h1>
         <p style={{ color: 'var(--muted)', fontSize: '15px', marginTop: '6px' }}>Move stablecoins on Arc. No jargon required.</p>
       </header>
@@ -91,33 +91,9 @@ export default function SendView() {
 
         {/* SEND FORM */}
         {action === 'send' && (
-          <>
-            {/* Mode toggle */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-              {([['email', 'Email', <Mail size={15} />], ['wallet', 'Wallet', <Wallet size={15} />]] as const).map(([m, label, icon]) => (
-                <button key={m} onClick={() => setMode(m as Mode)} style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  padding: '10px', borderRadius: '10px', border: '1px solid',
-                  borderColor: mode === m ? 'rgba(180,244,215,0.3)' : 'transparent',
-                  background: mode === m ? 'rgba(180,244,215,0.06)' : 'rgba(255,255,255,0.02)',
-                  color: mode === m ? 'var(--mint)' : 'var(--muted)',
-                  fontWeight: 600, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s',
-                }}>
-                  {icon} {label}
-                </button>
-              ))}
-            </div>
-
-            {mode === 'email' ? (
-              <Field label="Recipient email" hint="They'll receive USDC via a Circle-powered wallet">
-                <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="recipient@email.com" style={inputStyle} />
-              </Field>
-            ) : (
-              <Field label="Recipient wallet address">
-                <input value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="0x..." style={inputStyle} />
-              </Field>
-            )}
-          </>
+          <Field label="Recipient wallet address" hint="Target address on Arc or connected chain">
+            <input value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="0x..." style={inputStyle} />
+          </Field>
         )}
 
         {/* BRIDGE FORM */}
@@ -180,11 +156,14 @@ export default function SendView() {
         {/* Submit */}
         {!isConnected ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <button onClick={() => connectInjected()} disabled={isConnecting} style={{ ...btnStyle, background: '#BFFF00', color: '#0d1520' }}>
-              {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+            <button onClick={handleSubmit} disabled={isProcessing || status === 'loading'} style={{ ...btnStyle, background: '#BFFF00', color: '#0d1520' }}>
+              {isProcessing || status === 'loading'
+                ? <><Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> Processing via Circle...</>
+                : <>{action === 'send' ? 'Execute via Circle Wallet' : action === 'bridge' ? 'Bridge via Circle Wallet' : 'Swap via Circle Wallet'} <ArrowRight size={16} /></>
+              }
             </button>
-            <button style={{ ...btnStyle, background: 'transparent', border: '1px solid rgba(180,244,215,0.2)', color: 'var(--mint)' }}>
-              Continue with Email
+            <button onClick={() => connectInjected()} disabled={isConnecting} style={{ ...btnStyle, background: 'transparent', border: '1px solid rgba(180,244,215,0.2)', color: 'var(--mint)' }}>
+              {isConnecting ? 'Connecting Web3 Wallet...' : 'Or Connect Web3 Wallet (Self-Custody)'}
             </button>
           </div>
         ) : (
