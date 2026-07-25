@@ -146,25 +146,6 @@ export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: str
     const feeJobId = `MOCK-FEE-${rule.id.slice(0, 8)}`;
     const reputationTxHash = fakeHash(`rep-${rule.id}-${Date.now()}`);
     const res: FireResult = { txHash, arcScanUrl: arcScan.tx(txHash), mode: 'mock', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
-    if (rule.notifyPhone) {
-      try {
-        const { sendWhatsAppExecutionReport } = await import('./whatsapp');
-        await sendWhatsAppExecutionReport(rule.notifyPhone, {
-          recipient: recipientAddress,
-          amount: rule.amount,
-          pair: rule.pair,
-          rate,
-          bestProvider: quoteShop.bestProvider,
-          providersChecked: quoteShop.providersChecked,
-          txHash: res.txHash,
-          arcScanUrl: res.arcScanUrl,
-          mode: 'mock',
-          memo,
-        });
-      } catch (err) {
-        console.warn('[Agent] WhatsApp notification failed in mock mode (non-fatal):', err);
-      }
-    }
     return res;
   }
 
@@ -219,26 +200,6 @@ export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: str
   }
 
   const result: FireResult = { txHash: mock ? fakeHash(`agent-${rule.id}-${Date.now()}`) : (undefined as any), arcScanUrl: mock ? arcScan.tx(fakeHash(`agent-${rule.id}-${Date.now()}`)) : (undefined as any), mode: mock ? 'mock' : 'real', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
-
-  if (rule.notifyPhone) {
-    try {
-      const { sendWhatsAppExecutionReport } = await import('./whatsapp');
-      await sendWhatsAppExecutionReport(rule.notifyPhone, {
-        recipient: recipientAddress,
-        amount: rule.amount,
-        pair: rule.pair,
-        rate: rate,
-        bestProvider: quoteShop.bestProvider,
-        providersChecked: quoteShop.providersChecked,
-        txHash: result.txHash,
-        arcScanUrl: result.arcScanUrl,
-        mode: result.mode,
-        memo,
-      });
-    } catch (err) {
-      console.warn('[Agent] WhatsApp notification failed (non-fatal):', err);
-    }
-  }
 
   return mock
     ? result
