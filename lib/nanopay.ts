@@ -46,7 +46,7 @@ export function quoteFor(id: QuoteProviderId, midRate: number): number {
 }
 
 function isX402RealMode(): boolean {
-  return !!process.env.ROVA_X402_BUYER_PRIVATE_KEY && !!process.env.ROVA_X402_SELLER_ADDRESS;
+  return !!process.env.ROVA_X402_BUYER_PRIVATE_KEY;
 }
 
 // ── Buyer side ──────────────────────────────────────────────────────────────────
