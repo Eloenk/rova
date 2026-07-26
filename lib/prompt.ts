@@ -44,6 +44,6 @@ JSON Schema:
 }
 Constraint: totalAmount = sum(splits.amount) + reserveAmount. Expiry defaults to 7 days if not mentioned.`;
 
-export const ROVA_MODEL       = 'gemini-2.0-flash' as const;
+export const ROVA_MODEL       = 'gemini-flash-latest' as const;
 export const MAX_TOKENS         = 8192 as const;
 export const TEMPERATURE        = 0.1 as const;

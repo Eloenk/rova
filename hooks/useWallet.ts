@@ -20,8 +20,12 @@ export function useWallet() {
   const wrongChain = isConnected && !isOnArc;
 
   const connectInjected = () => {
-    const c = connectors.find(c => c.id === 'injected');
-    if (c) connect({ connector: c, chainId: arcTestnet.id });
+    const c = connectors.find(c => c.id === 'injected' || c.id === 'metaMask') || connectors[0];
+    if (c) {
+      connect({ connector: c, chainId: arcTestnet.id });
+    } else {
+      console.warn('[useWallet] No EVM wallet connector found in window.ethereum');
+    }
   };
 
   // WalletConnect removed to avoid SSR localStorage conflict.

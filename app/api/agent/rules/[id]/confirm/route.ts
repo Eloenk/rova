@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 import { getRule, updateRuleStatus, recordExecution } from '@/lib/agentStore';
 import { resolveRecipient } from '@/lib/emailWallets';
 import { confirmSelfCustodyExecution } from '@/lib/agentExecutor';

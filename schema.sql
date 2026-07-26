@@ -58,6 +58,17 @@ CREATE TABLE IF NOT EXISTS rova_intents (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    whatsapp_number TEXT UNIQUE,
+    email TEXT,
+    circle_wallet_address TEXT,
+    custodian_wallet_address TEXT,
+    whatsapp_approval_threshold_usdc NUMERIC NOT NULL DEFAULT 100.00
+);
+
 CREATE INDEX IF NOT EXISTS idx_agent_rules_status ON agent_rules(status);
 CREATE INDEX IF NOT EXISTS idx_standing_intents_status ON standing_intents(status);
 CREATE INDEX IF NOT EXISTS idx_agent_executions_fired_at ON agent_executions(fired_at DESC);
+CREATE INDEX IF NOT EXISTS idx_users_whatsapp ON users(whatsapp_number);

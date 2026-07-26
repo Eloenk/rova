@@ -10,10 +10,10 @@ const FeedbackWidget = dynamic(() => import('@/components/FeedbackWidget'), { ss
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isLanding = pathname === '/';
+  const isStandalonePage = pathname === '/' || pathname === '/login';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  if (isLanding) {
+  if (isStandalonePage) {
     return <>{children}</>;
   }
 

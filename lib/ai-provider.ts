@@ -10,7 +10,7 @@ let _anthropic: Anthropic | null = null;
 
 export interface RovaAIConfig {
   ai: {
-    provider: 'gemini' | 'anthropic' | 'auto';
+    provider: 'gemini' | 'anthropic' | 'agentrouter' | 'auto';
     model: string;
     temperature: number;
     max_tokens: number;
@@ -86,11 +86,50 @@ function getAnthropic() {
   return _anthropic;
 }
 
-export type AIProvider = 'anthropic' | 'gemini' | 'openai';
+export type AIProvider = 'anthropic' | 'gemini' | 'openai' | 'agentrouter';
 
 interface AIResult {
   text: string;
   provider: AIProvider;
+}
+
+async function callAgentRouter(intent: string, model: string, config: RovaAIConfig): Promise<AIResult> {
+  const key = process.env.AGENTROUTER_API_KEY;
+  const baseUrl = process.env.AGENTROUTER_BASE_URL || 'https://agentrouter.org/v1/chat/completions';
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (key) {
+    headers['Authorization'] = `Bearer ${key}`;
+  }
+
+  const response = await fetch(baseUrl, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      model: model || 'agent-router',
+      messages: [
+        { role: 'system', content: ROVA_SYSTEM_PROMPT },
+        { role: 'user', content: `User Intent: ${intent}\n\nReturn EXACT minified JSON only.` },
+      ],
+      temperature: config.ai.temperature,
+      max_tokens: config.ai.max_tokens,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`AgentRouter API error (${response.status}): ${errorText}`);
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content || '';
+  if (!text) {
+    throw new Error('AgentRouter returned empty content');
+  }
+
+  return { text, provider: 'agentrouter' };
 }
 
 export async function callAI(intent: string, forceProvider?: AIProvider): Promise<AIResult> {
@@ -98,7 +137,12 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
   const targetProvider = forceProvider || (config.ai.provider === 'auto' ? 'anthropic' : config.ai.provider);
   const targetModel = config.ai.model || (targetProvider === 'anthropic' ? 'claude-3-5-sonnet-20240620' : ROVA_MODEL);
 
-  // 1. Try Anthropic if specified or selected
+  // 1. Try AgentRouter if explicitly requested
+  if (targetProvider === 'agentrouter') {
+    return await callAgentRouter(intent, targetModel, config);
+  }
+
+  // 2. Try Anthropic if specified or selected
   if (targetProvider === 'anthropic' || (config.ai.provider === 'auto' && !forceProvider)) {
     const anthropic = getAnthropic();
     if (anthropic) {
@@ -114,32 +158,59 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
         if (text) return { text, provider: 'anthropic' };
       } catch (e: any) {
         console.error('[AI Provider] Anthropic failed:', e.message);
-        if (forceProvider === 'anthropic' || targetProvider === 'anthropic') {
-          // If gemini key is available, fallback to gemini before erroring
-          const gemini = getGemini();
-          if (!gemini) throw e;
-        }
       }
     }
   }
 
-  // 2. Try Gemini
-  const gemini = getGemini();
-  if (gemini) {
+  // 3. Try Gemini (SDK first, then direct REST API with X-goog-api-key)
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (apiKey) {
+    const modelToUse = targetProvider === 'gemini' ? (targetModel || 'gemini-flash-latest') : 'gemini-flash-latest';
+    const gemini = getGemini();
+    if (gemini) {
+      try {
+        const model = gemini.getGenerativeModel({
+          model: modelToUse,
+          generationConfig: {
+            temperature: config.ai.temperature,
+            maxOutputTokens: config.ai.max_tokens,
+          },
+        });
+        const result = await model.generateContent(`${ROVA_SYSTEM_PROMPT}\n\nUser Intent: ${intent}`);
+        const text = result.response.text();
+        if (text) return { text, provider: 'gemini' };
+      } catch (e: any) {
+        console.warn('[AI Provider] Gemini SDK failed, falling back to direct REST API:', e.message);
+      }
+    }
+
     try {
-      const model = gemini.getGenerativeModel({
-        model: targetProvider === 'gemini' ? targetModel : ROVA_MODEL,
-        generationConfig: {
-          temperature: config.ai.temperature,
-          maxOutputTokens: config.ai.max_tokens,
+      const restRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-goog-api-key': apiKey,
         },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `${ROVA_SYSTEM_PROMPT}\n\nUser Intent: ${intent}` }] }],
+        }),
       });
-      const result = await model.generateContent(`${ROVA_SYSTEM_PROMPT}\n\nUser Intent: ${intent}`);
-      const text = result.response.text();
-      return { text, provider: 'gemini' };
+      if (restRes.ok) {
+        const data = await restRes.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) return { text, provider: 'gemini' };
+      }
     } catch (e: any) {
-      console.error('[AI Provider] Gemini failed:', e.message);
-      throw e;
+      console.error('[AI Provider] Gemini direct REST API failed:', e.message);
+    }
+  }
+
+  // 4. Try AgentRouter in auto mode fallback
+  if (process.env.AGENTROUTER_API_KEY || config.ai.provider === 'auto') {
+    try {
+      return await callAgentRouter(intent, targetModel, config);
+    } catch (e: any) {
+      console.error('[AI Provider] AgentRouter fallback failed:', e.message);
     }
   }
 

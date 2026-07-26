@@ -2,47 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Theme Variables (exact from Figma ZIP) ─────────────────────────────── */
 :root {
   --font-size: 16px;
-  --background: #0d1520;
-  --foreground: #ffffff;
-  --card: #1a2838;
-  --card-foreground: #ffffff;
-  --primary: #BFFF00;
-  --primary-foreground: #0d1520;
-  --secondary: #2a4a5a;
-  --secondary-foreground: #ffffff;
-  --muted: #8b9ba8;
-  --muted-foreground: #b4c5d0;
-  --accent: #B4F4D7;
-  --accent-foreground: #0d1520;
-  --destructive: #ff4d4d;
-  --border: rgba(180, 244, 215, 0.1);
-  --input-background: rgba(26, 40, 56, 0.5);
-  --ring: #B4F4D7;
+  --background: #090d14;
+  --foreground: #f8fafc;
+  --card: #0f172a;
+  --card-foreground: #f8fafc;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  --muted: #64748b;
+  --muted-foreground: #94a3b8;
+  --accent: #38bdf8;
+  --accent-foreground: #090d14;
+  --destructive: #ef4444;
+  --border: rgba(148, 163, 184, 0.12);
+  --input-background: rgba(15, 23, 42, 0.6);
+  --ring: #38bdf8;
 
-  /* Custom Rova Variables */
-  --teal: #14f195;
-  --mint: #B4F4D7;
-  --lime: #BFFF00;
-  --blue: #60a5fa;
-  --surface: rgba(26, 40, 56, 0.4);
-  --surface2: rgba(26, 40, 56, 0.6);
-  --border2: rgba(180, 244, 215, 0.15);
-  --subtle: #6b7c8c;
-  --text: #ffffff;
+  --teal: #10b981;
+  --mint: #34d399;
+  --lime: #84cc16;
+  --blue: #3b82f6;
+  --surface: rgba(15, 23, 42, 0.5);
+  --surface2: rgba(30, 41, 59, 0.7);
+  --border2: rgba(148, 163, 184, 0.2);
+  --subtle: #64748b;
+  --text: #f8fafc;
 
-  /* Typography */
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'Menlo', 'Monaco', 'Courier New', monospace;
 
-  --radius: 0.75rem;
-  --sidebar: #0d1520;
+  --radius: 0.5rem;
+  --sidebar: #090d14;
 }
 
-/* ── Base ────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { font-size: var(--font-size); }
@@ -54,30 +50,28 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Utilities (exact from Figma ZIP index.css) ──────────────────────────── */
 .glass-panel {
-  background: rgba(180, 244, 215, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(180, 244, 215, 0.1);
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .glass-card {
-  background: rgba(180, 244, 215, 0.08);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(180, 244, 215, 0.15);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.15);
 }
 
 .cyber-button {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease-in-out;
 }
 
 .cyber-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(191, 255, 0, 0.2);
+  transform: translateY(-1px);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #BFFF00 0%, #B4F4D7 50%, #14f195 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -89,34 +83,16 @@ body {
   letter-spacing: 0.05em;
 }
 
-.animate-fade-up  { animation: fadeUp 0.6s ease-out; }
-.animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
-.animate-glow     { animation: glow 3s ease-in-out infinite; }
-.animate-spin     { animation: spin 1s linear infinite; }
+.animate-fade-up { animation: fadeUp 0.4s ease-out; }
+.animate-spin { animation: spin 1s linear infinite; }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes pulseGlow {
-  0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--mint); }
-  50%       { opacity: 0.7; box-shadow: 0 0 20px var(--mint); }
-}
-
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 40px rgba(180, 244, 215, 0.3); }
-  50%       { box-shadow: 0 0 60px rgba(191, 255, 0, 0.4); }
 }
 
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
-}
-
-@keyframes floatOrb {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  33%       { transform: translateY(-15px) rotate(5deg); }
-  66%       { transform: translateY(-8px) rotate(-5deg); }
 }
 
