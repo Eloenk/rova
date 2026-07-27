@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-export const dynamic = 'force-dynamic';
 import { Web3Providers } from '@/app/providers';
 import AppShell from '@/components/AppShell';
 import GlobalErrorBoundary from '@/components/GlobalErrorBoundary';

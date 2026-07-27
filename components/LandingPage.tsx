@@ -17,8 +17,7 @@ export default function LandingPage() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '20px 48px',
-        borderBottom: '1px solid rgba(180, 244, 215, 0.12)',
+        padding: '24px 48px',
         background: 'rgba(13, 21, 32, 0.85)',
         backdropFilter: 'blur(12px)',
         position: 'sticky',
@@ -137,45 +136,45 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* 4 Compact Cards (2x2 Grid) */}
-      <div style={{ padding: '0 24px 80px', maxWidth: '860px', margin: '0 auto' }}>
+      {/* 4 Cards (Strictly 1 Row on Desktop & Mid-Screen; 3-Up 1-Down on Mobile) */}
+      <div style={{ padding: '0 24px 80px', maxWidth: '1200px', margin: '0 auto' }}>
         <div className="landing-grid">
           {[
             {
-              icon: <MessageSquare size={22} style={{ color: '#25D366' }} />,
+              icon: <MessageSquare size={20} style={{ color: '#25D366' }} />,
               title: 'WhatsApp Conversational Agent',
-              desc: 'Execute transfers, set FX rate triggers, and check balances via natural language chat on WhatsApp with no app download required.',
+              desc: 'Execute transfers, set FX rate triggers, and check balances via WhatsApp chat with no app download required.',
             },
             {
-              icon: <Wallet size={22} style={{ color: '#BFFF00' }} />,
+              icon: <Wallet size={20} style={{ color: '#BFFF00' }} />,
               title: 'Circle Infrastructure & Wallets',
-              desc: 'Powered by Circle Developer-Controlled Wallets (HSM-secured) for instant email onboarding, plus optional Web3 self-custody linking.',
+              desc: 'Powered by Circle Developer-Controlled Wallets (HSM-secured) for instant email onboarding & Web3 linking.',
             },
             {
-              icon: <Zap size={22} style={{ color: '#25D366' }} />,
-              title: 'x402 Nanopayment Rate Shopping',
-              desc: 'Rova pays 3 competing quote providers $0.0005 via Circle Gateway x402 nanopayments to guarantee the best exchange rate before sending.',
+              icon: <Zap size={20} style={{ color: '#25D366' }} />,
+              title: 'x402 Nanopayment Shopping',
+              desc: 'Rova pays 3 quote providers $0.0005 via Circle Gateway x402 nanopayments to guarantee the best rate before sending.',
             },
             {
-              icon: <Repeat size={22} style={{ color: '#BFFF00' }} />,
+              icon: <Repeat size={20} style={{ color: '#BFFF00' }} />,
               title: '24/7 Autopilot Rules Engine',
-              desc: 'Arm rules once by rate threshold, date, or incoming payment. Rova continuously monitors triggers and fires automatically on Arc Testnet.',
+              desc: 'Arm rules once by rate, date, or payment trigger. Rova continuously monitors and fires automatically on Arc Testnet.',
             },
           ].map(({ icon, title, desc }, i) => (
             <div key={i} style={{
-              padding: '24px 20px',
-              borderRadius: '14px',
+              padding: '20px 16px',
+              borderRadius: '12px',
               background: 'rgba(13, 21, 32, 0.75)',
               border: '1px solid rgba(180, 244, 215, 0.15)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '12px',
+              gap: '10px',
               boxSizing: 'border-box',
             }}>
               <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
                 background: 'rgba(191, 255, 0, 0.08)',
                 border: '1px solid rgba(191, 255, 0, 0.2)',
                 display: 'flex',
@@ -184,22 +183,21 @@ export default function LandingPage() {
               }}>
                 {icon}
               </div>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', margin: 0 }}>{title}</h3>
-              <p style={{ color: '#8b9ba8', fontSize: '13.5px', lineHeight: 1.55, margin: 0 }}>{desc}</p>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', margin: 0, lineHeight: 1.3 }}>{title}</h3>
+              <p style={{ color: '#8b9ba8', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>{desc}</p>
             </div>
           ))}
         </div>
 
-        {/* Technology Badges Footer */}
+        {/* Technology Badges Footer (Seamless Without Border Line) */}
         <div style={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '28px',
-          marginTop: '48px',
-          paddingTop: '24px',
-          borderTop: '1px solid rgba(180, 244, 215, 0.1)',
+          marginTop: '40px',
+          paddingTop: '10px',
         }}>
           {[
             'Circle Wallets',

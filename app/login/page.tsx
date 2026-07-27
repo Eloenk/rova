@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Shield, ArrowRight, Wallet, CheckCircle2, Smartphone, Mail, Globe, Send, Layers } from 'lucide-react';
+import { Shield, ArrowRight, Wallet, CheckCircle2, Smartphone, Mail, Globe, Send } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,7 +60,6 @@ export default function LoginPage() {
         justifyContent: 'space-between',
         padding: '60px 64px',
         position: 'relative',
-        borderRight: '1px solid #1e293b',
         boxSizing: 'border-box',
       }}>
         {/* Main Center Writeup */}
@@ -86,10 +85,9 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Absolute Footer Level Metrics */}
+        {/* Absolute Footer Level Metrics (Seamless Without Border Line) */}
         <div style={{
-          paddingTop: '32px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          paddingTop: '24px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -311,7 +309,6 @@ export default function LoginPage() {
               </form>
             )
           ) : (
-            /* Single RainbowKit / Web3Modal Unified Multi-Wallet Selector */
             <div>
               <button
                 type="button"

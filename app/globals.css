@@ -96,14 +96,26 @@ body {
   to   { transform: rotate(360deg); }
 }
 
+/* 4 Cards strictly in 1 Row on Desktop and Mid-Screens; 3-Up 1-Down on Mobile */
 .landing-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  width: 100%;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .landing-grid {
-    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+  }
+  .landing-grid > div:nth-child(4) {
+    grid-column: span 3 !important;
   }
 }
