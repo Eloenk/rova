@@ -4,22 +4,22 @@ This document records the design systems, authentication flows, and security thr
 
 ---
 
-## 🎨 1. Plain-English Landing Page Grid
-* **Removed All Technical Developer Jargon**: Stripped developer phrases like "goroutines", "whatsmeow daemon", "CCTP V2", and "DEX liquidity providers" from user-facing landing cards.
-* **Economic Value Copy**:
-  1. **WhatsApp Banking Agent**: Chat directly on WhatsApp to send money, set target rate alerts, and manage stablecoins.
-  2. **Instant Frictionless Accounts**: Sign in with phone number or email for an automatic secure wallet, or link an external wallet.
-  3. **Smart Security Guard**: Custom transfer thresholds for automated micro-payments and 1-click web approvals for larger amounts.
-  4. **Sub-Second Global Remittances**: Sub-second international money transfers for ~$0.006 gas fee.
-  5. **Zero-Slippage FX Swaps**: Institutional rate currency swaps between USD, EUR, and yield-bearing stablecoins.
-  6. **Automated Rate Watchers**: 24/7 market monitoring that executes transfers automatically when target FX rates are hit.
-* **Ecosystem Badges**: Updated footer badges to clear user concepts: `['Arc Network', 'Circle Wallets', 'WhatsApp Banking', 'StableFX Engine', 'Yield USYC', 'Sub-Second Transfers']`.
+## 🔐 1. Standalone Split Login Page (`/login`)
+* **Left Side (50% Desktop Width)**:
+  * **Bold Impact Typography**: `ROVA × ARC` headline (`64px` font size) with large subtitle description.
+  * **Footer-Level Metrics**: Positioned `ARC TESTNET (5042002) // SUB-SECOND FINALITY` strictly at the very bottom (footer level) with a border separator.
+* **Right Side (50% Desktop Width)**:
+  * **ROVA Logo Header**: Positioned at top-left of the crisp white panel.
+  * **Unified Web3 Connector**: Replaced standalone wallet list with a single primary `Connect Web3 Wallet (RainbowKit)` multi-wallet selector button.
 
 ---
 
-## 🔐 2. Standalone Desktop 50/50 Split Login (`/login`)
-* **Isolated Full-Screen Route**: `/login` renders as an independent, standalone page without dashboard sidebar or topbar header wrappers.
-* **Arc Metrics Showcase**: Displays sub-second finality (< 250ms), native USDC gas overhead (~$0.006), and live security guard status.
+## 🎨 2. Global Color Unification & Responsive Mobile Grid
+* **Unified Global Palette**: Updated CSS color variables (`globals.css` / `index.css`) across the platform to match the landing page theme:
+  * `--background`: `#0d1520` (Dark Navy Slate)
+  * `--primary`: `#BFFF00` (Lime Accent)
+  * `--accent`: `#25D366` (WhatsApp Mint Green)
+* **Responsive Mobile Grid**: Added `.landing-grid` with `@media (max-width: 768px)` so grid cards stack in a single vertical column on mobile screens.
 
 ---
 

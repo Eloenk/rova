@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Shield, Zap, ArrowRight, Wallet, CheckCircle2, Lock, Smartphone, Mail, Globe } from 'lucide-react';
+import { Shield, ArrowRight, Wallet, CheckCircle2, Smartphone, Mail, Globe, Send, Layers } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function LoginPage() {
     }, 600);
   };
 
-  const handleWeb3Connect = (providerName: string) => {
+  const handleWeb3Connect = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
@@ -41,214 +41,324 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090d14] text-slate-100 flex flex-col justify-between">
-      <header className="p-6 border-b border-slate-800/80 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow-sm">
-            R
-          </div>
-          <span className="font-semibold text-lg tracking-tight text-white">ROVA</span>
-        </Link>
-        <Link href="/" className="text-sm text-slate-400 hover:text-slate-200 transition-colors">
-          Back to home
-        </Link>
-      </header>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      background: '#ffffff',
+      fontFamily: 'Inter, -apple-system, sans-serif',
+    }}>
+      {/* Left Side: Large Bolder ROVA x ARC Writeup & Footer Metrics (50% Desktop Width) */}
+      <div style={{
+        flex: '1 1 50%',
+        minWidth: '340px',
+        background: '#05080c',
+        color: '#ffffff',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '60px 64px',
+        position: 'relative',
+        borderRight: '1px solid #1e293b',
+        boxSizing: 'border-box',
+      }}>
+        {/* Main Center Writeup */}
+        <div style={{ maxWidth: '520px', margin: 'auto 0' }}>
+          <h1 style={{
+            fontSize: '64px',
+            fontWeight: 900,
+            lineHeight: 1.05,
+            letterSpacing: '-0.03em',
+            color: '#ffffff',
+            marginBottom: '24px',
+          }}>
+            ROVA × ARC
+          </h1>
 
-      <main className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto p-6 lg:p-12 gap-8 lg:gap-16 items-center justify-center">
-        {/* Left Side: Arc Network Branding Showcase (Desktop 50/50 Split) */}
-        <div className="w-full lg:w-1/2 flex flex-col space-y-8">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-800/50 text-blue-400 text-xs font-medium">
-              <Zap className="w-3.5 h-3.5" />
-              <span>Arc Testnet Engine (Chain ID 5042002)</span>
+          <p style={{
+            fontSize: '20px',
+            lineHeight: 1.6,
+            color: '#94a3b8',
+            margin: 0,
+          }}>
+            Autonomous cross-border stablecoin execution engine. Managed Circle wallets, threshold security, and x402 nanopayment rate shopping.
+          </p>
+        </div>
+
+        {/* Absolute Footer Level Metrics */}
+        <div style={{
+          paddingTop: '32px',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          opacity: 0.65,
+        }}>
+          <span style={{ fontSize: '13px', color: '#94a3b8', fontFamily: 'monospace', letterSpacing: '0.04em' }}>
+            ARC TESTNET (5042002)
+          </span>
+          <span style={{ fontSize: '13px', color: '#94a3b8', fontFamily: 'monospace', letterSpacing: '0.04em' }}>
+            SUB-SECOND FINALITY
+          </span>
+        </div>
+      </div>
+
+      {/* Right Side: Clean Crisp All-White Auth Section with ROVA Logo at top */}
+      <div style={{
+        flex: '1 1 50%',
+        minWidth: '340px',
+        background: '#ffffff',
+        color: '#0f172a',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '50px 48px',
+        boxSizing: 'border-box',
+      }}>
+        {/* Top Header with ROVA Logo on White Side */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <div style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              background: '#0f172a',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Send size={19} color="#ffffff" strokeWidth={3} />
             </div>
-            <h1 className="text-3xl lg:text-4xl font-semibold tracking-tight text-white leading-tight">
-              Autonomous AI Agent Execution Engine
-            </h1>
-            <p className="text-slate-400 text-base leading-relaxed">
-              Sign in to manage your Circle Developer-Controlled Agent Wallet, configure WhatsApp security thresholds, and execute sub-second cross-chain intents.
+            <span style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a' }}>ROVA</span>
+          </Link>
+
+          <Link href="/" style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', textDecoration: 'none' }}>
+            Back to Home
+          </Link>
+        </div>
+
+        {/* Center Auth Card */}
+        <div style={{ maxWidth: '420px', width: '100%', margin: '40px auto' }}>
+          <div style={{ marginBottom: '32px' }}>
+            <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', marginBottom: '8px' }}>
+              Sign In to Rova
+            </h2>
+            <p style={{ fontSize: '14px', color: '#64748b' }}>
+              {step === 'input' ? 'Select your authentication method to access your agent dashboard' : 'Enter the 6-digit verification code sent to your device'}
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1">
-              <div className="text-xs text-slate-400 font-medium">Sub-Second Finality</div>
-              <div className="text-xl font-bold text-white">&lt; 250ms</div>
-              <div className="text-[11px] text-slate-500">Arc Testnet Settlement</div>
-            </div>
-            <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1">
-              <div className="text-xs text-slate-400 font-medium">Gas Overhead</div>
-              <div className="text-xl font-bold text-emerald-400">~$0.006</div>
-              <div className="text-[11px] text-slate-500">Native USDC Gas</div>
-            </div>
+          {/* Auth Tab Switcher */}
+          <div style={{
+            display: 'flex',
+            padding: '4px',
+            background: '#f1f5f9',
+            borderRadius: '10px',
+            border: '1px solid #e2e8f0',
+            marginBottom: '28px',
+          }}>
+            {[
+              { id: 'phone', label: 'Phone OTP', icon: <Smartphone size={14} /> },
+              { id: 'email', label: 'Email OTP', icon: <Mail size={14} /> },
+              { id: 'web3', label: 'Web3 Wallet', icon: <Globe size={14} /> },
+            ].map(({ id, label, icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => { setAuthMode(id as any); setStep('input'); }}
+                style={{
+                  flex: 1,
+                  padding: '9px 12px',
+                  borderRadius: '7px',
+                  border: 'none',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  background: authMode === id ? '#0f172a' : 'transparent',
+                  color: authMode === id ? '#ffffff' : '#64748b',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {icon}
+                {label}
+              </button>
+            ))}
           </div>
 
-          <div className="p-5 rounded-xl bg-slate-900/40 border border-slate-800/80 space-y-3">
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <span className="font-mono text-slate-300">Live Security Guard</span>
-              <span className="text-emerald-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Active
-              </span>
-            </div>
-            <div className="text-xs text-slate-300 font-mono bg-slate-950/80 p-3 rounded border border-slate-800/60 space-y-1">
-              <div className="text-slate-400">// WhatsApp Intent Protection</div>
-              <div>Auto-execution limit: <span className="text-blue-400">$100.00 USDC</span></div>
-              <div>Transfers &gt; threshold require 1-click Web Approval signature.</div>
-            </div>
-          </div>
-        </div>
+          {/* Form Content */}
+          {authMode !== 'web3' ? (
+            step === 'input' ? (
+              <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
+                    {authMode === 'phone' ? 'WhatsApp / Phone Number' : 'Email Address'}
+                  </label>
+                  <input
+                    type={authMode === 'phone' ? 'tel' : 'email'}
+                    placeholder={authMode === 'phone' ? '+1 (555) 000-0000' : 'user@example.com'}
+                    value={phoneOrEmail}
+                    onChange={(e) => setPhoneOrEmail(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      border: '1.5px solid #cbd5e1',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      fontSize: '14px',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
 
-        {/* Right Side: Clean White/Slate Modern Auth Card */}
-        <div className="w-full lg:w-1/2 max-w-md">
-          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-8 shadow-xl space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-white tracking-tight">Access Your Agent</h2>
-              <p className="text-sm text-slate-400">
-                {step === 'input' ? 'Sign in or create a new account automatically' : 'Enter the verification code sent to your device'}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '10px',
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  {loading ? 'Sending Code...' : 'Continue with OTP'}
+                  <ArrowRight size={16} />
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
+                    6-Digit Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="123456"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      border: '1.5px solid #cbd5e1',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      fontSize: '18px',
+                      fontWeight: 700,
+                      letterSpacing: '0.2em',
+                      textAlign: 'center',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '10px',
+                    background: '#16a34a',
+                    color: '#ffffff',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  {loading ? 'Verifying...' : 'Verify & Launch Dashboard'}
+                  <CheckCircle2 size={16} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStep('input')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#64748b',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Change {authMode === 'phone' ? 'phone number' : 'email'}
+                </button>
+              </form>
+            )
+          ) : (
+            /* Single RainbowKit / Web3Modal Unified Multi-Wallet Selector */
+            <div>
+              <button
+                type="button"
+                onClick={handleWeb3Connect}
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                  color: '#ffffff',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  boxShadow: '0 4px 14px rgba(15, 23, 42, 0.15)',
+                }}
+              >
+                <Wallet size={18} color="#BFFF00" />
+                <span>{loading ? 'Connecting...' : 'Connect Web3 Wallet (RainbowKit)'}</span>
+              </button>
+              <p style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', marginTop: '12px' }}>
+                Supports Rainbow, MetaMask, Coinbase Wallet, and WalletConnect
               </p>
             </div>
-
-            {/* Auth Tab Switcher */}
-            <div className="flex p-1 bg-slate-950/80 rounded-lg border border-slate-800/80 text-xs font-medium">
-              <button
-                type="button"
-                onClick={() => { setAuthMode('phone'); setStep('input'); }}
-                className={`flex-1 py-2 rounded-md transition-all flex items-center justify-center gap-1.5 ${authMode === 'phone' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                Phone OTP
-              </button>
-              <button
-                type="button"
-                onClick={() => { setAuthMode('email'); setStep('input'); }}
-                className={`flex-1 py-2 rounded-md transition-all flex items-center justify-center gap-1.5 ${authMode === 'email' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-              >
-                <Mail className="w-3.5 h-3.5" />
-                Email OTP
-              </button>
-              <button
-                type="button"
-                onClick={() => { setAuthMode('web3'); setStep('input'); }}
-                className={`flex-1 py-2 rounded-md transition-all flex items-center justify-center gap-1.5 ${authMode === 'web3' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-              >
-                <Globe className="w-3.5 h-3.5" />
-                Web3 Wallet
-              </button>
-            </div>
-
-            {/* Form Section */}
-            {authMode !== 'web3' ? (
-              step === 'input' ? (
-                <form onSubmit={handleSendOtp} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                      {authMode === 'phone' ? 'WhatsApp Phone Number' : 'Email Address'}
-                    </label>
-                    <input
-                      type={authMode === 'phone' ? 'tel' : 'email'}
-                      placeholder={authMode === 'phone' ? '+1 (555) 000-0000' : 'user@example.com'}
-                      value={phoneOrEmail}
-                      onChange={(e) => setPhoneOrEmail(e.target.value)}
-                      required
-                      className="w-full px-4 py-3 rounded-lg bg-slate-950/80 border border-slate-800 text-slate-100 text-sm focus:outline-none focus:border-blue-500 transition-colors"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {loading ? 'Processing...' : 'Continue with OTP'}
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleVerifyOtp} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                      6-Digit Verification Code
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      placeholder="123456"
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value)}
-                      required
-                      className="w-full px-4 py-3 rounded-lg bg-slate-950/80 border border-slate-800 text-slate-100 text-center tracking-widest text-lg font-mono focus:outline-none focus:border-blue-500 transition-colors"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {loading ? 'Verifying...' : 'Verify & Launch Dashboard'}
-                    <CheckCircle2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStep('input')}
-                    className="w-full text-center text-xs text-slate-400 hover:text-slate-200 transition-colors"
-                  >
-                    Change {authMode === 'phone' ? 'phone number' : 'email'}
-                  </button>
-                </form>
-              )
-            ) : (
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => handleWeb3Connect('Rainbow')}
-                  className="w-full p-3.5 rounded-lg bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 text-slate-200 text-sm font-medium flex items-center justify-between transition-colors"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Wallet className="w-4 h-4 text-blue-400" />
-                    Rainbow Wallet
-                  </span>
-                  <span className="text-xs text-slate-400">Connect</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleWeb3Connect('MetaMask')}
-                  className="w-full p-3.5 rounded-lg bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 text-slate-200 text-sm font-medium flex items-center justify-between transition-colors"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Wallet className="w-4 h-4 text-amber-400" />
-                    MetaMask
-                  </span>
-                  <span className="text-xs text-slate-400">Connect</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleWeb3Connect('Thirdweb')}
-                  className="w-full p-3.5 rounded-lg bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 text-slate-200 text-sm font-medium flex items-center justify-between transition-colors"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Wallet className="w-4 h-4 text-purple-400" />
-                    Thirdweb / WalletConnect
-                  </span>
-                  <span className="text-xs text-slate-400">Connect</span>
-                </button>
-              </div>
-            )}
-
-            <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-500">
-              <span className="flex items-center gap-1">
-                <Shield className="w-3.5 h-3.5 text-blue-400" />
-                Circle Developer-Controlled Wallet
-              </span>
-              <span>Arc Testnet</span>
-            </div>
-          </div>
+          )}
         </div>
-      </main>
 
-      <footer className="p-6 text-center text-xs text-slate-500 border-t border-slate-800/60">
-        &copy; {new Date().getFullYear()} Rova Execution Engine. All rights reserved.
-      </footer>
+        {/* Footer Info */}
+        <div style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '12px',
+          color: '#64748b',
+        }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Shield size={14} color="#0f172a" />
+            Circle HSM Managed Security
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

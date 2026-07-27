@@ -1,8 +1,6 @@
 'use client';
-export const dynamic = 'force-dynamic';
-import nextDynamic from 'next/dynamic';
 
-const AgentView = nextDynamic(() => import('@/components/AgentView'), { ssr: false });
+import AgentView from '@/components/AgentView';
 
 export default function AgentPage() {
   return <AgentView />;
