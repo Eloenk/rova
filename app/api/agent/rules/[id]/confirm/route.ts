@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-export const dynamic = 'force-dynamic';
 import { getRule, updateRuleStatus, recordExecution } from '@/lib/agentStore';
 import { resolveRecipient } from '@/lib/emailWallets';
 import { confirmSelfCustodyExecution } from '@/lib/agentExecutor';
 import { arcScan } from '@/lib/config';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const rule = getRule(params.id);

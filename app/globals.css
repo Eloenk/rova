@@ -33,7 +33,7 @@
 
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'Menlo', 'Monaco', 'Courier New', monospace;
+  --font-mono: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --radius: 0.5rem;
   --sidebar: #090d14;
@@ -78,7 +78,7 @@ body {
 }
 
 .mono-tag {
-  font-family: var(--font-mono);
+  font-family: var(--font-main);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -96,7 +96,17 @@ body {
   to   { transform: rotate(360deg); }
 }
 
-/* 4 Cards strictly in 1 Row on Desktop and Mid-Screens; 3-Up 1-Down on Mobile */
+/* Landing Feature Card Hover & Responsive Grid */
+.landing-feature-card {
+  transition: all 0.25s ease-in-out;
+}
+
+.landing-feature-card:hover {
+  background: rgba(255, 255, 255, 0.035) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  transform: translateY(-2px);
+}
+
 .landing-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -106,16 +116,47 @@ body {
 
 @media (max-width: 1024px) {
   .landing-grid {
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
   }
 }
 
 @media (max-width: 640px) {
   .landing-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 10px !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
   }
-  .landing-grid > div:nth-child(4) {
-    grid-column: span 3 !important;
+  .landing-card-title {
+    font-size: 14px !important;
+  }
+  .landing-card-desc {
+    font-size: 12.5px !important;
+  }
+
+  /* Forced 1-row Dashboard stats grid on mobile */
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+  .dashboard-stat-tile {
+    padding: 10px 8px !important;
+  }
+  .dashboard-stat-tile h2 {
+    font-size: 14px !important;
+  }
+  .dashboard-stat-tile p {
+    font-size: 10px !important;
+  }
+}
+
+/* Mobile-only Login Page layout: Hide dark branding panel on mobile */
+@media (max-width: 768px) {
+  .login-left-brand {
+    display: none !important;
+  }
+  .login-right-auth {
+    flex: 1 1 100% !important;
+    min-height: 100vh !important;
+    padding: 36px 24px !important;
   }
 }

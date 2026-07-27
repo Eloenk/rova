@@ -4,47 +4,39 @@ This document records the design systems, authentication flows, and security thr
 
 ---
 
-## 🎨 1. Seamless Landing Page & Login Cleanups
-* **Landing Page Technology Badges**: Removed the `borderTop` divider line above the technology badges list at the bottom of `LandingPage.tsx` so the entire page flows as one unified surface.
-* **Landing Page Navigation Header**: Removed `borderBottom` underneath the top navigation bar.
-* **Login Page Left Panel**: Removed the right vertical border (`borderRight`) and bottom footer top border (`borderTop`) on the dark monochrome left side.
+## 🔐 1. Post-Login WhatsApp Deep-Link Verification Architecture (`LoginPage.tsx` & `Topbar.tsx`)
+* **Zero-Friction Authentication (`LoginPage.tsx`)**: Removed phone number/OTP collection from the sign-in screen to make login instantaneous and friction-free. The sign-in flow now supports **Email OTP** and **Web3 Wallet** connection.
+* **Deep-Link WhatsApp Account Linking (`Topbar.tsx`)**:
+  * Added a prominent **"Link WhatsApp"** badge button in the Topbar header.
+  * Clicking **Link WhatsApp** opens a sleek dark modal displaying a unique verification token (`LINK-8492`).
+  * Direct CTA opens WhatsApp directly via `https://wa.me/14155552671?text=LINK-8492`.
+  * When sent, Rova's backend webhook matches the link token to the user's active wallet session, eliminating manual 6-digit code entry and verifying active WhatsApp ownership automatically.
 
 ---
 
-## ⚡ 2. Responsive 4-Card Landing Grid
-* **Desktop & Mid-Screen Layout**:
-  * **Strict 1-Row Grid**: Enforced `grid-template-columns: repeat(4, 1fr)` across desktop, laptop, and mid-screens so all 4 cards fit in a single horizontal row without wrapping.
-  * **Fluid Scaling**: Reduced card padding (`20px 16px`) and description font size (`13px`) for clean proportions.
-* **Mobile Screen Layout (`max-width: 640px`)**:
-  * **Strict 2-Row 3-Up 1-Down Grid**: Enforced `grid-template-columns: repeat(3, 1fr)` where Cards 1-3 fill Row 1, and Card 4 spans all 3 columns on Row 2 (`grid-column: span 3`).
+## 📱 2. Landing Page Visual & Layout Adjustments (`LandingPage.tsx`)
+* **Desktop Hero & Cards Shift**: Increased top padding (`paddingTop: clamp(50px, 8.5vh, 105px)`). On desktop screens, this smoothly shifts the hero title, subtitle, CTA button, and feature grid cards downwards together for an even, elegant vertical balance.
+* **Hero Copy**: Subtitle set to *"Tell Rova what you want from the web or WhatsApp. It discovers the best execution path and handles every swap, bridge, and transfer autonomously."*
+* **Enlarged CTA Button**: Font size set to `15px` with `15px 42px` padding.
+* **Reordered Feature Cards**:
+  1. **Natural Language** (User Benefit)
+  2. **Best Execution** (User Benefit)
+  3. **Autonomous Rules** (User Benefit)
+  4. **Built on Circle** (Technical Details)
+* **Subtle Card Containers**: `padding: 18px`, `border-radius: 14px`, background (`rgba(255, 255, 255, 0.015)`), border (`rgba(255, 255, 255, 0.05)`).
+* **Simplified Footer Ticker**: Updated footer inscription to *"Powered by Circle Wallets • CCTP V2 • StableFX • x402"*.
 
 ---
 
-## 🔐 3. Standalone Split Login Page (`/login`)
-* **Left Side (50% Desktop Width)**:
-  * **Bold Impact Typography**: `ROVA × ARC` headline (`64px` font size) with large subtitle description.
-  * **Footer-Level Metrics**: Positioned `ARC TESTNET (5042002) // SUB-SECOND FINALITY` strictly at the very bottom (footer level) without border lines.
-* **Right Side (50% Desktop Width)**:
-  * **ROVA Logo Header**: Positioned at top-left of the crisp white panel.
-  * **Unified Web3 Connector**: Single primary `Connect Web3 Wallet (RainbowKit)` multi-wallet selector button.
+## 👻 3. Modernized Phantom Wallet Drawer (`Topbar.tsx`)
+* **Emoji Logo Avatar**: Replaced gradient icon avatar with a clean emoji logo (`👻`).
+* **Slim Typography & Unified Font**: Replaced all heavy bold font weights (`fontWeight: 800` / `700`) with clean slim weights (`fontWeight: 400` / `500`) using a single uniform font (`Inter`) across all drawer properties.
+* **White Accents (No Purple)**: Replaced all purple accent colors with crisp solid white (`#ffffff`).
+* **Streamlined Action Row**: Removed **Receive** and **Buy** buttons. The action row now features **Send** and **Swap** with crisp white icons and text.
 
 ---
 
-## 🎨 4. Global Color Unification
-* **Unified Global Palette**: Updated CSS color variables (`globals.css` / `index.css`) across the platform to match the landing page theme:
-  * `--background`: `#0d1520` (Dark Navy Slate)
-  * `--primary`: `#BFFF00` (Lime Accent)
-  * `--accent`: `#25D366` (WhatsApp Mint Green)
-
----
-
-## 👛 5. Phantom Wallet-Style Header Popover Drawer
-* **Header Wallet Pill**: Minimalist address button (`0x71C7...976F`).
-* **Drawer Panel**: EVM address, 1-click clipboard copy, real-time balances for **USDC**, **EURC**, and **USYC**, plus `"+ Add Custodian Wallet"` modal.
-
----
-
-## 🛡️ 6. WhatsApp Security Threshold System
-* **User-Configurable Limit**: Web security setting defaulting to `$100.00 USDC`.
-* **Instant Execution $\le$ Threshold**: Circle Agent Wallet handles transfers instantly.
-* **Transfers $>$ Threshold**: Generates a 1-click web approval link on WhatsApp (`rova.app/confirm/tx_id`).
+## ✨ 4. Gemini Web Full Canvas Interface (`DashboardView.tsx`)
+* **Full Free Space Canvas**: Removed all boxed chat containers, outer borders, avatars, and icons. Messages render in clean, fluid, unboxed typography directly on the dark canvas.
+* **Centered Initial State**: Displays `"Ready when you are"` headline in large clean typography with subtitle when conversation history is empty.
+* **Floating Bottom Input Pill Bar**: Floating rounded pill prompt container (`Ask Rova...`) pinned near the bottom with a Send button.

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 const STATUS_FILE = path.join(process.cwd(), '.maintenance_status');
 
 export async function GET() {

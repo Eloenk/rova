@@ -1,14 +1,13 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useWallet } from '@/hooks/useWallet';
 import { Send, LayoutDashboard, BookOpen, Bot, X } from 'lucide-react';
 
 const NAV = [
-  { href: '/dashboard', label: 'Command Hub',  icon: <LayoutDashboard size={18} strokeWidth={2.5} /> },
-  { href: '/send',      label: 'Send & Swap',  icon: <Send size={18} strokeWidth={2.5} /> },
-  { href: '/agent',     label: 'Agent',        icon: <Bot size={18} strokeWidth={2.5} /> },
-  { href: '/history',   label: 'Ledger',       icon: <BookOpen size={18} strokeWidth={2.5} /> },
+  { href: '/dashboard', label: 'Command Hub',     icon: <LayoutDashboard size={18} strokeWidth={2.5} /> },
+  { href: '/send',      label: 'Send & Swap',     icon: <Send size={18} strokeWidth={2.5} /> },
+  { href: '/agent',     label: 'Agent',           icon: <Bot size={18} strokeWidth={2.5} /> },
+  { href: '/history',   label: 'Recent Activity', icon: <BookOpen size={18} strokeWidth={2.5} /> },
 ];
 
 export default function Sidebar({
@@ -19,7 +18,6 @@ export default function Sidebar({
   onCloseMobile?: () => void;
 }) {
   const pathname = usePathname();
-  const { isConnected, shortAddress, usdcBalance, connectInjected, isConnecting, disconnect } = useWallet();
 
   return (
     <>
@@ -57,7 +55,7 @@ export default function Sidebar({
             <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg, #BFFF00, #B4F4D7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Send size={16} color="#0d1520" strokeWidth={3} />
             </div>
-            <span style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em' }}>ROVA</span>
+            <span style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>ROVA</span>
           </div>
 
           {onCloseMobile && (
@@ -102,48 +100,11 @@ export default function Sidebar({
           })}
         </nav>
 
-        {/* Bottom: wallet */}
-        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {!isConnected ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button
-                onClick={() => { connectInjected(); onCloseMobile?.(); }}
-                disabled={isConnecting}
-                style={{
-                  width: '100%', padding: '12px', borderRadius: '12px',
-                  background: 'var(--lime)', color: '#000', fontWeight: 800,
-                  border: 'none', cursor: 'pointer', fontSize: '13px',
-                }}
-              >
-                {isConnecting ? 'CONNECTING...' : 'CONNECT WALLET'}
-              </button>
-              <Link
-                href="/dashboard"
-                onClick={onCloseMobile}
-                style={{
-                  width: '100%', padding: '11px', borderRadius: '12px',
-                  background: 'transparent', border: '1px solid rgba(180,244,215,0.2)',
-                  color: 'var(--mint)', fontWeight: 700, fontSize: '13px',
-                  textDecoration: 'none', textAlign: 'center', display: 'block',
-                }}
-              >
-                USE CIRCLE WALLET
-              </Link>
-            </div>
-          ) : (
-            <div className="glass-panel" style={{ padding: '16px', borderRadius: '16px', cursor: 'pointer' }} onClick={() => disconnect()}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span className="mono-tag" style={{ color: 'var(--mint)', fontSize: '10px' }}>Connected</span>
-                <span style={{ fontSize: '10px', color: 'var(--subtle)' }}>{shortAddress}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: '11px', color: 'var(--subtle)' }}>USDC Balance</span>
-                <span style={{ fontSize: '14px', fontWeight: 800, color: '#fff' }}>${usdcBalance ?? '0.00'}</span>
-              </div>
-            </div>
-          )}
-
-
+        {/* Bottom inscription: Crisp all-white text, no box container, no bullet dot */}
+        <div style={{ marginTop: 'auto', paddingLeft: '8px', paddingBottom: '4px' }}>
+          <span style={{ fontSize: '12px', color: '#8b9ba8', fontWeight: 600, letterSpacing: '0.02em' }}>
+            Arc Testnet • 5042002
+          </span>
         </div>
       </aside>
     </>

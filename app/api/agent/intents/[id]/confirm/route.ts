@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-export const dynamic = 'force-dynamic';
 import { getStandingIntent, updateStandingIntent, recordExecution } from '@/lib/agentStore';
 import { confirmSelfCustodyExecution } from '@/lib/agentExecutor';
 import { arcScan } from '@/lib/config';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const intent = getStandingIntent(params.id);

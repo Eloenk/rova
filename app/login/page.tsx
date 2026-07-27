@@ -3,19 +3,21 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Shield, ArrowRight, Wallet, CheckCircle2, Smartphone, Mail, Globe, Send } from 'lucide-react';
+import { useWallet } from '@/hooks/useWallet';
+import { Shield, ArrowRight, Wallet, CheckCircle2, Mail, Globe, Send } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [authMode, setAuthMode] = useState<'phone' | 'email' | 'web3'>('phone');
-  const [phoneOrEmail, setPhoneOrEmail] = useState('');
+  const { connectInjected, isConnecting } = useWallet();
+  const [authMode, setAuthMode] = useState<'email' | 'web3'>('email');
+  const [email, setEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [step, setStep] = useState<'input' | 'otp'>('input');
   const [loading, setLoading] = useState(false);
 
   const handleSendOtp = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phoneOrEmail) return;
+    if (!email) return;
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
@@ -33,11 +35,8 @@ export default function LoginPage() {
   };
 
   const handleWeb3Connect = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      router.push('/dashboard');
-    }, 800);
+    connectInjected();
+    router.push('/dashboard');
   };
 
   return (
@@ -49,8 +48,8 @@ export default function LoginPage() {
       background: '#ffffff',
       fontFamily: 'Inter, -apple-system, sans-serif',
     }}>
-      {/* Left Side: Large Bolder ROVA x ARC Writeup & Footer Metrics (50% Desktop Width) */}
-      <div style={{
+      {/* Left Side: Large Bolder ROVA x ARC Writeup & Footer Metrics (Hidden on Mobile) */}
+      <div className="login-left-brand" style={{
         flex: '1 1 50%',
         minWidth: '340px',
         background: '#05080c',
@@ -103,7 +102,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side: Clean Crisp All-White Auth Section with ROVA Logo at top */}
-      <div style={{
+      <div className="login-right-auth" style={{
         flex: '1 1 50%',
         minWidth: '340px',
         background: '#ffffff',
@@ -143,11 +142,11 @@ export default function LoginPage() {
               Sign In to Rova
             </h2>
             <p style={{ fontSize: '14px', color: '#64748b' }}>
-              {step === 'input' ? 'Select your authentication method to access your agent dashboard' : 'Enter the 6-digit verification code sent to your device'}
+              {step === 'input' ? 'Select your authentication method to access your agent dashboard' : 'Enter the 6-digit verification code sent to your email'}
             </p>
           </div>
 
-          {/* Auth Tab Switcher */}
+          {/* Auth Tab Switcher (Email & Web3 Wallet) */}
           <div style={{
             display: 'flex',
             padding: '4px',
@@ -157,7 +156,6 @@ export default function LoginPage() {
             marginBottom: '28px',
           }}>
             {[
-              { id: 'phone', label: 'Phone OTP', icon: <Smartphone size={14} /> },
               { id: 'email', label: 'Email OTP', icon: <Mail size={14} /> },
               { id: 'web3', label: 'Web3 Wallet', icon: <Globe size={14} /> },
             ].map(({ id, label, icon }) => (
@@ -189,18 +187,18 @@ export default function LoginPage() {
           </div>
 
           {/* Form Content */}
-          {authMode !== 'web3' ? (
+          {authMode === 'email' ? (
             step === 'input' ? (
               <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
-                    {authMode === 'phone' ? 'WhatsApp / Phone Number' : 'Email Address'}
+                    Email Address
                   </label>
                   <input
-                    type={authMode === 'phone' ? 'tel' : 'email'}
-                    placeholder={authMode === 'phone' ? '+1 (555) 000-0000' : 'user@example.com'}
-                    value={phoneOrEmail}
-                    onChange={(e) => setPhoneOrEmail(e.target.value)}
+                    type="email"
+                    placeholder="user@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                     style={{
                       width: '100%',
@@ -235,7 +233,7 @@ export default function LoginPage() {
                     gap: '8px',
                   }}
                 >
-                  {loading ? 'Sending Code...' : 'Continue with OTP'}
+                  {loading ? 'Sending Code...' : 'Continue with Email OTP'}
                   <ArrowRight size={16} />
                 </button>
               </form>
@@ -304,7 +302,7 @@ export default function LoginPage() {
                     textDecoration: 'underline',
                   }}
                 >
-                  Change {authMode === 'phone' ? 'phone number' : 'email'}
+                  Change email address
                 </button>
               </form>
             )
@@ -313,7 +311,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleWeb3Connect}
-                disabled={loading}
+                disabled={isConnecting}
                 style={{
                   width: '100%',
                   padding: '16px',
@@ -332,10 +330,10 @@ export default function LoginPage() {
                 }}
               >
                 <Wallet size={18} color="#BFFF00" />
-                <span>{loading ? 'Connecting...' : 'Connect Web3 Wallet (RainbowKit)'}</span>
+                <span>{isConnecting ? 'Connecting...' : 'Connect Wallet'}</span>
               </button>
               <p style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', marginTop: '12px' }}>
-                Supports Rainbow, MetaMask, Coinbase Wallet, and WalletConnect
+                Supports MetaMask, Coinbase Wallet, Rainbow, and Injected EVM
               </p>
             </div>
           )}

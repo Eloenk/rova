@@ -1,16 +1,15 @@
 'use client';
-import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useRova } from '@/hooks/useRova';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useWallet } from '@/hooks/useWallet';
-import { Menu, X, Wallet as WalletIcon, Copy, Check, Plus, MessageCircle, ExternalLink } from 'lucide-react';
+import { Menu, X, Wallet as WalletIcon, Copy, Check, Plus, MessageCircle, Send, Repeat, DollarSign, CheckCircle2 } from 'lucide-react';
 
 const META: Record<string, { title: string; sub: string }> = {
   '/':          { title: 'Rova',         sub: 'AI-powered money movement on Arc' },
   '/dashboard': { title: 'Command Hub',  sub: 'Your stablecoin activity on Arc' },
   '/send':      { title: 'Send & Swap',  sub: 'Transfer, bridge, or swap stablecoins' },
   '/agent':     { title: 'Agent',        sub: 'Autonomous agent triggers and watchers' },
-  '/history':   { title: 'Ledger',       sub: 'Transaction history with Arc Memos' },
+  '/history':   { title: 'Recent Activity', sub: 'Transaction history with Arc Memos' },
 };
 
 export default function Topbar({
@@ -21,11 +20,11 @@ export default function Topbar({
   isMobileOpen?: boolean;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const meta = META[pathname] ?? META['/dashboard'];
-  const [blk, setBlk] = useState(5_821_443);
-  const { reputation } = useRova();
-  const { isConnected, address, shortAddress, connectInjected, disconnect } = useWallet();
+  const { isConnected, address, shortAddress, usdcBalance, disconnect } = useWallet();
   const [showDrawer, setShowDrawer] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showAddCustodian, setShowAddCustodian] = useState(false);
   const [custodianInput, setCustodianInput] = useState('');
@@ -33,11 +32,6 @@ export default function Topbar({
 
   const defaultAddr = address || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
   const displayShort = address ? shortAddress : '0x71C7...976F';
-
-  useEffect(() => {
-    const id = setInterval(() => setBlk(b => b + Math.floor(Math.random() * 3 + 1)), 4000);
-    return () => clearInterval(id);
-  }, []);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(defaultAddr);
@@ -54,14 +48,22 @@ export default function Topbar({
   };
 
   return (
-    <header className="glass-panel relative" style={{
-      height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-      padding: '0 20px', flexShrink: 0,
-      borderLeft: 'none', borderRight: 'none', borderTop: 'none',
-      background: 'rgba(9, 13, 20, 0.8)', zIndex: 40,
+    <header style={{
+      height: 56,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      padding: '0 20px',
+      flexShrink: 0,
+      background: '#0d1520',
+      borderBottom: '1px solid rgba(180, 244, 215, 0.12)',
+      position: 'relative',
+      zIndex: 40,
       width: '100%',
+      fontFamily: 'Inter, -apple-system, sans-serif',
     }}>
-      {/* Left section: Hamburger toggle (mobile) + Brand/Title */}
+      {/* Left section: Hamburger toggle (mobile) + Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
         {onToggleMobileMenu && (
           <button
@@ -80,167 +82,278 @@ export default function Topbar({
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap' }}>{meta.title}</span>
+          <span style={{ fontSize: 15, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>{meta.title}</span>
           <span className="hidden md:inline-block" style={{ width: 1, height: 16, background: 'var(--border2)', flexShrink: 0 }} />
           <span className="hidden lg:inline-block" style={{ fontSize: 12, color: 'var(--subtle)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{meta.sub}</span>
         </div>
       </div>
 
-      {/* Right section: WhatsApp Icon + Rep + Phantom Drawer Toggle */}
+      {/* Right section: WhatsApp Icon + USDC Balance Badge + Phantom Drawer Toggle */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        {/* Subtle WhatsApp Icon Link */}
-        <a
-          href="https://wa.me/14155552671?text=Hi%20Rova"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Open WhatsApp AI Agent"
-          className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-emerald-400 hover:border-emerald-500/50 transition-colors flex items-center justify-center"
-        >
-          <MessageCircle className="w-4 h-4" />
-        </a>
-
-        <div className="hidden md:block" style={{ padding: '4px 10px', borderRadius: 6, background: 'var(--surface2)', border: '1px solid var(--border)', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--subtle)' }}>
-          <span style={{ color: 'var(--muted)' }}>REP:</span> <span style={{ color: '#fff' }}>{reputation ?? 0}%</span>
-        </div>
-
-        {/* Minimalist Wallet Button */}
         <button
-          onClick={() => setShowDrawer(!showDrawer)}
-          className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-mono font-medium flex items-center gap-2 transition-colors"
+          onClick={() => setShowWhatsAppModal(true)}
+          title="Link WhatsApp AI Agent"
+          style={{
+            padding: '7px 10px',
+            borderRadius: '8px',
+            background: 'rgba(37, 211, 102, 0.08)',
+            border: '1px solid rgba(37, 211, 102, 0.25)',
+            color: '#25D366',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            gap: '6px',
+            fontSize: '12px',
+            fontWeight: 600,
+          }}
         >
-          <WalletIcon className="w-3.5 h-3.5 text-blue-400" />
-          <span>{displayShort}</span>
+          <MessageCircle size={15} />
+          <span className="hidden sm:inline-block">Link WhatsApp</span>
         </button>
 
-        {/* Phantom Wallet-Style Popover Drawer */}
+        {/* USDC Balance Display in Topbar */}
+        <div className="hidden md:flex" style={{
+          padding: '6px 12px',
+          borderRadius: 8,
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          fontSize: 12,
+          fontWeight: 500,
+          color: '#ffffff',
+          alignItems: 'center',
+          gap: 6,
+        }}>
+          <span style={{ color: '#8b9ba8', fontWeight: 400 }}>Balance:</span>
+          <span>${isConnected ? (usdcBalance ?? '1,250.00') : '1,250.00'} USDC</span>
+        </div>
+
+        {/* Minimalist Topbar Wallet Button */}
+        <button
+          onClick={() => setShowDrawer(!showDrawer)}
+          style={{
+            padding: '7px 12px',
+            borderRadius: '8px',
+            background: '#131d2a',
+            border: '1px solid rgba(180, 244, 215, 0.2)',
+            color: '#ffffff',
+            fontSize: '12px',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: isConnected ? '#25D366' : '#BFFF00',
+            display: 'inline-block',
+          }} />
+          <span style={{ fontFamily: 'Inter, sans-serif' }}>{displayShort}</span>
+        </button>
+
+        {/* Minimalist Drawer Popover (Slim Inter Typography, Emoji Logo, White Accents) */}
         {showDrawer && (
-          <div className="absolute right-5 top-14 w-80 bg-slate-900/95 border border-slate-800 rounded-xl p-4 shadow-2xl space-y-4 backdrop-blur-xl z-50 text-slate-100">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span className="text-xs font-semibold text-white">Circle Wallet (Arc)</span>
-              </div>
-              <button onClick={() => setShowDrawer(false)} className="text-slate-400 hover:text-slate-200">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Address & Copy */}
-            <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800/80 flex items-center justify-between">
-              <div className="font-mono text-xs text-slate-300 truncate max-w-[200px]">
-                {defaultAddr}
-              </div>
-              <button onClick={handleCopy} className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-
-            {/* Token Balances List (Phantom-Style UI) */}
-            <div className="space-y-2">
-              <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Balances</div>
-              
-              <div className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center text-xs font-bold">
-                    $
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-white">USDC</div>
-                    <div className="text-[10px] text-slate-400">Native Arc Gas</div>
-                  </div>
+          <div style={{
+            position: 'absolute',
+            top: '64px',
+            right: '20px',
+            width: '320px',
+            background: '#0d1520',
+            border: '1px solid #1c1c1c',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.7)',
+            zIndex: 100,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            fontFamily: 'Inter, sans-serif',
+          }}>
+            {/* Header: Logo, Name, Address & Copy */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '18px',
+                }}>
+                  👻
                 </div>
-                <div className="text-right">
-                  <div className="text-xs font-bold text-white">1,250.00</div>
-                  <div className="text-[10px] text-slate-400">$1,250.00</div>
-                </div>
-              </div>
 
-              <div className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-indigo-600/20 text-indigo-400 flex items-center justify-center text-xs font-bold">
-                    €
+                <div>
+                  <div style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff', lineHeight: 1.2 }}>
+                    Phantom Wallet
                   </div>
-                  <div>
-                    <div className="text-xs font-semibold text-white">EURC</div>
-                    <div className="text-[10px] text-slate-400">Arc StableFX</div>
+                  <div style={{ fontSize: '11.5px', color: '#8b9ba8', fontWeight: 400, marginTop: '2px' }}>
+                    {displayShort}
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-bold text-white">450.00</div>
-                  <div className="text-[10px] text-slate-400">$486.00</div>
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center text-xs font-bold">
-                    Y
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-white">USYC</div>
-                    <div className="text-[10px] text-slate-400">Treasury Yield</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-bold text-emerald-400">500.00</div>
-                  <div className="text-[10px] text-slate-400">5.1% APY</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Custodian Wallets Section */}
-            {custodianList.length > 0 && (
-              <div className="space-y-1.5 pt-2 border-t border-slate-800">
-                <div className="text-[11px] font-medium text-slate-400">Custodian Wallets</div>
-                {custodianList.map((cust, idx) => (
-                  <div key={idx} className="text-xs font-mono text-slate-300 bg-slate-950/60 p-2 rounded border border-slate-800/80 truncate">
-                    {cust}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Add Custodian Modal / Form */}
-            {!showAddCustodian ? (
               <button
-                onClick={() => setShowAddCustodian(true)}
-                className="w-full py-2 px-3 rounded-lg bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
+                onClick={handleCopy}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: copied ? '#ffffff' : '#8b9ba8',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Custodian Wallet</span>
+                {copied ? <Check size={15} color="#ffffff" /> : <Copy size={15} />}
               </button>
-            ) : (
-              <form onSubmit={handleAddCustodian} className="space-y-2 pt-2 border-t border-slate-800">
-                <input
-                  type="text"
-                  placeholder="0x... External Wallet Address"
-                  value={custodianInput}
-                  onChange={(e) => setCustodianInput(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 rounded bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="flex-1 py-1.5 rounded bg-blue-600 text-white text-xs font-medium"
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddCustodian(false)}
-                    className="px-3 py-1.5 rounded bg-slate-800 text-slate-300 text-xs"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
+            </div>
 
+            {/* Total Balance Hero Card */}
+            <div style={{
+              background: '#070c12',
+              borderRadius: '12px',
+              padding: '14px',
+              border: '1px solid #181818',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '11.5px', color: '#8b9ba8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 400 }}>
+                Total Balance
+              </div>
+              <div style={{ fontSize: '24px', fontWeight: 500, color: '#ffffff', margin: '4px 0 2px' }}>
+                ${isConnected ? (usdcBalance ?? '1,250.00') : '1,250.00'}
+              </div>
+              <div style={{ fontSize: '11.5px', color: '#8b9ba8', fontWeight: 400 }}>
+                USDC (Arc Testnet)
+              </div>
+            </div>
+
+            {/* Action Row: Send and Swap with Pure White Icons */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {[
+                { label: 'Send', icon: <Send size={15} color="#ffffff" />, action: () => router.push('/send') },
+                { label: 'Swap', icon: <Repeat size={15} color="#ffffff" />, action: () => router.push('/send?tab=swap') },
+              ].map(({ label, icon, action }, i) => (
+                <button
+                  key={i}
+                  onClick={() => { action(); setShowDrawer(false); }}
+                  style={{
+                    padding: '10px 8px',
+                    borderRadius: '10px',
+                    background: '#131d2a',
+                    border: '1px solid #1c1c1c',
+                    color: '#ffffff',
+                    fontSize: '12.5px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '5px',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    {icon}
+                  </div>
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Managed Custodians Section */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '11.5px', color: '#8b9ba8', fontWeight: 400 }}>Managed Custodians</span>
+                <button
+                  onClick={() => setShowAddCustodian(!showAddCustodian)}
+                  style={{ background: 'none', border: 'none', color: '#ffffff', fontSize: '11.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}
+                >
+                  <Plus size={13} /> Add
+                </button>
+              </div>
+
+              {showAddCustodian && (
+                <form onSubmit={handleAddCustodian} style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
+                  <input
+                    type="text"
+                    placeholder="0x... custodian address"
+                    value={custodianInput}
+                    onChange={(e) => setCustodianInput(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      background: '#070c12',
+                      border: '1px solid #222222',
+                      color: '#ffffff',
+                      fontSize: '12px',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      fontWeight: 400,
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="submit"
+                      style={{ flex: 1, padding: '8px', borderRadius: '8px', background: '#ffffff', color: '#000000', fontWeight: 600, border: 'none', cursor: 'pointer', fontSize: '12px' }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddCustodian(false)}
+                      style={{ padding: '8px 12px', borderRadius: '8px', background: '#141414', color: '#8b9ba8', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 400 }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {custodianList.length > 0 && (
+                <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {custodianList.map((cust, idx) => (
+                    <div key={idx} style={{ fontSize: '11px', color: '#8b9ba8', padding: '6px 8px', background: '#0a0a0a', borderRadius: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 400 }}>
+                      {cust}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Disconnect Button if Connected */}
             {isConnected && (
               <button
                 onClick={() => { disconnect(); setShowDrawer(false); }}
-                className="w-full py-2 text-center text-xs text-rose-400 hover:text-rose-300 transition-colors pt-2 border-t border-slate-800"
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  background: 'none',
+                  border: 'none',
+                  borderTop: '1px solid #1c1c1c',
+                  color: '#ef4444',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  marginTop: '4px',
+                }}
               >
                 Disconnect Session
               </button>
@@ -248,7 +361,114 @@ export default function Topbar({
           </div>
         )}
       </div>
+
+      {/* WhatsApp Deep-Link Verification Modal */}
+      {showWhatsAppModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100,
+          padding: '20px',
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '420px',
+            background: '#0d1520',
+            border: '1px solid rgba(37, 211, 102, 0.3)',
+            borderRadius: '16px',
+            padding: '28px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+            position: 'relative',
+          }}>
+            <button
+              onClick={() => setShowWhatsAppModal(false)}
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: 'none',
+                border: 'none',
+                color: '#8b9ba8',
+                cursor: 'pointer',
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '12px',
+                background: 'rgba(37, 211, 102, 0.12)',
+                border: '1px solid rgba(37, 211, 102, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <MessageCircle size={22} color="#25D366" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#ffffff', margin: 0 }}>Link WhatsApp AI Agent</h3>
+                <p style={{ fontSize: '12px', color: '#8b9ba8', margin: 0 }}>Deep-link verification (No 6-digit codes)</p>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '13.5px', color: '#c2d1e0', lineHeight: 1.5, marginBottom: '20px' }}>
+              Click the button below to open WhatsApp with your pre-filled verification token. Sending the message automatically links your phone number to your active Rova wallet.
+            </p>
+
+            <div style={{
+              background: '#070c12',
+              border: '1px dashed rgba(37, 211, 102, 0.3)',
+              borderRadius: '10px',
+              padding: '14px',
+              textAlign: 'center',
+              marginBottom: '20px',
+            }}>
+              <span style={{ fontSize: '11px', color: '#8b9ba8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '4px' }}>
+                Verification Link Token
+              </span>
+              <span style={{ fontSize: '18px', fontWeight: 800, color: '#25D366', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+                LINK-8492
+              </span>
+            </div>
+
+            <a
+              href="https://wa.me/14155552671?text=LINK-8492"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setShowWhatsAppModal(false)}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '12px',
+                background: '#25D366',
+                color: '#0d1520',
+                fontSize: '14.5px',
+                fontWeight: 800,
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 16px rgba(37, 211, 102, 0.25)',
+              }}
+            >
+              <MessageCircle size={18} />
+              Connect on WhatsApp
+            </a>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
-

@@ -9,8 +9,10 @@ export default function LandingPage() {
       background: '#0d1520',
       color: '#ffffff',
       fontFamily: 'Inter, -apple-system, sans-serif',
-      position: 'relative',
-      overflow: 'hidden',
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
     }}>
       {/* Top Header Navigation */}
       <nav style={{
@@ -18,11 +20,7 @@ export default function LandingPage() {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '24px 48px',
-        background: 'rgba(13, 21, 32, 0.85)',
-        backdropFilter: 'blur(12px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
+        flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{
@@ -58,68 +56,56 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section (Shifted Downwards Together for Desktop Balance) */}
       <div style={{
+        flex: 1,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'flex-start',
+        paddingTop: 'clamp(50px, 8.5vh, 105px)',
         textAlign: 'center',
-        padding: '70px 24px 40px',
-        maxWidth: '960px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        maxWidth: '920px',
         margin: '0 auto',
+        width: '100%',
       }}>
-        {/* Badge */}
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '6px 16px',
-          borderRadius: '30px',
-          background: 'rgba(191, 255, 0, 0.08)',
-          border: '1px solid rgba(191, 255, 0, 0.25)',
-          color: '#BFFF00',
-          fontSize: '13px',
-          fontWeight: 700,
-          marginBottom: '20px',
-        }}>
-          <Zap size={14} /> Autonomous Stablecoin Execution Engine
-        </div>
-
         {/* Hero Title */}
         <h1 style={{
-          fontSize: '56px',
+          fontSize: 'clamp(34px, 5.4vw, 58px)',
           fontWeight: 800,
-          lineHeight: 1.1,
-          marginBottom: '20px',
+          lineHeight: 1.12,
+          marginBottom: '18px',
           letterSpacing: '-0.03em',
           color: '#ffffff',
           maxWidth: '860px',
         }}>
-          Cross-border stablecoin transfers — <br />
+          Move money anywhere <br />
           <span style={{
             background: 'linear-gradient(90deg, #25D366 0%, #BFFF00 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}>
-            no human watching, no bad deals.
+            Just by asking.
           </span>
         </h1>
 
         {/* Subtitle */}
         <p style={{
-          fontSize: '17px',
+          fontSize: 'clamp(14px, 2.1vw, 17px)',
           lineHeight: 1.6,
           color: '#8b9ba8',
           marginBottom: '32px',
           maxWidth: '680px',
         }}>
-          Move money via Web & WhatsApp natural language. Rova shops rates across 3 quote sources using Circle x402 Nanopayments before executing every send.
+          Tell Rova what you want from the web or WhatsApp. It discovers the best execution path and handles every swap, bridge, and transfer autonomously.
         </p>
 
         {/* CTA Button */}
-        <div style={{ marginBottom: '44px' }}>
+        <div style={{ marginBottom: '48px' }}>
           <Link href="/login" style={{
-            padding: '15px 40px',
+            padding: '15px 42px',
             borderRadius: '12px',
             background: 'linear-gradient(135deg, #BFFF00 0%, #25D366 100%)',
             color: '#0d1520',
@@ -134,82 +120,75 @@ export default function LandingPage() {
             Get Started <ArrowRight size={18} />
           </Link>
         </div>
-      </div>
 
-      {/* 4 Cards (Strictly 1 Row on Desktop & Mid-Screen; 3-Up 1-Down on Mobile) */}
-      <div style={{ padding: '0 24px 80px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div className="landing-grid">
+        {/* Feature Cards Grid (Integrated within Hero Flow with Subtle Card Containers) */}
+        <div className="landing-grid" style={{ width: '100%', marginBottom: '40px' }}>
           {[
             {
-              icon: <MessageSquare size={20} style={{ color: '#25D366' }} />,
-              title: 'WhatsApp Conversational Agent',
-              desc: 'Execute transfers, set FX rate triggers, and check balances via WhatsApp chat with no app download required.',
+              icon: <MessageSquare size={18} style={{ color: '#25D366' }} />,
+              title: 'Natural Language',
+              desc: 'Tell Rova what you want from WhatsApp or the web. It understands your intent and handles the rest.',
             },
             {
-              icon: <Wallet size={20} style={{ color: '#BFFF00' }} />,
-              title: 'Circle Infrastructure & Wallets',
-              desc: 'Powered by Circle Developer-Controlled Wallets (HSM-secured) for instant email onboarding & Web3 linking.',
+              icon: <Zap size={18} style={{ color: '#25D366' }} />,
+              title: 'Best Execution',
+              desc: 'Compares routes across multiple providers to find the optimal swap, bridge, or transfer every time.',
             },
             {
-              icon: <Zap size={20} style={{ color: '#25D366' }} />,
-              title: 'x402 Nanopayment Shopping',
-              desc: 'Rova pays 3 quote providers $0.0005 via Circle Gateway x402 nanopayments to guarantee the best rate before sending.',
+              icon: <Repeat size={18} style={{ color: '#BFFF00' }} />,
+              title: 'Autonomous Rules',
+              desc: 'Create rules that execute automatically when your conditions are met, even when you\'re offline.',
             },
             {
-              icon: <Repeat size={20} style={{ color: '#BFFF00' }} />,
-              title: '24/7 Autopilot Rules Engine',
-              desc: 'Arm rules once by rate, date, or payment trigger. Rova continuously monitors and fires automatically on Arc Testnet.',
+              icon: <Wallet size={18} style={{ color: '#BFFF00' }} />,
+              title: 'Built on Circle',
+              desc: 'Powered by Circle Wallets, CCTP V2, and x402 for secure, cross-chain execution.',
             },
           ].map(({ icon, title, desc }, i) => (
-            <div key={i} style={{
-              padding: '20px 16px',
-              borderRadius: '12px',
-              background: 'rgba(13, 21, 32, 0.75)',
-              border: '1px solid rgba(180, 244, 215, 0.15)',
+            <div key={i} className="landing-feature-card" style={{
+              padding: '18px',
+              borderRadius: '14px',
+              background: 'rgba(255, 255, 255, 0.015)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
               display: 'flex',
               flexDirection: 'column',
               gap: '10px',
+              textAlign: 'left',
               boxSizing: 'border-box',
             }}>
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                background: 'rgba(191, 255, 0, 0.08)',
-                border: '1px solid rgba(191, 255, 0, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                {icon}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'rgba(191, 255, 0, 0.08)',
+                  border: '1px solid rgba(191, 255, 0, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  {icon}
+                </div>
+                <h3 className="landing-card-title" style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', margin: 0, lineHeight: 1.25 }}>{title}</h3>
               </div>
-              <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', margin: 0, lineHeight: 1.3 }}>{title}</h3>
-              <p style={{ color: '#8b9ba8', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>{desc}</p>
+              <p className="landing-card-desc" style={{ color: '#8b9ba8', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
+                {desc}
+              </p>
             </div>
           ))}
         </div>
+      </div>
 
-        {/* Technology Badges Footer (Seamless Without Border Line) */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '28px',
-          marginTop: '40px',
-          paddingTop: '10px',
-        }}>
-          {[
-            'Circle Wallets',
-            'Circle CCTP V2',
-            'StableFX Engine',
-            'x402 Nanopayments',
-            'WhatsApp Agent',
-            'Arc Testnet'
-          ].map(t => (
-            <span key={t} style={{ fontSize: '12.5px', color: '#8b9ba8', fontWeight: 600, letterSpacing: '0.04em' }}>{t}</span>
-          ))}
-        </div>
+      {/* Simplified Footer Ticker */}
+      <div style={{
+        padding: '0 24px 24px',
+        textAlign: 'center',
+        flexShrink: 0,
+      }}>
+        <span style={{ fontSize: '12.5px', color: '#8b9ba8', fontWeight: 500, letterSpacing: '0.04em' }}>
+          Powered by Circle Wallets • CCTP V2 • StableFX • x402
+        </span>
       </div>
     </div>
   );
