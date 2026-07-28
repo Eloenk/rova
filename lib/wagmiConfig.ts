@@ -1,12 +1,9 @@
-import { createConfig, http } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { arcTestnet } from './arcChain';
 
-export const wagmiConfig = createConfig({
-  ssr: true,
+export const wagmiConfig = getDefaultConfig({
+  appName: 'Rova',
+  projectId: 'c44e995f560e7e1f40784936d8d67295',
   chains: [arcTestnet],
-  connectors: [
-    injected({ shimDisconnect: true }),
-  ],
-  transports: { [arcTestnet.id]: http('https://rpc.testnet.arc.network') },
+  ssr: true,
 });

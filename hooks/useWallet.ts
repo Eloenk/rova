@@ -1,11 +1,13 @@
 'use client';
 import { useAccount, useConnect, useDisconnect, useSwitchChain, useBalance } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { arcTestnet } from '@/lib/arcChain';
 import { TOKENS, ARC_TESTNET } from '@/lib/config';
 
 export function useWallet() {
   const { address, isConnected, chain } = useAccount();
   const { connect, connectors, isPending: isConnecting } = useConnect();
+  const { openConnectModal } = useConnectModal();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
 
@@ -20,17 +22,19 @@ export function useWallet() {
   const wrongChain = isConnected && !isOnArc;
 
   const connectInjected = () => {
-    const c = connectors.find(c => c.id === 'injected' || c.id === 'metaMask') || connectors[0];
-    if (c) {
-      connect({ connector: c, chainId: arcTestnet.id });
+    if (openConnectModal) {
+      openConnectModal();
     } else {
-      console.warn('[useWallet] No EVM wallet connector found in window.ethereum');
+      const c = connectors.find(c => c.id === 'injected' || c.id === 'metaMask') || connectors[0];
+      if (c) {
+        connect({ connector: c, chainId: arcTestnet.id });
+      }
     }
   };
 
-  // WalletConnect removed to avoid SSR localStorage conflict.
-  // Only injected (MetaMask) wallet is supported.
-  const connectWalletConnect = () => { connectInjected(); };
+  const connectWalletConnect = () => {
+    connectInjected();
+  };
 
   const switchToArc = () => switchChain?.({ chainId: arcTestnet.id });
 
@@ -44,6 +48,7 @@ export function useWallet() {
     usdcBalance: usdcBal ? parseFloat(usdcBal.formatted).toFixed(2) : null,
     connectInjected,
     connectWalletConnect,
+    openConnectModal,
     disconnect,
     switchToArc,
     refetchBalance,

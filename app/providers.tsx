@@ -1,6 +1,8 @@
 'use client';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
+import '@rainbow-me/rainbowkit/styles.css';
 import { wagmiConfig } from '@/lib/wagmiConfig';
 import { type ReactNode, useEffect, useState } from 'react';
 
@@ -16,13 +18,20 @@ export function Web3Providers({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={qc}>
-        <FlowHistoryProvider>
-          <Erc8183Provider>
-            <div style={{ visibility: mounted ? 'visible' : 'hidden', height: '100%' }}>
-              {children}
-            </div>
-          </Erc8183Provider>
-        </FlowHistoryProvider>
+        <RainbowKitProvider theme={darkTheme({
+          accentColor: '#BFFF00',
+          accentColorForeground: '#0d1520',
+          borderRadius: 'medium',
+          overlayBlur: 'small',
+        })}>
+          <FlowHistoryProvider>
+            <Erc8183Provider>
+              <div style={{ visibility: mounted ? 'visible' : 'hidden', height: '100%' }}>
+                {children}
+              </div>
+            </Erc8183Provider>
+          </FlowHistoryProvider>
+        </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

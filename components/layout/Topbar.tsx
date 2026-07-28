@@ -1,8 +1,12 @@
 'use client';
+
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useWallet } from '@/hooks/useWallet';
-import { Menu, X, Wallet as WalletIcon, Copy, Check, Plus, MessageCircle, Send, Repeat, DollarSign, CheckCircle2 } from 'lucide-react';
+import {
+  Menu, X, Copy, Check, MessageCircle, Send, Repeat,
+  Monitor, Clock, Home, CheckCircle2, MoreHorizontal, Wallet, LogOut
+} from 'lucide-react';
 
 const META: Record<string, { title: string; sub: string }> = {
   '/':          { title: 'Rova',         sub: 'AI-powered money movement on Arc' },
@@ -22,29 +26,42 @@ export default function Topbar({
   const pathname = usePathname();
   const router = useRouter();
   const meta = META[pathname] ?? META['/dashboard'];
-  const { isConnected, address, shortAddress, usdcBalance, disconnect } = useWallet();
+  const { isConnected, address, shortAddress, usdcBalance, disconnect, connectInjected } = useWallet();
   const [showDrawer, setShowDrawer] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [showBanner, setShowBanner] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [showAddCustodian, setShowAddCustodian] = useState(false);
-  const [custodianInput, setCustodianInput] = useState('');
-  const [custodianList, setCustodianList] = useState<string[]>([]);
+
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const walletBtnRef = useRef<HTMLButtonElement>(null);
 
   const defaultAddr = address || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
   const displayShort = address ? shortAddress : '0x71C7...976F';
+
+  // Click outside to close Phantom Wallet Popover Drawer
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        drawerRef.current &&
+        !drawerRef.current.contains(event.target as Node) &&
+        walletBtnRef.current &&
+        !walletBtnRef.current.contains(event.target as Node)
+      ) {
+        setShowDrawer(false);
+      }
+    }
+    if (showDrawer) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDrawer]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(defaultAddr);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
-  };
-
-  const handleAddCustodian = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!custodianInput.startsWith('0x') || custodianInput.length < 10) return;
-    setCustodianList([...custodianList, custodianInput]);
-    setCustodianInput('');
-    setShowAddCustodian(false);
   };
 
   return (
@@ -70,12 +87,12 @@ export default function Topbar({
             onClick={onToggleMobileMenu}
             aria-label="Toggle Navigation Menu"
             style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              alignItems: 'center', justifyContent: 'center',
               width: 36, height: 36, borderRadius: 8,
               background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)',
               color: '#fff', cursor: 'pointer', flexShrink: 0,
             }}
-            className="md:hidden"
+            className="mobile-menu-toggle"
           >
             {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -83,53 +100,38 @@ export default function Topbar({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
           <span style={{ fontSize: 15, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>{meta.title}</span>
-          <span className="hidden md:inline-block" style={{ width: 1, height: 16, background: 'var(--border2)', flexShrink: 0 }} />
-          <span className="hidden lg:inline-block" style={{ fontSize: 12, color: 'var(--subtle)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{meta.sub}</span>
+          <span className="hidden md:inline-block" style={{ width: 1, height: 16, background: 'rgba(180, 244, 215, 0.2)', flexShrink: 0 }} />
+          <span className="hidden lg:inline-block" style={{ fontSize: 12, color: '#8b9ba8', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{meta.sub}</span>
         </div>
       </div>
 
-      {/* Right section: WhatsApp Icon + USDC Balance Badge + Phantom Drawer Toggle */}
+      {/* Right section: WhatsApp Icon + Phantom Drawer Toggle */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
         <button
           onClick={() => setShowWhatsAppModal(true)}
           title="Link WhatsApp AI Agent"
           style={{
-            padding: '7px 10px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '7px 11px',
             borderRadius: '8px',
             background: 'rgba(37, 211, 102, 0.08)',
             border: '1px solid rgba(37, 211, 102, 0.25)',
             color: '#25D366',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            gap: '6px',
             fontSize: '12px',
             fontWeight: 600,
+            cursor: 'pointer',
+            gap: '6px',
           }}
         >
-          <MessageCircle size={15} />
-          <span className="hidden sm:inline-block">Link WhatsApp</span>
+          <MessageCircle size={15} color="#25D366" />
+          <span className="hidden sm:inline">WhatsApp</span>
         </button>
 
-        {/* USDC Balance Display in Topbar */}
-        <div className="hidden md:flex" style={{
-          padding: '6px 12px',
-          borderRadius: 8,
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          fontSize: 12,
-          fontWeight: 500,
-          color: '#ffffff',
-          alignItems: 'center',
-          gap: 6,
-        }}>
-          <span style={{ color: '#8b9ba8', fontWeight: 400 }}>Balance:</span>
-          <span>${isConnected ? (usdcBalance ?? '1,250.00') : '1,250.00'} USDC</span>
-        </div>
-
-        {/* Minimalist Topbar Wallet Button */}
+        {/* Phantom Wallet Pill Toggle Button */}
         <button
+          ref={walletBtnRef}
           onClick={() => setShowDrawer(!showDrawer)}
           style={{
             padding: '7px 12px',
@@ -155,209 +157,356 @@ export default function Topbar({
           <span style={{ fontFamily: 'Inter, sans-serif' }}>{displayShort}</span>
         </button>
 
-        {/* Minimalist Drawer Popover (Slim Inter Typography, Emoji Logo, White Accents) */}
+        {/* CUSTOM PHANTOM WALLET POPOVER DRAWER */}
         {showDrawer && (
-          <div style={{
-            position: 'absolute',
-            top: '64px',
-            right: '20px',
-            width: '320px',
-            background: '#0d1520',
-            border: '1px solid #1c1c1c',
-            borderRadius: '14px',
-            padding: '16px',
-            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.7)',
-            zIndex: 100,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            fontFamily: 'Inter, sans-serif',
-          }}>
-            {/* Header: Logo, Name, Address & Copy */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{
-                  width: '34px',
-                  height: '34px',
-                  borderRadius: '10px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '18px',
-                }}>
-                  👻
-                </div>
-
-                <div>
-                  <div style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff', lineHeight: 1.2 }}>
-                    Phantom Wallet
-                  </div>
-                  <div style={{ fontSize: '11.5px', color: '#8b9ba8', fontWeight: 400, marginTop: '2px' }}>
-                    {displayShort}
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={handleCopy}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: copied ? '#ffffff' : '#8b9ba8',
-                  cursor: 'pointer',
-                  padding: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {copied ? <Check size={15} color="#ffffff" /> : <Copy size={15} />}
-              </button>
-            </div>
-
-            {/* Total Balance Hero Card */}
+          <div
+            ref={drawerRef}
+            style={{
+              position: 'absolute',
+              top: '60px',
+              right: '20px',
+              width: '350px',
+              background: '#09090b',
+              border: '1px solid #27272a',
+              borderRadius: '20px',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.95)',
+              zIndex: 100,
+              display: 'flex',
+              flexDirection: 'column',
+              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              color: '#ffffff',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Top Bar: Pure Emoji, Wallet Type Title & Circle Address */}
             <div style={{
-              background: '#070c12',
-              borderRadius: '12px',
-              padding: '14px',
-              border: '1px solid #181818',
-              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '16px 16px 12px',
             }}>
-              <div style={{ fontSize: '11.5px', color: '#8b9ba8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 400 }}>
-                Total Balance
+              {/* Wallet Type & Circle Address */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '24px', lineHeight: 1 }}>👾</span>
+                <div>
+                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff', lineHeight: 1.1 }}>
+                    {isConnected ? 'Custodian Wallet' : 'Circle Wallet'}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                    <span style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 500, fontFamily: 'monospace' }}>
+                      {displayShort}
+                    </span>
+                    <button
+                      onClick={handleCopy}
+                      title="Copy Address"
+                      style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', padding: 0 }}
+                    >
+                      {copied ? <Check size={12} color="#22c55e" /> : <Copy size={12} />}
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div style={{ fontSize: '24px', fontWeight: 500, color: '#ffffff', margin: '4px 0 2px' }}>
-                ${isConnected ? (usdcBalance ?? '1,250.00') : '1,250.00'}
-              </div>
-              <div style={{ fontSize: '11.5px', color: '#8b9ba8', fontWeight: 400 }}>
-                USDC (Arc Testnet)
+
+              {/* Right Utility Icons (Monitor & Close) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#a1a1aa' }}>
+                <Monitor size={17} style={{ cursor: 'pointer' }} />
+                <button
+                  onClick={() => setShowDrawer(false)}
+                  style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', padding: 0 }}
+                >
+                  <X size={18} />
+                </button>
               </div>
             </div>
 
-            {/* Action Row: Send and Swap with Pure White Icons */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              {[
-                { label: 'Send', icon: <Send size={15} color="#ffffff" />, action: () => router.push('/send') },
-                { label: 'Swap', icon: <Repeat size={15} color="#ffffff" />, action: () => router.push('/send?tab=swap') },
-              ].map(({ label, icon, action }, i) => (
+            {/* Main Content Body */}
+            <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              {/* Huge Centered Hero Total Balance */}
+              <div style={{ textAlign: 'center', padding: '12px 0 4px' }}>
+                <div style={{ fontSize: '40px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                  ${isConnected ? (usdcBalance ?? '1,250.00') : '1,250.00'}
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#22c55e' }}>+$12.50</span>
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: '#22c55e',
+                    background: 'rgba(34, 197, 94, 0.15)',
+                    padding: '2px 6px',
+                    borderRadius: '6px',
+                  }}>
+                    +1.01%
+                  </span>
+                </div>
+              </div>
+
+              {/* 3 Rounded Action Buttons Row (Send, Swap, Connect) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                {/* Send */}
                 <button
-                  key={i}
-                  onClick={() => { action(); setShowDrawer(false); }}
+                  onClick={() => { router.push('/send'); setShowDrawer(false); }}
                   style={{
-                    padding: '10px 8px',
-                    borderRadius: '10px',
-                    background: '#131d2a',
-                    border: '1px solid #1c1c1c',
-                    color: '#ffffff',
-                    fontSize: '12.5px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
+                    background: '#18181b',
+                    border: 'none',
+                    borderRadius: '16px',
+                    padding: '14px 4px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '5px',
-                    transition: 'all 0.15s ease',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    transition: 'background 0.15s ease',
                   }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#27272a')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '#18181b')}
                 >
-                  <div style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.08)',
+                  <Send size={19} color="#ffffff" style={{ transform: 'rotate(-45deg)' }} />
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>Send</span>
+                </button>
+
+                {/* Swap */}
+                <button
+                  onClick={() => { router.push('/send?tab=swap'); setShowDrawer(false); }}
+                  style={{
+                    background: '#18181b',
+                    border: 'none',
+                    borderRadius: '16px',
+                    padding: '14px 4px',
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                  }}>
-                    {icon}
-                  </div>
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Managed Custodians Section */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '11.5px', color: '#8b9ba8', fontWeight: 400 }}>Managed Custodians</span>
-                <button
-                  onClick={() => setShowAddCustodian(!showAddCustodian)}
-                  style={{ background: 'none', border: 'none', color: '#ffffff', fontSize: '11.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}
+                    gap: '8px',
+                    cursor: 'pointer',
+                    transition: 'background 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#27272a')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '#18181b')}
                 >
-                  <Plus size={13} /> Add
+                  <Repeat size={19} color="#ffffff" />
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>Swap</span>
+                </button>
+
+                {/* Sign Out / Disconnect */}
+                <button
+                  onClick={() => {
+                    disconnect();
+                    setShowDrawer(false);
+                    router.push('/login');
+                  }}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.08)',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    borderRadius: '16px',
+                    padding: '14px 4px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    transition: 'background 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)')}
+                >
+                  <LogOut size={19} color="#ef4444" />
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444' }}>
+                    {isConnected ? 'Disconnect' : 'Sign Out'}
+                  </span>
                 </button>
               </div>
 
-              {showAddCustodian && (
-                <form onSubmit={handleAddCustodian} style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
-                  <input
-                    type="text"
-                    placeholder="0x... custodian address"
-                    value={custodianInput}
-                    onChange={(e) => setCustodianInput(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      borderRadius: '8px',
-                      background: '#070c12',
-                      border: '1px solid #222222',
-                      color: '#ffffff',
-                      fontSize: '12px',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      fontWeight: 400,
-                    }}
-                  />
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      type="submit"
-                      style={{ flex: 1, padding: '8px', borderRadius: '8px', background: '#ffffff', color: '#000000', fontWeight: 600, border: 'none', cursor: 'pointer', fontSize: '12px' }}
-                    >
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddCustodian(false)}
-                      style={{ padding: '8px 12px', borderRadius: '8px', background: '#141414', color: '#8b9ba8', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 400 }}
-                    >
-                      Cancel
-                    </button>
+              {/* Rova Banner Promotion Card */}
+              {showBanner && (
+                <div style={{
+                  background: '#18181b',
+                  borderRadius: '16px',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  position: 'relative',
+                }}>
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    background: '#27272a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <Monitor size={18} color="#22c55e" />
                   </div>
-                </form>
-              )}
-
-              {custodianList.length > 0 && (
-                <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {custodianList.map((cust, idx) => (
-                    <div key={idx} style={{ fontSize: '11px', color: '#8b9ba8', padding: '6px 8px', background: '#0a0a0a', borderRadius: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 400 }}>
-                      {cust}
-                    </div>
-                  ))}
+                  <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#ffffff', lineHeight: 1.3, paddingRight: '16px' }}>
+                    Meet Rova AI, your new home for automated stablecoin trading
+                  </div>
+                  <button
+                    onClick={() => setShowBanner(false)}
+                    style={{
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
+                      background: 'none',
+                      border: 'none',
+                      color: '#71717a',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
               )}
+
+              {/* Tokens Section Header */}
+              <div style={{ marginTop: '4px' }}>
+                <span style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff' }}>
+                  Tokens
+                </span>
+              </div>
+
+              {/* Token Cards Feed */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* USDC */}
+                <div style={{
+                  background: '#18181b',
+                  borderRadius: '16px',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: '#27272a',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      color: '#2563eb',
+                    }}>
+                      $
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>USDC</span>
+                        <CheckCircle2 size={13} color="#2563eb" />
+                      </div>
+                      <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 500, marginTop: '2px' }}>
+                        {isConnected ? (usdcBalance ?? '1,250.00') : '1,250.00'} USDC
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>$1,250.00</div>
+                    <div style={{ fontSize: '11.5px', color: '#22c55e', fontWeight: 500, marginTop: '2px' }}>+$0.00</div>
+                  </div>
+                </div>
+
+                {/* EURC */}
+                <div style={{
+                  background: '#18181b',
+                  borderRadius: '16px',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: '#27272a',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      color: '#6366f1',
+                    }}>
+                      €
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>EURC</span>
+                        <CheckCircle2 size={13} color="#6366f1" />
+                      </div>
+                      <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 500, marginTop: '2px' }}>
+                        450.00 EURC
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>$486.00</div>
+                    <div style={{ fontSize: '11.5px', color: '#22c55e', fontWeight: 500, marginTop: '2px' }}>+0.42%</div>
+                  </div>
+                </div>
+
+                {/* USYC */}
+                <div style={{
+                  background: '#18181b',
+                  borderRadius: '16px',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: '#27272a',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      color: '#22c55e',
+                    }}>
+                      Y
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>USYC</span>
+                        <CheckCircle2 size={13} color="#22c55e" />
+                      </div>
+                      <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 500, marginTop: '2px' }}>
+                        500.00 USYC
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>$500.00</div>
+                    <div style={{ fontSize: '11.5px', color: '#22c55e', fontWeight: 500, marginTop: '2px' }}>5.1% APY</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Disconnect Button if Connected */}
-            {isConnected && (
-              <button
-                onClick={() => { disconnect(); setShowDrawer(false); }}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  background: 'none',
-                  border: 'none',
-                  borderTop: '1px solid #1c1c1c',
-                  color: '#ef4444',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  marginTop: '4px',
-                }}
-              >
-                Disconnect Session
-              </button>
-            )}
+            {/* Bottom App Bar inside Popover */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-around',
+              padding: '12px 16px',
+              background: '#000000',
+              borderTop: '1px solid #18181b',
+            }}>
+              <Home size={20} color="#ab9ff2" style={{ cursor: 'pointer' }} />
+              <Repeat size={20} color="#71717a" style={{ cursor: 'pointer' }} onClick={() => { router.push('/send?tab=swap'); setShowDrawer(false); }} />
+              <Clock size={20} color="#71717a" style={{ cursor: 'pointer' }} onClick={() => { router.push('/history'); setShowDrawer(false); }} />
+            </div>
           </div>
         )}
       </div>
@@ -428,18 +577,18 @@ export default function Topbar({
 
             <div style={{
               background: '#070c12',
-              border: '1px dashed rgba(37, 211, 102, 0.3)',
+              padding: '12px 16px',
               borderRadius: '10px',
-              padding: '14px',
-              textAlign: 'center',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}>
-              <span style={{ fontSize: '11px', color: '#8b9ba8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '4px' }}>
-                Verification Link Token
-              </span>
-              <span style={{ fontSize: '18px', fontWeight: 800, color: '#25D366', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-                LINK-8492
-              </span>
+              <div>
+                <span style={{ fontSize: '11px', color: '#8b9ba8', display: 'block' }}>Verification Token</span>
+                <span style={{ fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', fontWeight: 700 }}>LINK-8492</span>
+              </div>
             </div>
 
             <a
@@ -449,22 +598,21 @@ export default function Topbar({
               onClick={() => setShowWhatsAppModal(false)}
               style={{
                 width: '100%',
-                padding: '14px',
-                borderRadius: '12px',
+                padding: '12px',
+                borderRadius: '10px',
                 background: '#25D366',
                 color: '#0d1520',
-                fontSize: '14.5px',
-                fontWeight: 800,
-                textDecoration: 'none',
+                fontWeight: 700,
+                fontSize: '14px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                boxShadow: '0 4px 16px rgba(37, 211, 102, 0.25)',
+                textDecoration: 'none',
+                boxSizing: 'border-box',
               }}
             >
-              <MessageCircle size={18} />
-              Connect on WhatsApp
+              <MessageCircle size={18} color="#0d1520" /> Open WhatsApp to Link
             </a>
           </div>
         </div>

@@ -1,28 +1,26 @@
 'use client';
+
 import { useState } from 'react';
 import { useWallet } from '@/hooks/useWallet';
 import { useRova } from '@/hooks/useRova';
-import { Send, Repeat, Globe, Mail, Wallet, ArrowRight, Loader, CheckCircle, AlertCircle, ChevronDown } from 'lucide-react';
+import { Send, Repeat, Globe, ArrowRight, Loader, CheckCircle, AlertCircle, ChevronDown } from 'lucide-react';
 
-type Mode = 'email' | 'wallet';
 type Action = 'send' | 'bridge' | 'swap';
 
 const ACTIONS: { id: Action; label: string; icon: React.ReactNode; desc: string }[] = [
-  { id: 'send',   label: 'Send',   icon: <Send size={18} />,   desc: 'Transfer USDC to a wallet address or email' },
+  { id: 'send',   label: 'Send',   icon: <Send size={18} />,   desc: 'Transfer stablecoins to a wallet address or recipient' },
   { id: 'bridge', label: 'Bridge', icon: <Globe size={18} />,  desc: 'Move USDC cross-chain via CCTP V2' },
   { id: 'swap',   label: 'Swap',   icon: <Repeat size={18} />, desc: 'Exchange USDC ↔ EURC with StableFX' },
 ];
 
 const BRIDGE_CHAINS = ['Ethereum', 'Base', 'Polygon', 'Solana', 'Arbitrum'];
-const CURRENCIES = ['USDC', 'EURC'];
+const CURRENCIES = ['USDC', 'EURC', 'USYC'];
 
 export default function SendView() {
   const { isConnected, connectInjected, isConnecting, usdcBalance } = useWallet();
   const { executeFlow, isProcessing } = useRova();
 
-  const [mode, setMode] = useState<Mode>('wallet');
   const [action, setAction] = useState<Action>('send');
-  const [email, setEmail] = useState('');
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [fromChain, setFromChain] = useState('Ethereum');
@@ -35,18 +33,16 @@ export default function SendView() {
 
   const buildIntent = () => {
     if (action === 'send') {
-      const to = mode === 'email' ? email : recipient;
-      return `Send ${amount} USDC to ${to}${memo ? ` — memo: ${memo}` : ''}`;
+      return `Send ${amount} ${fromCurrency} to ${recipient}${memo ? ` — memo: ${memo}` : ''}`;
     }
-    if (action === 'bridge') return `Bridge ${amount} USDC from ${fromChain} to ${toChain}${memo ? ` — memo: ${memo}` : ''}`;
+    if (action === 'bridge') return `Bridge ${amount} ${fromCurrency} from ${fromChain} to ${toChain}${memo ? ` — memo: ${memo}` : ''}`;
     if (action === 'swap')   return `Swap ${amount} ${fromCurrency} to ${toCurrency} using StableFX${memo ? ` — memo: ${memo}` : ''}`;
     return '';
   };
 
   const handleSubmit = async () => {
     if (!amount || parseFloat(amount) <= 0) { setStatus('error'); setResultMsg('Enter a valid amount.'); return; }
-    if (action === 'send' && mode === 'email' && !email) { setStatus('error'); setResultMsg('Enter a recipient email.'); return; }
-    if (action === 'send' && mode === 'wallet' && !recipient) { setStatus('error'); setResultMsg('Enter a recipient address.'); return; }
+    if (action === 'send' && !recipient) { setStatus('error'); setResultMsg('Enter a recipient address.'); return; }
 
     setStatus('loading');
     setResultMsg('');
@@ -55,7 +51,7 @@ export default function SendView() {
       await executeFlow(intent);
       setStatus('success');
       setResultMsg(`${action === 'send' ? 'Transfer' : action === 'bridge' ? 'Bridge' : 'Swap'} initiated on Arc. Check your Ledger for confirmation.`);
-      setAmount(''); setRecipient(''); setEmail(''); setMemo('');
+      setAmount(''); setRecipient(''); setMemo('');
     } catch (err: unknown) {
       setStatus('error');
       setResultMsg(err instanceof Error ? err.message : 'Something went wrong. Try again.');
@@ -91,20 +87,30 @@ export default function SendView() {
 
         {/* SEND FORM */}
         {action === 'send' && (
-          <Field label="Recipient wallet address" hint="Target address on Arc or connected chain">
-            <input value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="0x..." style={inputStyle} />
-          </Field>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
+            <Field label="Recipient wallet address" hint="Target address on Arc or connected chain">
+              <input value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="0x..." style={inputStyle} />
+            </Field>
+            <Field label="Currency">
+              <Select value={fromCurrency} onChange={setFromCurrency} options={CURRENCIES} />
+            </Field>
+          </div>
         )}
 
         {/* BRIDGE FORM */}
         {action === 'bridge' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '12px', alignItems: 'end', marginBottom: '20px' }}>
-            <Field label="From chain">
-              <Select value={fromChain} onChange={setFromChain} options={BRIDGE_CHAINS} />
-            </Field>
-            <div style={{ paddingBottom: '14px', color: 'var(--muted)' }}><ArrowRight size={18} /></div>
-            <Field label="To chain">
-              <Select value={toChain} onChange={setToChain} options={['Arc', ...BRIDGE_CHAINS.filter(c => c !== fromChain)]} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '12px', alignItems: 'end' }}>
+              <Field label="From chain">
+                <Select value={fromChain} onChange={setFromChain} options={BRIDGE_CHAINS} />
+              </Field>
+              <div style={{ paddingBottom: '14px', color: 'var(--muted)' }}><ArrowRight size={18} /></div>
+              <Field label="To chain">
+                <Select value={toChain} onChange={setToChain} options={['Arc', ...BRIDGE_CHAINS.filter(c => c !== fromChain)]} />
+              </Field>
+            </div>
+            <Field label="Currency">
+              <Select value={fromCurrency} onChange={setFromCurrency} options={CURRENCIES} />
             </Field>
           </div>
         )}
@@ -112,20 +118,22 @@ export default function SendView() {
         {/* SWAP FORM */}
         {action === 'swap' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '12px', alignItems: 'end', marginBottom: '20px' }}>
-            <Field label="From">
+            <Field label="From currency">
               <Select value={fromCurrency} onChange={setFromCurrency} options={CURRENCIES} />
             </Field>
             <div style={{ paddingBottom: '14px', color: 'var(--muted)' }}><Repeat size={18} /></div>
-            <Field label="To">
+            <Field label="To currency">
               <Select value={toCurrency} onChange={setToCurrency} options={CURRENCIES.filter(c => c !== fromCurrency)} />
             </Field>
           </div>
         )}
 
         {/* Amount — shared */}
-        <Field label="Amount (USDC)" hint={isConnected && usdcBalance ? `Available: $${usdcBalance}` : undefined}>
+        <Field label={`Amount (${fromCurrency})`} hint={isConnected && usdcBalance ? `Available: $${usdcBalance}` : undefined}>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', fontSize: '16px', fontWeight: 700 }}>$</span>
+            <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', fontSize: '16px', fontWeight: 700 }}>
+              {fromCurrency === 'EURC' ? '€' : '$'}
+            </span>
             <input
               value={amount}
               onChange={e => setAmount(e.target.value)}
@@ -154,26 +162,13 @@ export default function SendView() {
         )}
 
         {/* Submit */}
-        {!isConnected ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <button onClick={handleSubmit} disabled={isProcessing || status === 'loading'} style={{ ...btnStyle, background: '#BFFF00', color: '#0d1520' }}>
-              {isProcessing || status === 'loading'
-                ? <><Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> Processing via Circle...</>
-                : <>{action === 'send' ? 'Execute via Circle Wallet' : action === 'bridge' ? 'Bridge via Circle Wallet' : 'Swap via Circle Wallet'} <ArrowRight size={16} /></>
-              }
-            </button>
-            <button onClick={() => connectInjected()} disabled={isConnecting} style={{ ...btnStyle, background: 'transparent', border: '1px solid rgba(180,244,215,0.2)', color: 'var(--mint)' }}>
-              {isConnecting ? 'Connecting Web3 Wallet...' : 'Or Connect Web3 Wallet (Self-Custody)'}
-            </button>
-          </div>
-        ) : (
-          <button onClick={handleSubmit} disabled={isProcessing || status === 'loading'} style={{ ...btnStyle, background: '#BFFF00', color: '#0d1520', opacity: isProcessing ? 0.7 : 1 }}>
-            {isProcessing || status === 'loading'
-              ? <><Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> Processing...</>
-              : <>{action === 'send' ? 'Send USDC' : action === 'bridge' ? 'Bridge Now' : 'Swap Now'} <ArrowRight size={16} /></>
-            }
-          </button>
-        )}
+        <button onClick={handleSubmit} disabled={isProcessing || status === 'loading'} style={{ ...btnStyle, background: '#BFFF00', color: '#0d1520', opacity: isProcessing ? 0.7 : 1 }}>
+          {isProcessing || status === 'loading'
+            ? <><Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> Processing...</>
+            : <>{action === 'send' ? `Send ${fromCurrency}` : action === 'bridge' ? `Bridge ${fromCurrency}` : `Swap ${fromCurrency} ↔ ${toCurrency}`} <ArrowRight size={16} /></>
+          }
+        </button>
+
       </div>
 
       {/* Powered by */}
@@ -201,17 +196,35 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 function Select({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
   return (
     <div style={{ position: 'relative' }}>
-      <select value={value} onChange={e => onChange(e.target.value)} style={{ ...inputStyle, appearance: 'none', paddingRight: '36px', cursor: 'pointer' }}>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          ...inputStyle,
+          appearance: 'none',
+          WebkitAppearance: 'none',
+          MozAppearance: 'none',
+          paddingRight: '36px',
+          cursor: 'pointer',
+          background: '#090e17',
+          color: '#ffffff',
+          border: '1px solid rgba(180, 244, 215, 0.18)',
+        }}
+      >
+        {options.map(o => (
+          <option key={o} value={o} style={{ background: '#0d1520', color: '#ffffff', padding: '10px' }}>
+            {o}
+          </option>
+        ))}
       </select>
-      <ChevronDown size={14} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }} />
+      <ChevronDown size={14} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#8b9ba8', pointerEvents: 'none' }} />
     </div>
   );
 }
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '12px 14px', borderRadius: '12px',
-  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(180,244,215,0.12)',
+  background: '#090e17', border: '1px solid rgba(180,244,215,0.18)',
   color: '#fff', fontSize: '15px', fontFamily: 'inherit',
   outline: 'none', transition: 'border-color 0.2s',
 };

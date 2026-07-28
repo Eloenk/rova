@@ -1,12 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
-
-// Lazy-load so SSR never touches browser APIs inside the widget
-const FeedbackWidget = dynamic(() => import('@/components/FeedbackWidget'), { ssr: false });
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -26,8 +22,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-      {/* Feedback button — floats above all content on every page */}
-      <FeedbackWidget />
     </div>
   );
 }

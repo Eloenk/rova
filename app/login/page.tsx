@@ -8,12 +8,19 @@ import { Shield, ArrowRight, Wallet, CheckCircle2, Mail, Globe, Send } from 'luc
 
 export default function LoginPage() {
   const router = useRouter();
-  const { connectInjected, isConnecting } = useWallet();
+  const { connectInjected, isConnecting, isConnected } = useWallet();
+
   const [authMode, setAuthMode] = useState<'email' | 'web3'>('email');
   const [email, setEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [step, setStep] = useState<'input' | 'otp'>('input');
   const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (isConnected) {
+      router.push('/dashboard');
+    }
+  }, [isConnected, router]);
 
   const handleSendOtp = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +43,8 @@ export default function LoginPage() {
 
   const handleWeb3Connect = () => {
     connectInjected();
-    router.push('/dashboard');
   };
+
 
   return (
     <div style={{

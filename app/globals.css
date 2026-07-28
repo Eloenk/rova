@@ -96,6 +96,18 @@ body {
   to   { transform: rotate(360deg); }
 }
 
+/* Mobile-only hamburger toggle button (Strictly hidden on mid & desktop screens >= 768px) */
+@media (min-width: 768px) {
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+}
+@media (max-width: 767px) {
+  .mobile-menu-toggle {
+    display: inline-flex !important;
+  }
+}
+
 /* Landing Feature Card Hover & Responsive Grid */
 .landing-feature-card {
   transition: all 0.25s ease-in-out;
@@ -160,3 +172,16 @@ body {
     padding: 36px 24px !important;
   }
 }
+
+/* Select & Option dark dropdown styling */
+select {
+  background-color: #090e17 !important;
+  color: #ffffff !important;
+}
+
+select option {
+  background-color: #0d1520 !important;
+  color: #ffffff !important;
+  padding: 10px !important;
+}
+
