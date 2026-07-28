@@ -1,8 +1,18 @@
 'use client';
+import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Send, Repeat, Wallet, MessageSquare, Zap } from 'lucide-react';
 
 export default function LandingPage() {
+  const [hasSession, setHasSession] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const email = localStorage.getItem('rova_user_email') || document.cookie.includes('rova_user_email=');
+      setHasSession(!!email);
+    }
+  }, []);
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -39,7 +49,7 @@ export default function LandingPage() {
         </div>
 
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <Link href="/login" style={{
+          <Link href={hasSession ? "/dashboard" : "/login"} style={{
             padding: '10px 24px',
             borderRadius: '10px',
             background: '#BFFF00',
@@ -51,7 +61,7 @@ export default function LandingPage() {
             alignItems: 'center',
             gap: '8px',
           }}>
-            Get Started <ArrowRight size={16} />
+            {hasSession ? "Go to Dashboard" : "Get Started"} <ArrowRight size={16} />
           </Link>
         </div>
       </nav>
@@ -104,7 +114,7 @@ export default function LandingPage() {
 
         {/* CTA Button */}
         <div style={{ marginBottom: '48px' }}>
-          <Link href="/login" style={{
+          <Link href={hasSession ? "/dashboard" : "/login"} style={{
             padding: '15px 42px',
             borderRadius: '12px',
             background: 'linear-gradient(135deg, #BFFF00 0%, #25D366 100%)',
@@ -117,7 +127,7 @@ export default function LandingPage() {
             gap: '10px',
             boxShadow: '0 6px 20px rgba(37, 211, 102, 0.2)',
           }}>
-            Get Started <ArrowRight size={18} />
+            {hasSession ? "Go to Dashboard" : "Get Started"} <ArrowRight size={18} />
           </Link>
         </div>
 

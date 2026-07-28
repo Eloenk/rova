@@ -15,7 +15,7 @@ export function useWallet() {
     address,
     token:   TOKENS.USDC.address,
     chainId: arcTestnet.id,
-    query:   { enabled: isConnected },
+    query:   { enabled: !!address },
   });
 
   const isOnArc    = chain?.id === arcTestnet.id;

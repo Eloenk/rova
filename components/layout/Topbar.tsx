@@ -225,19 +225,19 @@ export default function Topbar({
               {/* Huge Centered Hero Total Balance */}
               <div style={{ textAlign: 'center', padding: '12px 0 4px' }}>
                 <div style={{ fontSize: '40px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  ${isConnected ? (usdcBalance ?? '1,250.00') : '1,250.00'}
+                  ${usdcBalance ?? '0.00'} <span style={{ fontSize: '18px', color: '#8b9ba8', fontWeight: 600 }}>USDC</span>
                 </div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#22c55e' }}>+$12.50</span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#BFFF00' }}>Arc Testnet</span>
                   <span style={{
                     fontSize: '11px',
                     fontWeight: 700,
-                    color: '#22c55e',
-                    background: 'rgba(34, 197, 94, 0.15)',
+                    color: '#BFFF00',
+                    background: 'rgba(191, 255, 0, 0.12)',
                     padding: '2px 6px',
                     borderRadius: '6px',
                   }}>
-                    +1.01%
+                    Live RPC
                   </span>
                 </div>
               </div>
@@ -294,8 +294,12 @@ export default function Topbar({
                 <button
                   onClick={() => {
                     disconnect();
+                    if (typeof window !== 'undefined') {
+                      localStorage.removeItem('rova_user_email');
+                      document.cookie = 'rova_user_email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    }
                     setShowDrawer(false);
-                    router.push('/login');
+                    router.push('/');
                   }}
                   style={{
                     background: 'rgba(239, 68, 68, 0.08)',

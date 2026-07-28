@@ -15,30 +15,57 @@ export default function LoginPage() {
   const [otpCode, setOtpCode] = useState('');
   const [step, setStep] = useState<'input' | 'otp'>('input');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   React.useEffect(() => {
-    if (isConnected) {
-      router.push('/dashboard');
+    const hasEmailSession = typeof window !== 'undefined' && (
+      localStorage.getItem('rova_user_email') || document.cookie.includes('rova_user_email=')
+    );
+    if (isConnected || hasEmailSession) {
+      router.replace('/dashboard');
     }
   }, [isConnected, router]);
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Failed to send verification code');
       setStep('otp');
-    }, 600);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!otpCode) return;
     setLoading(true);
-    setTimeout(() => {
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code: otpCode }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Verification failed');
+      router.replace('/dashboard');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Invalid verification code');
+    } finally {
       setLoading(false);
-      router.push('/dashboard');
-    }, 600);
+    }
   };
 
   const handleWeb3Connect = () => {
@@ -192,6 +219,23 @@ export default function LoginPage() {
               </button>
             ))}
           </div>
+
+          {/* Error Feedback */}
+          {errorMsg && (
+            <div style={{
+              padding: '10px 14px',
+              borderRadius: '8px',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#dc2626',
+              fontSize: '13px',
+              fontWeight: 600,
+              marginBottom: '20px',
+              textAlign: 'center',
+            }}>
+              {errorMsg}
+            </div>
+          )}
 
           {/* Form Content */}
           {authMode === 'email' ? (

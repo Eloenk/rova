@@ -132,24 +132,15 @@ export default function Dashboard() {
             boxSizing: 'border-box',
           }}>
             <h1 style={{
-              fontSize: 'clamp(32px, 4.5vw, 44px)',
-              fontWeight: 800,
+              fontSize: 'clamp(30px, 4vw, 42px)',
+              fontWeight: 300,
               color: '#ffffff',
               letterSpacing: '-0.02em',
-              marginBottom: '12px',
+              marginBottom: '28px',
               lineHeight: 1.15,
             }}>
               Ready when you are
             </h1>
-            <p style={{
-              fontSize: 'clamp(14px, 1.8vw, 15.5px)',
-              color: '#8b9ba8',
-              maxWidth: '500px',
-              marginBottom: '32px',
-              lineHeight: 1.55,
-            }}>
-              Ask Rova to send USDC, execute cross-border swaps, or configure autonomous triggers on Arc.
-            </p>
 
             {/* Centered Prompt Input Pill */}
             <div style={{

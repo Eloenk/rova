@@ -68,7 +68,17 @@ CREATE TABLE IF NOT EXISTS users (
     whatsapp_approval_threshold_usdc NUMERIC NOT NULL DEFAULT 100.00
 );
 
+CREATE TABLE IF NOT EXISTS otp_codes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT NOT NULL,
+    code TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS idx_agent_rules_status ON agent_rules(status);
 CREATE INDEX IF NOT EXISTS idx_standing_intents_status ON standing_intents(status);
 CREATE INDEX IF NOT EXISTS idx_agent_executions_fired_at ON agent_executions(fired_at DESC);
 CREATE INDEX IF NOT EXISTS idx_users_whatsapp ON users(whatsapp_number);
+CREATE INDEX IF NOT EXISTS idx_otp_codes_email ON otp_codes(email);
+
