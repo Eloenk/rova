@@ -30,10 +30,16 @@ export function useWallet() {
     query: { enabled: !!web3Address },
   });
 
+  const isEmailSession = typeof window !== 'undefined' && Boolean(
+    localStorage.getItem('rova_user_email') || (typeof document !== 'undefined' && document.cookie.includes('rova_user_email='))
+  );
+
   const fetchServerBalance = useCallback(async () => {
     try {
       const storedAddr = typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null;
-      const addrQuery = web3Address || storedAddr || '';
+      const addrQuery = isEmailSession
+        ? (storedAddr || '')
+        : (web3Address || storedAddr || '');
 
       const res = await fetch(`/api/user/balance${addrQuery ? `?address=${addrQuery}` : ''}`);
       const data = await res.json();
@@ -45,26 +51,32 @@ export function useWallet() {
     } catch (e) {
       console.warn('[useWallet] Server balance fetch error:', e);
     }
-  }, [web3Address]);
+  }, [web3Address, isEmailSession]);
 
   useEffect(() => {
     fetchServerBalance();
   }, [fetchServerBalance]);
 
-  const isEmailSession = typeof window !== 'undefined' && Boolean(
-    localStorage.getItem('rova_user_email') || (typeof document !== 'undefined' && document.cookie.includes('rova_user_email='))
-  );
 
   const isConnected = isWeb3Connected || isEmailSession;
-  const address = web3Address || apiAddress || (typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null);
+  const storedWallet = typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null;
+
+  const address = isEmailSession
+    ? (apiAddress || storedWallet || web3Address)
+    : (web3Address || apiAddress || storedWallet);
 
   const refetchBalance = () => {
     refetchWagmiBalance();
     fetchServerBalance();
   };
 
-  const finalUsdc = usdcBal ? parseFloat(usdcBal.formatted).toFixed(2) : (apiUsdc ?? '0.00');
-  const finalEurc = eurcBal ? parseFloat(eurcBal.formatted).toFixed(2) : (apiEurc ?? '0.00');
+  const finalUsdc = isEmailSession
+    ? (apiUsdc ?? '0.00')
+    : (usdcBal ? parseFloat(usdcBal.formatted).toFixed(2) : (apiUsdc ?? '0.00'));
+
+  const finalEurc = isEmailSession
+    ? (apiEurc ?? '0.00')
+    : (eurcBal ? parseFloat(eurcBal.formatted).toFixed(2) : (apiEurc ?? '0.00'));
 
   const isOnArc = chain?.id === arcTestnet.id || isEmailSession;
   const wrongChain = isWeb3Connected && !isOnArc;
@@ -104,3 +116,4 @@ export function useWallet() {
     arcChainId: ARC_TESTNET.chainId,
   };
 }
+

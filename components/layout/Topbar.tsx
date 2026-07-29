@@ -42,10 +42,11 @@ export default function Topbar({
   const drawerRef = useRef<HTMLDivElement>(null);
   const walletBtnRef = useRef<HTMLButtonElement>(null);
 
-  const userAddr = address || (typeof window !== 'undefined' ? localStorage.getItem('rova_user_address') : null) || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+  const userAddr = address || (typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null) || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
   const displayShort = address
     ? shortAddress
     : (userAddr ? `${userAddr.slice(0, 6)}…${userAddr.slice(-4)}` : '0x71C7...976F');
+
 
   // Dynamic Token Amounts & Real USD Values
   const currentUsdc = isConnected ? (usdcBalance ?? '0.00') : '0.00';
@@ -315,6 +316,7 @@ export default function Topbar({
                     disconnect();
                     if (typeof window !== 'undefined') {
                       localStorage.removeItem('rova_user_email');
+                      localStorage.removeItem('rova_user_wallet');
                       document.cookie = 'rova_user_email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
                     }
                     setShowDrawer(false);
