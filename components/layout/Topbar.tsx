@@ -424,7 +424,6 @@ export default function Topbar({
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>${usdcUsd.toFixed(2)}</div>
-                    <div style={{ fontSize: '11.5px', color: '#22c55e', fontWeight: 500, marginTop: '2px' }}>+$0.00</div>
                   </div>
                 </div>
 
@@ -464,7 +463,6 @@ export default function Topbar({
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>${eurcUsd.toFixed(2)}</div>
-                    <div style={{ fontSize: '11.5px', color: '#22c55e', fontWeight: 500, marginTop: '2px' }}>+0.00%</div>
                   </div>
                 </div>
 
@@ -504,7 +502,6 @@ export default function Topbar({
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>${usycUsd.toFixed(2)}</div>
-                    <div style={{ fontSize: '11.5px', color: '#22c55e', fontWeight: 500, marginTop: '2px' }}>5.1% APY</div>
                   </div>
                 </div>
               </div>
@@ -519,9 +516,24 @@ export default function Topbar({
               background: '#000000',
               borderTop: '1px solid #18181b',
             }}>
-              <Home size={20} color="#ab9ff2" style={{ cursor: 'pointer' }} />
-              <Repeat size={20} color="#71717a" style={{ cursor: 'pointer' }} onClick={() => { router.push('/send?tab=swap'); setShowDrawer(false); }} />
-              <Clock size={20} color="#71717a" style={{ cursor: 'pointer' }} onClick={() => { router.push('/history'); setShowDrawer(false); }} />
+              <Home
+                size={20}
+                color={pathname === '/dashboard' || pathname === '/' ? '#BFFF00' : '#ffffff'}
+                style={{ cursor: 'pointer', transition: 'color 0.15s ease' }}
+                onClick={() => { router.push('/dashboard'); setShowDrawer(false); }}
+              />
+              <Repeat
+                size={20}
+                color={pathname === '/send' ? '#BFFF00' : '#ffffff'}
+                style={{ cursor: 'pointer', transition: 'color 0.15s ease' }}
+                onClick={() => { router.push('/send?tab=swap'); setShowDrawer(false); }}
+              />
+              <Clock
+                size={20}
+                color={pathname === '/history' ? '#BFFF00' : '#ffffff'}
+                style={{ cursor: 'pointer', transition: 'color 0.15s ease' }}
+                onClick={() => { router.push('/history'); setShowDrawer(false); }}
+              />
             </div>
           </div>
         )}
