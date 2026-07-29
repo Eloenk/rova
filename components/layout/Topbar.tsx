@@ -29,45 +29,15 @@ export default function Topbar({
   const { isConnected, address, shortAddress, usdcBalance, eurcBalance, disconnect, connectInjected } = useWallet();
   const [showDrawer, setShowDrawer] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
-  const [whatsappPhone, setWhatsappPhone] = useState('');
-  const [savingPhone, setSavingPhone] = useState(false);
-  const [phoneSuccessMsg, setPhoneSuccessMsg] = useState('');
   const [showBanner, setShowBanner] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('rova_user_whatsapp');
-      if (saved) setWhatsappPhone(saved);
-    }
-  }, []);
-
-  const handleSaveWhatsAppPhone = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!whatsappPhone) return;
-    setSavingPhone(true);
-    setPhoneSuccessMsg('');
-    try {
-      const res = await fetch('/api/user/whatsapp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ whatsappNumber: whatsappPhone }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('rova_user_whatsapp', whatsappPhone);
-        }
-        setPhoneSuccessMsg('Stored in database!');
-      } else {
-        alert(data.error || 'Failed to save WhatsApp number');
-      }
-    } catch (err: any) {
-      alert(err?.message || 'Error saving WhatsApp number');
-    } finally {
-      setSavingPhone(false);
-    }
-  };
+  const rawWaConfig = process.env.NEXT_PUBLIC_WHATSAPP_LINK || 'https://wa.me/+447446132243';
+  const waDeepLink = rawWaConfig.includes('?')
+    ? `${rawWaConfig}&text=LINK-8492`
+    : rawWaConfig.startsWith('http')
+      ? `${rawWaConfig}?text=LINK-8492`
+      : `https://wa.me/${rawWaConfig.replace(/[^0-9+]/g, '')}?text=LINK-8492`;
 
   const drawerRef = useRef<HTMLDivElement>(null);
   const walletBtnRef = useRef<HTMLButtonElement>(null);
@@ -640,51 +610,6 @@ export default function Topbar({
               Click the button below to open WhatsApp with your pre-filled verification token. Sending the message automatically links your phone number to your active Rova wallet.
             </p>
 
-            <form onSubmit={handleSaveWhatsAppPhone} style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#8b9ba8', marginBottom: '6px' }}>
-                WhatsApp Phone Number
-              </label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="text"
-                  placeholder="+1234567890"
-                  value={whatsappPhone}
-                  onChange={(e) => setWhatsappPhone(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    background: '#070c12',
-                    color: '#ffffff',
-                    fontSize: '13.5px',
-                    outline: 'none',
-                  }}
-                />
-                <button
-                  type="submit"
-                  disabled={savingPhone}
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    background: '#BFFF00',
-                    color: '#05080c',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {savingPhone ? 'Saving...' : 'Save Phone'}
-                </button>
-              </div>
-              {phoneSuccessMsg && (
-                <div style={{ fontSize: '12px', color: '#25D366', fontWeight: 600, marginTop: '6px' }}>
-                  ✓ {phoneSuccessMsg}
-                </div>
-              )}
-            </form>
-
             <div style={{
               background: '#070c12',
               padding: '12px 16px',
@@ -696,13 +621,13 @@ export default function Topbar({
               justifyContent: 'center',
             }}>
               <div>
-                <span style={{ fontSize: '11px', color: '#8b9ba8', display: 'block' }}>Verification Token</span>
+                <span style={{ fontSize: '11px', color: '#8b9ba8', display: 'block', textAlign: 'center' }}>Verification Token</span>
                 <span style={{ fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', fontWeight: 700 }}>LINK-8492</span>
               </div>
             </div>
 
             <a
-              href="https://wa.me/14155552671?text=LINK-8492"
+              href={waDeepLink}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setShowWhatsAppModal(false)}
