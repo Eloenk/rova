@@ -42,10 +42,11 @@ export default function Topbar({
   const drawerRef = useRef<HTMLDivElement>(null);
   const walletBtnRef = useRef<HTMLButtonElement>(null);
 
-  const userAddr = address || (typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null) || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
-  const displayShort = address
-    ? shortAddress
-    : (userAddr ? `${userAddr.slice(0, 6)}…${userAddr.slice(-4)}` : '0x71C7...976F');
+  const userAddr = address || (typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null);
+  const displayShort = userAddr
+    ? `${userAddr.slice(0, 6)}…${userAddr.slice(-4)}`
+    : 'Not Connected';
+
 
 
   // Dynamic Token Amounts & Real USD Values
@@ -79,9 +80,11 @@ export default function Topbar({
   }, [showDrawer]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(userAddr);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    if (userAddr) {
+      navigator.clipboard.writeText(userAddr);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
   };
 
   return (

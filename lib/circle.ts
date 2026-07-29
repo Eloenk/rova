@@ -20,7 +20,7 @@ let _client: ReturnType<typeof initiateDeveloperControlledWalletsClient> | null 
 export function getCircleClient() {
   if (_client) return _client;
 
-  const apiKey       = process.env.CIRCLE_API_KEY;
+  let apiKey       = process.env.CIRCLE_API_KEY;
   const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
 
   if (!apiKey || !entitySecret) {
@@ -29,6 +29,10 @@ export function getCircleClient() {
       'Get them free at: https://console.circle.com\n' +
       'Or set mock_mode: true in config.yaml for testing.'
     );
+  }
+
+  if (apiKey && apiKey.split(':').length === 2) {
+    apiKey = `TEST_API_KEY:${apiKey}`;
   }
 
   _client = initiateDeveloperControlledWalletsClient({ apiKey, entitySecret });

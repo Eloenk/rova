@@ -49,7 +49,13 @@ export async function GET(req: NextRequest) {
     }
 
     if (!targetAddress) {
-      targetAddress = process.env.ROVA_OWNER_WALLET || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+      return NextResponse.json({
+        ok: true,
+        address: null,
+        rpcUrlUsed: getRpcUrlFromConfig(),
+        usdcBalance: '0.00',
+        eurcBalance: '0.00',
+      });
     }
 
     const rpcUrl = getRpcUrlFromConfig();

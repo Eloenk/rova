@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     let userId = `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;
-    let circleWalletAddress = process.env.ROVA_OWNER_WALLET || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+    let circleWalletAddress = '';
 
     if (supabase) {
       const { data: existingUser } = await supabase
@@ -57,16 +57,42 @@ export async function POST(req: NextRequest) {
         .eq('email', cleanEmail)
         .single();
 
-      if (!existingUser) {
+      if (existingUser) {
+        userId = existingUser.id;
+        if (existingUser.circle_wallet_address) {
+          circleWalletAddress = existingUser.circle_wallet_address;
+        } else {
+          try {
+            const { createSingleWallet } = await import('@/lib/circle');
+            const walletRes = await createSingleWallet(cleanEmail);
+            if (walletRes?.address) {
+              circleWalletAddress = walletRes.address;
+              await supabase
+                .from('users')
+                .update({ circle_wallet_address: circleWalletAddress })
+                .eq('id', userId);
+            }
+          } catch (circleErr) {
+            console.warn('[Verify OTP] Circle wallet dynamic creation note:', circleErr);
+          }
+        }
+      } else {
+        try {
+          const { createSingleWallet } = await import('@/lib/circle');
+          const walletRes = await createSingleWallet(cleanEmail);
+          if (walletRes?.address) {
+            circleWalletAddress = walletRes.address;
+          }
+        } catch (circleErr) {
+          console.warn('[Verify OTP] Circle wallet dynamic creation note:', circleErr);
+        }
+
         await supabase.from('users').insert({
           id: userId,
           email: cleanEmail,
           circle_wallet_address: circleWalletAddress,
           whatsapp_approval_threshold_usdc: 100.0,
         });
-      } else {
-        userId = existingUser.id;
-        circleWalletAddress = existingUser.circle_wallet_address || circleWalletAddress;
       }
     }
 
