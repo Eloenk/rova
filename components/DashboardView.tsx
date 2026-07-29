@@ -320,7 +320,7 @@ export default function Dashboard() {
                 {!isConversationalPlan(plan) && (!showTriggerPicker ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '4px' }}>
                     <button
-                      onClick={() => executePlan(isConnected ? address : undefined)}
+                      onClick={() => executePlan(isConnected && address ? address : undefined)}
                       style={{
                         padding: '10px 18px',
                         borderRadius: '20px',
