@@ -26,7 +26,7 @@ export default function Topbar({
   const pathname = usePathname();
   const router = useRouter();
   const meta = META[pathname] ?? META['/dashboard'];
-  const { isConnected, address, shortAddress, usdcBalance, disconnect, connectInjected } = useWallet();
+  const { isConnected, address, shortAddress, usdcBalance, eurcBalance, disconnect, connectInjected } = useWallet();
   const [showDrawer, setShowDrawer] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
@@ -35,8 +35,20 @@ export default function Topbar({
   const drawerRef = useRef<HTMLDivElement>(null);
   const walletBtnRef = useRef<HTMLButtonElement>(null);
 
-  const defaultAddr = address || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
-  const displayShort = address ? shortAddress : '0x71C7...976F';
+  const userAddr = address || (typeof window !== 'undefined' ? localStorage.getItem('rova_user_address') : null) || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+  const displayShort = address
+    ? shortAddress
+    : (userAddr ? `${userAddr.slice(0, 6)}…${userAddr.slice(-4)}` : '0x71C7...976F');
+
+  // Dynamic Token Amounts & Real USD Values
+  const currentUsdc = isConnected ? (usdcBalance ?? '0.00') : '0.00';
+  const currentEurc = isConnected ? (eurcBalance ?? '0.00') : '0.00';
+  const currentUsyc = '0.00';
+
+  const usdcUsd = parseFloat(currentUsdc) || 0;
+  const eurcUsd = (parseFloat(currentEurc) || 0) * 1.08;
+  const usycUsd = (parseFloat(currentUsyc) || 0) * 1.00;
+  const totalUsd = (usdcUsd + eurcUsd + usycUsd).toFixed(2);
 
   // Click outside to close Phantom Wallet Popover Drawer
   useEffect(() => {
@@ -59,7 +71,7 @@ export default function Topbar({
   }, [showDrawer]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(defaultAddr);
+    navigator.clipboard.writeText(userAddr);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
@@ -225,7 +237,7 @@ export default function Topbar({
               {/* Huge Centered Hero Total Balance */}
               <div style={{ textAlign: 'center', padding: '12px 0 4px' }}>
                 <div style={{ fontSize: '40px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  ${usdcBalance ?? '0.00'} <span style={{ fontSize: '18px', color: '#8b9ba8', fontWeight: 600 }}>USDC</span>
+                  ${totalUsd} <span style={{ fontSize: '18px', color: '#8b9ba8', fontWeight: 600 }}>USD</span>
                 </div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
                   <span style={{ fontSize: '13px', fontWeight: 600, color: '#BFFF00' }}>Arc Testnet</span>
@@ -406,12 +418,12 @@ export default function Topbar({
                         <CheckCircle2 size={13} color="#2563eb" />
                       </div>
                       <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 500, marginTop: '2px' }}>
-                        {isConnected ? (usdcBalance ?? '1,250.00') : '1,250.00'} USDC
+                        {currentUsdc} USDC
                       </div>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>$1,250.00</div>
+                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>${usdcUsd.toFixed(2)}</div>
                     <div style={{ fontSize: '11.5px', color: '#22c55e', fontWeight: 500, marginTop: '2px' }}>+$0.00</div>
                   </div>
                 </div>
@@ -446,13 +458,13 @@ export default function Topbar({
                         <CheckCircle2 size={13} color="#6366f1" />
                       </div>
                       <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 500, marginTop: '2px' }}>
-                        450.00 EURC
+                        {currentEurc} EURC
                       </div>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>$486.00</div>
-                    <div style={{ fontSize: '11.5px', color: '#22c55e', fontWeight: 500, marginTop: '2px' }}>+0.42%</div>
+                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>${eurcUsd.toFixed(2)}</div>
+                    <div style={{ fontSize: '11.5px', color: '#22c55e', fontWeight: 500, marginTop: '2px' }}>+0.00%</div>
                   </div>
                 </div>
 
@@ -486,12 +498,12 @@ export default function Topbar({
                         <CheckCircle2 size={13} color="#22c55e" />
                       </div>
                       <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 500, marginTop: '2px' }}>
-                        500.00 USYC
+                        {currentUsyc} USYC
                       </div>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>$500.00</div>
+                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>${usycUsd.toFixed(2)}</div>
                     <div style={{ fontSize: '11.5px', color: '#22c55e', fontWeight: 500, marginTop: '2px' }}>5.1% APY</div>
                   </div>
                 </div>

@@ -1,47 +1,109 @@
-# Rova
+# ⚡ Rova — AI-Powered Capital Flow Engine on Arc
 
-**AI-powered money movement on Arc** — built Africa-first, for the world.
+> **Autonomous Money Movement & Agentic Capital Allocation on Arc Testnet** — Built Africa-first, for the world.
 
-Rova lets anyone send, bridge, and swap stablecoins on Arc using plain English. No seed phrases required — sign up with your email via Circle Programmable Wallets, or connect your existing Web3 wallet.
+Rova enables users and autonomous AI agents to send, bridge, swap, and execute recurring flow rules for stablecoins on Arc using natural language. Featuring zero-friction email onboarding via Circle Programmable Wallets, native Web3 wallet connections, a deterministic conversational agent fast-path, and deep-linked WhatsApp bot integration.
 
-## What Rova does
+---
 
-- **Send USDC** — to any wallet address or email address
-- **Bridge** — cross-chain via CCTP V2 (Ethereum, Base, Polygon, and more → Arc)
-- **Swap** — USDC ↔ EURC with StableFX
-- **Ledger** — full transaction history with Arc Transaction Memos attached
+## 🌟 Key Features
 
-## Tech stack
+- 💬 **Conversational AI Agent (Claude 3.7 Sonnet + Fast-Path)**
+  - Zero-latency failsafe response for common greetings ("hi", "who are you", "what can you do").
+  - Deterministic action guardrails that automatically restrict execution controls for non-financial queries.
+- 💸 **Natural Language Transfers & Swaps**
+  - **Send USDC**: To any EVM address or email recipient.
+  - **Atomic FX Swaps**: USDC ↔ EURC via Circle StableFX with smart contract escrow.
+  - **Cross-Chain CCTP V2 Bridging**: Transfer USDC seamlessly between Sepolia, Base, Polygon, and Arc.
+- 🤖 **Autonomous Standing Instructions & Watchers**
+  - Create trigger-based rules (e.g., *"If USDC rate > $1.02, swap 100 USDC to EURC"*).
+  - Background daemon monitors market state and executes rules automatically on Arc.
+- 📱 **Native WhatsApp AI Integration**
+  - Deep-link verification modal for one-tap WhatsApp wallet linking.
+  - Direct conversational banking via WhatsApp powered by `whatsmeow` & Go backend engine.
+- 👛 **Dynamic Multi-Token Drawer**
+  - Phantom-inspired popover drawer rendering live onchain balances for USDC, EURC, and USYC.
+  - Real-time wallet address resolution supporting both Web3 injected wallets and Circle Managed Wallets.
+- 📜 **On-Chain Audit Ledger**
+  - Full activity log linked to `RovaExecutionLog.sol` smart contract with Arc Transaction Memos.
 
-- **Blockchain**: Arc Testnet (Circle's stablecoin-native L1)
-- **Wallets**: Circle Programmable Wallets (email) + Web3 wallet connect
-- **AI**: Claude 3.7 Sonnet (natural language intent routing)
-- **Cross-chain**: Circle CCTP V2
-- **FX**: StableFX
-- **Data**: Goldsky (real-time onchain indexing)
-- **Identity**: ERC-8004
-- **Frontend**: Next.js 14, TailwindCSS, Framer Motion, TypeScript
+---
 
-## Pages
+## 🛠️ Tech Stack
 
-| Page | Path | Description |
-|------|------|-------------|
-| Landing | `/` | App homepage |
-| Command Hub | `/dashboard` | Overview, stats, quick actions |
-| Send & Swap | `/send` | Send, bridge, or swap USDC |
-| Ledger | `/history` | Transaction history with memos |
+| Layer | Technology |
+|---|---|
+| **Blockchain** | Arc Testnet (Chain ID `5042002`, Circle native USDC gas L1) |
+| **Smart Contracts** | `RovaExecutionLog.sol`, ERC-8004 Identity/Reputation, ERC-8183 Flow Standard |
+| **Wallets** | Circle Programmable Wallets (Email OTP via Resend) + Wagmi / RainbowKit (Web3) |
+| **AI Router** | Anthropic Claude 3.7 Sonnet + Failsafe Intent Parser |
+| **Cross-Chain & FX** | Circle CCTP V2, Circle Gateway, StableFX Escrow |
+| **Backend Daemon** | `rova-agent-go` (Go 1.22+, `go-ethereum`, `whatsmeow`) |
+| **Frontend Framework** | Next.js 14 (App Router), React 18, TypeScript, TailwindCSS, Framer Motion |
 
-## Getting started
+---
 
-```bash
-npm install
-cp .env.example .env.local
-# Add your API keys to .env.local
-npm run dev
+## 📱 Application Routes
+
+| Route | Name | Description |
+|---|---|---|
+| `/` | **Landing Page** | Platform overview, features, and quick entry |
+| `/login` | **Authentication** | Email OTP via Resend & Web3 Wallet login |
+| `/dashboard` | **Command Hub** | Main AI chat prompt, stats, standing rules summary, quick action pills |
+| `/send` | **Send & Swap** | Full manual interface for transfers, cross-chain bridging, and FX swaps |
+| `/agent` | **Agent Watchers** | Manage active autonomous rules, triggers, and execution history |
+| `/history` | **Ledger Activity** | Detailed transaction table with ArcScan links and Arc Memos |
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- **Node.js**: `v18.x` or higher
+- **npm**: `v9.x` or higher
+
+### 2. Environment Setup
+
+Create `.env.local` in the project root:
+
+```env
+# Network RPC & Chain
+NEXT_PUBLIC_ARC_RPC_URL=https://rpc.testnet.arc.network
+NEXT_PUBLIC_ARC_CHAIN_ID=5042002
+
+# Smart Contract
+NEXT_PUBLIC_ROVA_EXECUTION_LOG_ADDRESS=0x58d1e3e11C7a93cb26C371B115f2710aF68d427a
+
+# AI & Email Services
+ANTHROPIC_API_KEY=your_anthropic_api_key
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL="Rova Security <auth@yourdomain.com>"
+
+# Circle SDK & Supabase
+NEXT_PUBLIC_CIRCLE_APP_ID=your_circle_app_id
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-## Built on Arc
+### 3. Installation & Local Development
 
-Rova is part of the Arc ecosystem — a stablecoin-native Layer-1 blockchain by Circle, designed for the programmable economy.
+```bash
+# Install dependencies
+npm install
 
-Live at: [rovaagent.vercel.app](https://rovaagent.vercel.app)
+# Run dev server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 🌐 Ecosystem & Live Links
+
+- **Live App**: [rovaagent.vercel.app](https://rovaagent.vercel.app)
+- **Arc Testnet Explorer**: [testnet.arcscan.app](https://testnet.arcscan.app)
+- **Arc Documentation**: [docs.arc.network](https://docs.arc.network)

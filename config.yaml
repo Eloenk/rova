@@ -32,3 +32,10 @@ execution:
   # Set mock_mode: true for local testing without Circle API credentials/live testnet transactions
   mock_mode: false
   fallback_to_mock: false
+
+arc:
+  rpc_url: "https://rpc.testnet.arc.network"
+  chain_id: 5042002
+  execution_log_address: "0x58d1e3e11C7a93cb26C371B115f2710aF68d427a"
+  usdc_address: "0x3600000000000000000000000000000000000000"
+  eurc_address: "0x3600000000000000000000000000000000000001"

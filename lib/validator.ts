@@ -66,7 +66,7 @@ export function validateFlowPlan(raw: unknown): ValidationResult {
   if (typeof obj.confidence  !== 'number' || obj.confidence < 0 || obj.confidence > 100) e.push('confidence must be 0-100');
   if (!RISK_SET.has(obj.risk as string)) e.push('risk must be low/medium/high');
   if (typeof obj.reserveAmount !== 'number' || obj.reserveAmount < 0) e.push('reserveAmount must be >= 0');
-  if (typeof obj.totalAmount   !== 'number' || obj.totalAmount <= 0)  e.push('totalAmount must be > 0');
+  if (typeof obj.totalAmount   !== 'number' || obj.totalAmount < 0)   e.push('totalAmount must be >= 0');
   if (typeof obj.strategy      !== 'string' || !obj.strategy.trim())  e.push('strategy required');
 
   if (Array.isArray(obj.splits) && typeof obj.reserveAmount === 'number' && typeof obj.totalAmount === 'number') {

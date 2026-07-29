@@ -18,6 +18,13 @@ export function useWallet() {
     query:   { enabled: !!address },
   });
 
+  const { data: eurcBal } = useBalance({
+    address,
+    token:   TOKENS.EURC.address,
+    chainId: arcTestnet.id,
+    query:   { enabled: !!address },
+  });
+
   const isOnArc    = chain?.id === arcTestnet.id;
   const wrongChain = isConnected && !isOnArc;
 
@@ -46,6 +53,7 @@ export function useWallet() {
     isOnArc,
     wrongChain,
     usdcBalance: usdcBal ? parseFloat(usdcBal.formatted).toFixed(2) : null,
+    eurcBalance: eurcBal ? parseFloat(eurcBal.formatted).toFixed(2) : null,
     connectInjected,
     connectWalletConnect,
     openConnectModal,

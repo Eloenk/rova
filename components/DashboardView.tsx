@@ -13,6 +13,16 @@ interface ChatMessage {
   text: string;
 }
 
+export function isConversationalPlan(plan: any | null): boolean {
+  if (!plan) return true;
+  if (!plan.totalAmount || plan.totalAmount <= 0) return true;
+  if (plan.splits && plan.splits.every((s: any) => !s.amount || s.amount <= 0)) return true;
+  if (plan.splits && plan.splits.some((s: any) => s.recipient === 'Rova Assistant')) return true;
+  const str = ((plan.strategy || '') + ' ' + (plan.reasoning || '')).toLowerCase();
+  if (str.includes('hello') || str.includes('i am rova') || str.includes('how can i assist') || str.includes('exclusively to financial operations')) return true;
+  return false;
+}
+
 export default function Dashboard() {
   const rova = useRova();
   const { syncAgentStatus, plan, status, executionResult, isProcessing, planIntent, executePlan, reset } = rova;
@@ -306,8 +316,8 @@ export default function Dashboard() {
                 </div>
 
 
-                {/* Inline Action Pills */}
-                {!showTriggerPicker ? (
+                {/* Inline Action Pills (Only shown when there is an actual financial transaction to execute) */}
+                {!isConversationalPlan(plan) && (!showTriggerPicker ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '4px' }}>
                     <button
                       onClick={() => executePlan(isConnected ? address : undefined)}
@@ -410,7 +420,7 @@ export default function Dashboard() {
                       </button>
                     </div>
                   </div>
-                )}
+                ))}
               </div>
             )}
 

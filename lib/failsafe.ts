@@ -6,7 +6,39 @@ import type { FlowPlan } from './types';
  */
 export function getFailsafePlan(intent: string): FlowPlan | null {
   const text = intent.toLowerCase().trim();
-  
+
+  // 0. GREETINGS & INTRODUCTIONS (Fast-Path 0ms guaranteed)
+  const isGreeting = ['hi', 'hello', 'hey', 'who are you', 'what is rova', 'what can you do', 'help'].includes(text) || text.startsWith('hi ') || text.startsWith('hello ') || text.startsWith('hey ');
+  if (isGreeting) {
+    return {
+      totalAmount: 0,
+      splits: [{
+        recipient: "Rova Assistant",
+        address: "0x0000000000000000000000000000000000000000",
+        amount: 0,
+        currency: "USDC",
+        country: "US",
+        fxRate: 1.0,
+        fxSymbol: "$",
+        arcProtocol: "Arc Native"
+      }],
+      routes: [{
+        from: "Rova Agent",
+        to: "User Interface",
+        via: "Arc AI Engine",
+        fee: 0,
+        cctpDomain: null,
+        bridgeType: "native"
+      }],
+      gasEstimate: { totalTxCount: 1, totalGasUsdc: 0.006 },
+      reasoning: "Hello! I am Rova, your autonomous AI financial agent built on Arc Testnet. I can execute instant USDC/EURC transfers, StableFX swaps, yield staking, or set up 24/7 automated rules. How can I assist you today?",
+      confidence: 100,
+      risk: "low",
+      strategy: "Hello! I am Rova, your autonomous AI financial agent on Arc Testnet.",
+      reserveAmount: 0
+    };
+  }
+
   // Extract common components using simple global regex
   const amountMatch = text.match(/([\d.]+)/);
   const addrMatch = text.match(/(0x[a-f0-9]{40})/i);
@@ -28,7 +60,41 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
     return null;
   }
 
-  // We only run failsafe if an amount is specified
+  // OUT-OF-SCOPE / UNRELATED NON-FINANCIAL PROMPTS (No amount & no financial keywords)
+  const financialKeywords = ['send', 'pay', 'transfer', 'swap', 'convert', 'exchange', 'bridge', 'cctp', 'move', 'stake', 'yield', 'usyc', 'rule', 'automate', 'recurring', 'job', 'hire'];
+  const hasFinancialKeyword = financialKeywords.some(k => text.includes(k));
+
+  if (amount <= 0 && !hasFinancialKeyword) {
+    return {
+      totalAmount: 0,
+      splits: [{
+        recipient: "Rova Assistant",
+        address: "0x0000000000000000000000000000000000000000",
+        amount: 0,
+        currency: "USDC",
+        country: "US",
+        fxRate: 1.0,
+        fxSymbol: "$",
+        arcProtocol: "Arc Native"
+      }],
+      routes: [{
+        from: "Rova Agent",
+        to: "User Interface",
+        via: "Arc AI Engine",
+        fee: 0,
+        cctpDomain: null,
+        bridgeType: "native"
+      }],
+      gasEstimate: { totalTxCount: 1, totalGasUsdc: 0.006 },
+      reasoning: "I am Rova, an autonomous AI financial agent dedicated exclusively to financial operations on Arc Testnet. Please use me for sending payments, currency swaps (USDC/EURC), CCTP cross-chain bridging, treasury yield, or setting up 24/7 automation rules.",
+      confidence: 100,
+      risk: "low",
+      strategy: "I am Rova, an autonomous AI financial agent dedicated exclusively to financial operations on Arc Testnet.",
+      reserveAmount: 0
+    };
+  }
+
+  // We only run failsafe for standard transactions if an amount is specified
   if (amount <= 0) return null;
 
   // 1. SWAP INTENT
@@ -40,7 +106,7 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
       totalAmount: amount,
       splits: [{
         recipient: address === "0x0000000000000000000000000000000000000000" ? "Self (Swap)" : "Recipient Wallet",
-        address: address, // Properly captured address!
+        address: address,
         amount: amount,
         currency: outCurrency,
         country: outCurrency === 'EURC' ? "EU" : "US",
