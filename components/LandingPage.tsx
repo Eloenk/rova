@@ -21,6 +21,7 @@ import {
   Calendar,
   Mail,
 } from 'lucide-react';
+import HeroChatDemo from '@/components/viz/HeroChatDemo';
 
 export default function LandingPage() {
   const [hasSession, setHasSession] = useState(false);
@@ -112,60 +113,9 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right Product Preview Floating Card */}
-            <div className="lg:col-span-5">
-              <div className="relative p-6 rounded-2xl bg-surface-raised border border-border-strong shadow-2xl backdrop-blur-xl transform hover:-translate-y-1 transition-all duration-300">
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-accent-mint/10 border border-accent-mint/20 flex items-center justify-center">
-                      <Activity size={20} className="text-accent-mint" />
-                    </div>
-                    <div>
-                      <div className="text-xs text-text-secondary uppercase tracking-wider font-mono">Portfolio State</div>
-                      <div className="text-xl font-bold text-text-primary font-mono">$142,850.00 <span className="text-xs text-accent-mint font-sans">+4.2%</span></div>
-                    </div>
-                  </div>
-                  <span className="px-2.5 py-1 rounded-md bg-accent-primary/10 text-accent-primary border border-accent-primary/20 text-xs font-mono">
-                    LIVE DEMO
-                  </span>
-                </div>
-
-                {/* Micro Sparkline Preview */}
-                <div className="h-16 w-full mb-4 flex items-end gap-1.5 px-1">
-                  {[40, 55, 35, 60, 50, 75, 65, 85, 80, 95, 90, 100].map((h, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 bg-accent-mint/20 hover:bg-accent-primary transition-all rounded-t-sm"
-                      style={{ height: `${h}%` }}
-                    />
-                  ))}
-                </div>
-
-                {/* Line Item Breakdown */}
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-border text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-accent-mint/20 text-accent-mint flex items-center justify-center font-bold">$</div>
-                      <span className="font-semibold text-text-primary">USDC Balance</span>
-                    </div>
-                    <span className="font-mono text-text-primary font-bold">120,400.00 USDC</span>
-                  </div>
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-border text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-accent-mint/20 text-accent-mint flex items-center justify-center font-bold">€</div>
-                      <span className="font-semibold text-text-primary">EURC Balance</span>
-                    </div>
-                    <span className="font-mono text-text-primary font-bold">20,787.03 EURC</span>
-                  </div>
-                </div>
-
-                {/* Floating micro notification tag */}
-                <div className="mt-4 pt-3 border-t border-border flex items-center gap-2 text-xs text-accent-mint">
-                  <Zap size={14} />
-                  <span>Automated Standing Rule Active: Best FX desk selected via x402</span>
-                </div>
-              </div>
+            {/* Right Product Preview Floating HeroChatDemo */}
+            <div className="lg:col-span-5 flex justify-center lg:justify-end">
+              <HeroChatDemo />
             </div>
           </div>
         </div>
