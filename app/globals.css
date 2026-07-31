@@ -4,9 +4,9 @@
 
 :root {
   /* surfaces */
-  --background: #0a1018;       /* app background, slightly darker than current */
+  --background: #0a1018;       /* app background */
   --surface: #101927;          /* card / panel background */
-  --surface-raised: #16212f;   /* elevated card, e.g. hero balance card */
+  --surface-raised: #16212f;   /* elevated card */
   --border: rgba(180, 244, 215, 0.12);
   --border-strong: rgba(180, 244, 215, 0.25);
 
@@ -15,8 +15,8 @@
   --text-secondary: #8b9ba8;
   --text-tertiary: #5b6b78;
 
-  /* accent */
-  --accent-primary: #BFFF00;   /* primary CTA color */
+  /* accent — restored to previous primary green #25D366 */
+  --accent-primary: #25D366;   /* primary CTA color */
   --accent-mint: #B4F4D7;      /* secondary accent, active nav states */
   --accent-success: #22c55e;
   --accent-error: #ef4444;
@@ -84,11 +84,11 @@ body {
   transform: translateY(-1px);
 }
 
+/* Solid white heading style replacing text gradient */
 .text-gradient {
-  background: linear-gradient(135deg, #BFFF00 0%, #25D366 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
 }
 
 .mono-tag {

@@ -117,51 +117,6 @@ export default function Dashboard() {
         flex-1 max-w-[840px] w-full mx-auto flex flex-col pb-6 box-border
         ${!hasChatStarted ? 'justify-center items-center' : 'justify-start items-stretch'}
       `}>
-        {/* COMPACT BALANCE SUMMARY STRIP (Idle state before chat starts) */}
-        {!hasChatStarted && (
-          <div className="w-full max-w-[720px] mb-8 space-y-4">
-            <div className="p-4 rounded-xl bg-surface-raised border border-border flex items-center justify-between shadow-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-accent-mint/10 border border-accent-mint/20 flex items-center justify-center">
-                  <TrendingUp size={20} className="text-accent-mint" />
-                </div>
-                <div>
-                  <div className="text-xs text-text-secondary font-mono uppercase tracking-wider">Total Portfolio Balance</div>
-                  <div className="text-2xl font-bold text-text-primary font-mono">${totalUsd} <span className="text-xs text-accent-mint font-sans font-normal">+0.12% 24h</span></div>
-                </div>
-              </div>
-              <div className="text-right hidden sm:block">
-                <span className="text-xs text-accent-mint px-2 py-1 rounded bg-accent-mint/10 border border-accent-mint/20 font-mono">
-                  Arc Testnet
-                </span>
-              </div>
-            </div>
-
-            {/* Asset Row Feed */}
-            <div className="space-y-2">
-              <AssetRow
-                symbol="USDC"
-                name="USD Coin (Arc)"
-                amount={`${currentUsdc} USDC`}
-                usdValue={usdcVal.toFixed(2)}
-                iconBg="rgba(180, 244, 215, 0.1)"
-                iconColor="var(--accent-mint)"
-                sparklineData={[100, 102, 101, 105, 104, 108]}
-                change24h="+0.05%"
-              />
-              <AssetRow
-                symbol="EURC"
-                name="Euro Coin (Arc)"
-                amount={`${currentEurc} EURC`}
-                usdValue={eurcVal.toFixed(2)}
-                iconBg="rgba(191, 255, 0, 0.1)"
-                iconColor="var(--accent-primary)"
-                sparklineData={[90, 92, 95, 93, 98, 102]}
-                change24h="+0.24%"
-              />
-            </div>
-          </div>
-        )}
 
         {/* CENTERED HERO INPUT STATE */}
         {!hasChatStarted && (

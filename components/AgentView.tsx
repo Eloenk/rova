@@ -176,7 +176,7 @@ export default function AgentView() {
       <header className="flex justify-between items-end mb-7">
         <div>
           <span className="text-[11px] font-mono font-bold tracking-widest text-accent-mint uppercase block mb-1">Autonomous Agent</span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-accent-primary via-accent-mint to-accent-success bg-clip-text text-transparent">Agent</h1>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text-primary">Agent</h1>
           <p className="text-text-secondary text-sm sm:text-base mt-1">
             Shops three rate providers before every move, then executes on its own, or waits for your one-tap approval if using your wallet.
           </p>

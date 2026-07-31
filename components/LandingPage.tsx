@@ -85,7 +85,7 @@ export default function LandingPage() {
 
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-text-primary leading-[1.08]">
                 A New Standard <br />
-                <span className="bg-gradient-to-r from-accent-mint via-accent-primary to-accent-success bg-clip-text text-transparent">
+                <span className="text-accent-mint">
                   in Autonomous Capital.
                 </span>
               </h1>

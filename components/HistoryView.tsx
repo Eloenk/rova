@@ -33,7 +33,7 @@ export default function HistoryView() {
           <span className="text-[11px] font-mono font-bold tracking-widest text-accent-mint uppercase block mb-1">
             Operational Log
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-accent-primary via-accent-mint to-accent-success bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text-primary">
             Recent Activity
           </h1>
           <p className="text-text-secondary text-sm sm:text-base mt-1">
