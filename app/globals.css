@@ -7,18 +7,18 @@
   --background: #0d1520;       /* base navy app background */
   --surface: #131d2a;          /* card / panel background */
   --surface-raised: #1a2636;   /* elevated card */
-  --border: rgba(37, 211, 102, 0.15);
-  --border-strong: rgba(37, 211, 102, 0.3);
+  --border: rgba(191, 255, 0, 0.15);
+  --border-strong: rgba(191, 255, 0, 0.3);
 
   /* text */
   --text-primary: #ffffff;
   --text-secondary: #8b9ba8;
   --text-tertiary: #5b6b78;
 
-  /* accent — original primary green #25D366 */
-  --accent-primary: #25D366;   /* primary CTA color */
+  /* accent — vibrant lime green #BFFF00 */
+  --accent-primary: #BFFF00;   /* primary CTA color */
   --accent-mint: #B4F4D7;      /* mint highlight */
-  --accent-success: #25D366;
+  --accent-success: #BFFF00;
   --accent-error: #ef4444;
 
   /* radii */

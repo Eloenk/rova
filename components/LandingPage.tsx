@@ -64,7 +64,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <Link
               href={hasSession ? '/dashboard' : '/login'}
-              className="px-5 py-2.5 rounded-xl bg-[#047857] text-white font-extrabold text-xs uppercase tracking-wider hover:bg-[#065f46] transition-all border border-[#10b981]/40 shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl bg-[#BFFF00] text-black font-semibold text-xs uppercase tracking-wider hover:brightness-110 transition-all flex items-center gap-2"
             >
               <span>{hasSession ? 'Go to Dashboard' : 'Launch App'}</span>
               <ArrowRight size={14} />
@@ -96,7 +96,7 @@ export default function LandingPage() {
               <div className="flex flex-wrap items-center gap-4 pt-4">
                 <Link
                   href={hasSession ? '/dashboard' : '/login'}
-                  className="px-7 py-3.5 rounded-xl bg-[#047857] text-white font-extrabold text-sm uppercase tracking-wider hover:bg-[#065f46] transition-all border border-[#10b981]/40 shadow-[0_0_30px_rgba(16,185,129,0.35)] flex items-center gap-2.5"
+                  className="px-7 py-3.5 rounded-xl bg-[#BFFF00] text-black font-semibold text-sm uppercase tracking-wider hover:brightness-110 transition-all flex items-center gap-2.5"
                 >
                   <span>{hasSession ? 'Access Command Hub' : 'Launch App Now'}</span>
                   <ArrowRight size={16} />
@@ -343,7 +343,7 @@ export default function LandingPage() {
           <div className="pt-4">
             <Link
               href={hasSession ? '/dashboard' : '/login'}
-              className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-accent-primary text-primary-foreground font-extrabold text-lg hover:brightness-110 transition-all shadow-[0_0_40px_rgba(191,255,0,0.25)]"
+              className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-[#BFFF00] text-black font-semibold text-base uppercase tracking-wider hover:brightness-110 transition-all shadow-[0_0_30px_rgba(191,255,0,0.25)]"
             >
               <span>Launch Application</span>
               <ArrowRight size={20} />
