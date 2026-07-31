@@ -6,7 +6,7 @@ const ITEMS = [
   'CIRCLE',
   'ARC NETWORK',
   'WHATSAPP',
-  'METAMASK',
+  'SOLIDITY SMART CONTRACTS',
   'SUPABASE',
 ];
 
@@ -29,16 +29,16 @@ export default function WarningTapeMarquee() {
     return () => observer.disconnect();
   }, []);
 
-  // Build repeated sequence: CIRCLE • ARC NETWORK • WHATSAPP • METAMASK • SUPABASE • ...
+  // Build repeated sequence: CIRCLE • ARC NETWORK • WHATSAPP • SOLIDITY SMART CONTRACTS • SUPABASE • ...
   const textBlock = ITEMS.join('  •  ');
 
   return (
     <section
       id="integrations"
       ref={containerRef}
-      className="w-full py-4 bg-[#08080a] border-y border-white/15 overflow-hidden relative select-none"
+      className="w-full py-7 md:py-9 bg-[#0b131e] border-y border-accent-primary/25 overflow-hidden relative select-none shadow-lg"
       style={{
-        backgroundImage: 'repeating-linear-gradient(-45deg, #08080a, #08080a 12px, #121216 12px, #121216 24px)',
+        backgroundImage: 'repeating-linear-gradient(-45deg, #0b131e, #0b131e 16px, #132030 16px, #132030 32px)',
       }}
     >
       <div className="w-full overflow-hidden flex whitespace-nowrap">
@@ -52,10 +52,10 @@ export default function WarningTapeMarquee() {
           {[1, 2, 3, 4].map((idx) => (
             <div
               key={idx}
-              className="flex items-center text-xs md:text-sm font-mono font-black uppercase tracking-[0.25em] text-white/90 shrink-0 pr-8"
+              className="flex items-center text-sm md:text-lg lg:text-xl font-mono font-black uppercase tracking-[0.3em] text-white/95 shrink-0 pr-10"
             >
               <span>{textBlock}</span>
-              <span className="ml-8 text-emerald-400/80">•</span>
+              <span className="ml-10 text-accent-primary">•</span>
             </div>
           ))}
         </div>

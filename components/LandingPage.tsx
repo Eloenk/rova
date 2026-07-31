@@ -92,7 +92,7 @@ export default function LandingPage() {
 
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-text-primary leading-[1.08]">
                 A New Standard <br />
-                <span className="text-text-secondary font-bold">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-primary via-emerald-300 to-accent-mint font-extrabold">
                   in Autonomous Capital.
                 </span>
               </h1>

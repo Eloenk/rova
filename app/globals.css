@@ -4,21 +4,21 @@
 
 :root {
   /* surfaces */
-  --background: #000000;       /* pure black app background */
-  --surface: #0a0a0c;          /* card / panel background */
-  --surface-raised: #121215;   /* elevated card */
-  --border: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.2);
+  --background: #0d1520;       /* base navy app background */
+  --surface: #131d2a;          /* card / panel background */
+  --surface-raised: #1a2636;   /* elevated card */
+  --border: rgba(37, 211, 102, 0.15);
+  --border-strong: rgba(37, 211, 102, 0.3);
 
   /* text */
   --text-primary: #ffffff;
-  --text-secondary: #94a3b8;
-  --text-tertiary: #64748b;
+  --text-secondary: #8b9ba8;
+  --text-tertiary: #5b6b78;
 
-  /* accent — sleek emerald */
-  --accent-primary: #10b981;   /* subtle emerald */
-  --accent-mint: #34d399;      /* soft emerald accent */
-  --accent-success: #10b981;
+  /* accent — original primary green #25D366 */
+  --accent-primary: #25D366;   /* primary CTA color */
+  --accent-mint: #B4F4D7;      /* mint highlight */
+  --accent-success: #25D366;
   --accent-error: #ef4444;
 
   /* radii */
@@ -33,15 +33,15 @@
   --card: var(--surface);
   --card-foreground: var(--text-primary);
   --primary: var(--accent-primary);
-  --primary-foreground: #000000;
-  --secondary: #121215;
+  --primary-foreground: #0d1520;
+  --secondary: #1a2636;
   --secondary-foreground: var(--accent-mint);
   --muted: var(--text-secondary);
   --muted-foreground: var(--text-secondary);
   --accent: var(--accent-primary);
-  --accent-foreground: #000000;
+  --accent-foreground: #0d1520;
   --destructive: #ef4444;
-  --input-background: rgba(10, 10, 12, 0.8);
+  --input-background: rgba(19, 29, 42, 0.8);
   --ring: var(--accent-primary);
   --teal: var(--accent-primary);
   --mint: var(--accent-mint);
@@ -50,7 +50,7 @@
   --border2: var(--border-strong);
   --subtle: var(--text-secondary);
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --sidebar: #000000;
+  --sidebar: #090e17;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -84,11 +84,11 @@ body {
   transform: translateY(-1px);
 }
 
-/* Solid white heading style replacing text gradient */
+/* Vibrant heading text gradient */
 .text-gradient {
-  color: #ffffff !important;
-  background: none !important;
-  -webkit-text-fill-color: initial !important;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-mint) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .mono-tag {
