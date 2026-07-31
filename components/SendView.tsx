@@ -8,16 +8,16 @@ import { Send, Repeat, Globe, ArrowRight, Loader, CheckCircle, AlertCircle, Chev
 type Action = 'send' | 'bridge' | 'swap';
 
 const ACTIONS: { id: Action; label: string; icon: React.ReactNode; desc: string }[] = [
-  { id: 'send',   label: 'Send',   icon: <Send size={18} />,   desc: 'Transfer stablecoins to a wallet address or recipient' },
-  { id: 'bridge', label: 'Bridge', icon: <Globe size={18} />,  desc: 'Move USDC cross-chain via CCTP V2' },
-  { id: 'swap',   label: 'Swap',   icon: <Repeat size={18} />, desc: 'Exchange USDC ↔ EURC with StableFX' },
+  { id: 'send',   label: 'Send',   icon: <Send size={16} />,   desc: 'Transfer stablecoins to a wallet address or recipient' },
+  { id: 'bridge', label: 'Bridge', icon: <Globe size={16} />,  desc: 'Move USDC cross-chain via CCTP V2' },
+  { id: 'swap',   label: 'Swap',   icon: <Repeat size={16} />, desc: 'Exchange USDC ↔ EURC with StableFX' },
 ];
 
 const BRIDGE_CHAINS = ['Ethereum', 'Base', 'Polygon', 'Solana', 'Arbitrum'];
 const CURRENCIES = ['USDC', 'EURC', 'USYC'];
 
 export default function SendView() {
-  const { isConnected, connectInjected, isConnecting, usdcBalance } = useWallet();
+  const { isConnected, usdcBalance } = useWallet();
   const { executeFlow, isProcessing } = useRova();
 
   const [action, setAction] = useState<Action>('send');
@@ -59,37 +59,53 @@ export default function SendView() {
   };
 
   return (
-    <div style={{ padding: '32px 40px', maxWidth: '680px', margin: '0 auto' }} className="animate-fade-up">
-
+    <div className="py-8 px-4 sm:px-8 max-w-[680px] mx-auto animate-fade-up font-sans">
       {/* Header */}
-      <header style={{ marginBottom: '36px' }}>
-        <span className="mono-tag" style={{ color: 'var(--mint)', marginBottom: '8px', display: 'block', fontSize: '11px' }}>Operational</span>
-        <h1 style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.03em' }} className="text-gradient">Send & Swap</h1>
-        <p style={{ color: 'var(--muted)', fontSize: '15px', marginTop: '6px' }}>Move stablecoins on Arc. No jargon required.</p>
+      <header className="mb-8">
+        <span className="text-[11px] font-mono font-bold tracking-widest text-accent-mint uppercase block mb-1">
+          Operational Flow
+        </span>
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-accent-primary via-accent-mint to-accent-success bg-clip-text text-transparent">
+          Send & Swap
+        </h1>
+        <p className="text-text-secondary text-sm sm:text-base mt-1">
+          Move stablecoins on Arc with instant sub-second finality.
+        </p>
       </header>
 
-      {/* Action selector */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '28px', padding: '6px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px' }}>
-        {ACTIONS.map(a => (
-          <button key={a.id} onClick={() => { setAction(a.id); setStatus('idle'); }} style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-            padding: '12px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-            background: action === a.id ? 'rgba(255,255,255,0.07)' : 'transparent',
-            color: action === a.id ? '#fff' : 'var(--muted)',
-            fontWeight: action === a.id ? 700 : 500, fontSize: '14px', transition: 'all 0.2s',
-          }}>
-            {a.icon} {a.label}
-          </button>
-        ))}
+      {/* Rounded-Pill Segmented Action Control */}
+      <div className="flex gap-1.5 p-1.5 mb-6 rounded-full bg-surface border border-border">
+        {ACTIONS.map(a => {
+          const isActive = action === a.id;
+          return (
+            <button
+              key={a.id}
+              onClick={() => { setAction(a.id); setStatus('idle'); }}
+              className={`
+                flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-full border-0 cursor-pointer font-bold text-xs sm:text-sm transition-all
+                ${isActive
+                  ? 'bg-accent-mint/15 text-accent-mint border border-accent-mint/30 shadow-sm'
+                  : 'bg-transparent text-text-secondary hover:text-text-primary'}
+              `}
+            >
+              {a.icon} {a.label}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="glass-panel" style={{ padding: '28px', borderRadius: '24px', border: '1px solid var(--border2)' }}>
-
+      {/* Main Card Container */}
+      <div className="p-6 sm:p-8 rounded-xl bg-surface-raised border border-border shadow-xl space-y-5">
         {/* SEND FORM */}
         {action === 'send' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
-            <Field label="Recipient wallet address" hint="Target address on Arc or connected chain">
-              <input value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="0x..." style={inputStyle} />
+          <div className="space-y-4">
+            <Field label="Recipient wallet address" hint="Target EVM address on Arc">
+              <input
+                value={recipient}
+                onChange={e => setRecipient(e.target.value)}
+                placeholder="0x..."
+                className="w-full p-3 rounded-md bg-surface border border-border text-text-primary text-sm outline-none focus:border-accent-mint transition-colors font-mono"
+              />
             </Field>
             <Field label="Currency">
               <Select value={fromCurrency} onChange={setFromCurrency} options={CURRENCIES} />
@@ -99,12 +115,12 @@ export default function SendView() {
 
         {/* BRIDGE FORM */}
         {action === 'bridge' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '12px', alignItems: 'end' }}>
+          <div className="space-y-4">
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-end">
               <Field label="From chain">
                 <Select value={fromChain} onChange={setFromChain} options={BRIDGE_CHAINS} />
               </Field>
-              <div style={{ paddingBottom: '14px', color: 'var(--muted)' }}><ArrowRight size={18} /></div>
+              <div className="pb-3 text-text-secondary"><ArrowRight size={18} /></div>
               <Field label="To chain">
                 <Select value={toChain} onChange={setToChain} options={['Arc', ...BRIDGE_CHAINS.filter(c => c !== fromChain)]} />
               </Field>
@@ -117,11 +133,11 @@ export default function SendView() {
 
         {/* SWAP FORM */}
         {action === 'swap' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '12px', alignItems: 'end', marginBottom: '20px' }}>
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-end">
             <Field label="From currency">
               <Select value={fromCurrency} onChange={setFromCurrency} options={CURRENCIES} />
             </Field>
-            <div style={{ paddingBottom: '14px', color: 'var(--muted)' }}><Repeat size={18} /></div>
+            <div className="pb-3 text-text-secondary"><Repeat size={18} /></div>
             <Field label="To currency">
               <Select value={toCurrency} onChange={setToCurrency} options={CURRENCIES.filter(c => c !== fromCurrency)} />
             </Field>
@@ -130,8 +146,8 @@ export default function SendView() {
 
         {/* Amount — shared */}
         <Field label={`Amount (${fromCurrency})`} hint={isConnected && usdcBalance ? `Available: $${usdcBalance}` : undefined}>
-          <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', fontSize: '16px', fontWeight: 700 }}>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary font-bold text-base">
               {fromCurrency === 'EURC' ? '€' : '$'}
             </span>
             <input
@@ -140,41 +156,57 @@ export default function SendView() {
               type="number"
               min="0"
               placeholder="0.00"
-              style={{ ...inputStyle, paddingLeft: '32px' }}
+              className="w-full p-3 pl-8 pr-14 rounded-md bg-surface border border-border text-text-primary text-sm outline-none focus:border-accent-mint font-mono"
             />
             {isConnected && usdcBalance && (
-              <button onClick={() => setAmount(usdcBalance)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', fontWeight: 700, color: 'var(--mint)', background: 'none', border: 'none', cursor: 'pointer' }}>MAX</button>
+              <button
+                onClick={() => setAmount(usdcBalance)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-accent-mint bg-transparent border-0 cursor-pointer hover:underline"
+              >
+                MAX
+              </button>
             )}
           </div>
         </Field>
 
         {/* Memo */}
         <Field label="Memo (optional)" hint="Attached as a Transaction Memo on Arc">
-          <input value={memo} onChange={e => setMemo(e.target.value)} placeholder="e.g. Invoice #12, rent, supplier payment..." style={inputStyle} />
+          <input
+            value={memo}
+            onChange={e => setMemo(e.target.value)}
+            placeholder="e.g. Invoice #12, rent, supplier payment..."
+            className="w-full p-3 rounded-md bg-surface border border-border text-text-primary text-sm outline-none focus:border-accent-mint"
+          />
         </Field>
 
-        {/* Status */}
+        {/* Status Feedback */}
         {status !== 'idle' && status !== 'loading' && (
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '14px 16px', borderRadius: '12px', marginBottom: '16px', background: status === 'success' ? 'rgba(180,244,215,0.08)' : 'rgba(255,77,77,0.08)', border: `1px solid ${status === 'success' ? 'rgba(180,244,215,0.2)' : 'rgba(255,77,77,0.2)'}` }}>
-            {status === 'success' ? <CheckCircle size={16} color="var(--mint)" style={{ flexShrink: 0, marginTop: '1px' }} /> : <AlertCircle size={16} color="#ff4d4d" style={{ flexShrink: 0, marginTop: '1px' }} />}
-            <p style={{ fontSize: '13px', color: status === 'success' ? 'var(--mint)' : '#ff4d4d', lineHeight: 1.5 }}>{resultMsg}</p>
+          <div className={`
+            flex items-start gap-2.5 p-3.5 rounded-lg text-xs leading-relaxed border
+            ${status === 'success' ? 'bg-accent-mint/10 border-accent-mint/25 text-accent-mint' : 'bg-accent-error/10 border-accent-error/25 text-accent-error'}
+          `}>
+            {status === 'success' ? <CheckCircle size={16} className="shrink-0 mt-0.5" /> : <AlertCircle size={16} className="shrink-0 mt-0.5" />}
+            <p>{resultMsg}</p>
           </div>
         )}
 
-        {/* Submit */}
-        <button onClick={handleSubmit} disabled={isProcessing || status === 'loading'} style={{ ...btnStyle, background: '#BFFF00', color: '#0d1520', opacity: isProcessing ? 0.7 : 1 }}>
+        {/* Submit Button */}
+        <button
+          onClick={handleSubmit}
+          disabled={isProcessing || status === 'loading'}
+          className="w-full py-3.5 rounded-lg bg-accent-primary text-primary-foreground font-extrabold text-sm border-0 cursor-pointer flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-md"
+        >
           {isProcessing || status === 'loading'
-            ? <><Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> Processing...</>
+            ? <><Loader size={16} className="animate-spin" /> Processing...</>
             : <>{action === 'send' ? `Send ${fromCurrency}` : action === 'bridge' ? `Bridge ${fromCurrency}` : `Swap ${fromCurrency} ↔ ${toCurrency}`} <ArrowRight size={16} /></>
           }
         </button>
-
       </div>
 
-      {/* Powered by */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '24px', opacity: 0.4 }}>
+      {/* Powered by Footer */}
+      <div className="flex justify-center gap-6 mt-6 opacity-50 text-xs font-mono text-text-secondary">
         {['Circle Wallets', 'CCTP V2', 'StableFX', 'Arc Memos'].map(t => (
-          <span key={t} style={{ fontSize: '11px', color: 'var(--subtle)', fontWeight: 600 }}>{t}</span>
+          <span key={t}>{t}</span>
         ))}
       </div>
     </div>
@@ -183,10 +215,10 @@ export default function SendView() {
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
-        <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--muted)' }}>{label}</label>
-        {hint && <span style={{ fontSize: '11px', color: 'var(--subtle)' }}>{hint}</span>}
+    <div>
+      <div className="flex justify-between items-baseline mb-1.5">
+        <label className="text-xs font-semibold text-text-secondary">{label}</label>
+        {hint && <span className="text-[11px] text-text-tertiary">{hint}</span>}
       </div>
       {children}
     </div>
@@ -195,43 +227,19 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 
 function Select({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="relative">
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        style={{
-          ...inputStyle,
-          appearance: 'none',
-          WebkitAppearance: 'none',
-          MozAppearance: 'none',
-          paddingRight: '36px',
-          cursor: 'pointer',
-          background: '#090e17',
-          color: '#ffffff',
-          border: '1px solid rgba(180, 244, 215, 0.18)',
-        }}
+        className="w-full p-3 pr-9 rounded-md bg-surface border border-border text-text-primary text-sm outline-none cursor-pointer appearance-none"
       >
         {options.map(o => (
-          <option key={o} value={o} style={{ background: '#0d1520', color: '#ffffff', padding: '10px' }}>
+          <option key={o} value={o} className="bg-surface-raised text-text-primary">
             {o}
           </option>
         ))}
       </select>
-      <ChevronDown size={14} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#8b9ba8', pointerEvents: 'none' }} />
+      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" />
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '12px 14px', borderRadius: '12px',
-  background: '#090e17', border: '1px solid rgba(180,244,215,0.18)',
-  color: '#fff', fontSize: '15px', fontFamily: 'inherit',
-  outline: 'none', transition: 'border-color 0.2s',
-};
-
-const btnStyle: React.CSSProperties = {
-  width: '100%', padding: '14px', borderRadius: '14px',
-  fontWeight: 800, fontSize: '15px', cursor: 'pointer',
-  border: 'none', display: 'flex', alignItems: 'center',
-  justifyContent: 'center', gap: '8px', transition: 'all 0.2s',
-};

@@ -9,18 +9,37 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['Syne', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
+        background: 'var(--background)',
+        surface: 'var(--surface)',
+        'surface-raised': 'var(--surface-raised)',
+        border: 'var(--border)',
+        'border-strong': 'var(--border-strong)',
+        'text-primary': 'var(--text-primary)',
+        'text-secondary': 'var(--text-secondary)',
+        'text-tertiary': 'var(--text-tertiary)',
+        'accent-primary': 'var(--accent-primary)',
+        'accent-mint': 'var(--accent-mint)',
+        'accent-success': 'var(--accent-success)',
+        'accent-error': 'var(--accent-error)',
         arc: {
-          bg: '#080c14',
-          surface: '#0d1424',
-          surface2: '#111827',
-          teal: '#00d4aa',
+          bg: '#0a1018',
+          surface: '#101927',
+          surface2: '#16212f',
+          teal: '#25D366',
           blue: '#3b82f6',
         },
+      },
+      borderRadius: {
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
+        pill: 'var(--radius-pill)',
       },
       animation: {
         'fade-up': 'fadeUp .35s ease-out both',

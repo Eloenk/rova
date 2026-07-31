@@ -10,6 +10,11 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 export const metadata: Metadata = {
   title: 'Rova — AI-Powered Money Movement on Arc',
   description: 'Send, bridge, and swap stablecoins on Arc using plain English. Powered by Circle Wallets, Claude AI, StableFX, CCTP V2, and App Kits.',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

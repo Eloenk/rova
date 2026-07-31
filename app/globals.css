@@ -3,63 +3,77 @@
 @tailwind utilities;
 
 :root {
-  --font-size: 16px;
-  --background: #0d1520;
-  --foreground: #ffffff;
-  --card: #131d2a;
-  --card-foreground: #ffffff;
-  --primary: #BFFF00;
+  /* surfaces */
+  --background: #0a1018;       /* app background, slightly darker than current */
+  --surface: #101927;          /* card / panel background */
+  --surface-raised: #16212f;   /* elevated card, e.g. hero balance card */
+  --border: rgba(180, 244, 215, 0.12);
+  --border-strong: rgba(180, 244, 215, 0.25);
+
+  /* text */
+  --text-primary: #ffffff;
+  --text-secondary: #8b9ba8;
+  --text-tertiary: #5b6b78;
+
+  /* accent */
+  --accent-primary: #BFFF00;   /* primary CTA color */
+  --accent-mint: #B4F4D7;      /* secondary accent, active nav states */
+  --accent-success: #22c55e;
+  --accent-error: #ef4444;
+
+  /* radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* legacy compatibility mapping */
+  --foreground: var(--text-primary);
+  --card: var(--surface);
+  --card-foreground: var(--text-primary);
+  --primary: var(--accent-primary);
   --primary-foreground: #0d1520;
   --secondary: #1a2636;
-  --secondary-foreground: #B4F4D7;
-  --muted: #8b9ba8;
-  --muted-foreground: #8b9ba8;
+  --secondary-foreground: var(--accent-mint);
+  --muted: var(--text-secondary);
+  --muted-foreground: var(--text-secondary);
   --accent: #25D366;
   --accent-foreground: #0d1520;
   --destructive: #ef4444;
-  --border: rgba(180, 244, 215, 0.15);
-  --input-background: rgba(19, 29, 42, 0.7);
-  --ring: #BFFF00;
-
+  --input-background: rgba(16, 25, 39, 0.7);
+  --ring: var(--accent-primary);
   --teal: #25D366;
-  --mint: #B4F4D7;
-  --lime: #BFFF00;
-  --blue: #25D366;
-  --surface: rgba(19, 29, 42, 0.6);
-  --surface2: rgba(26, 38, 54, 0.75);
-  --border2: rgba(180, 244, 215, 0.22);
-  --subtle: #8b9ba8;
-  --text: #ffffff;
-
+  --mint: var(--accent-mint);
+  --lime: var(--accent-primary);
+  --surface2: var(--surface-raised);
+  --border2: var(--border-strong);
+  --subtle: var(--text-secondary);
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-
-  --radius: 0.5rem;
-  --sidebar: #090d14;
+  --sidebar: #070c13;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { font-size: var(--font-size); }
+html { font-size: 16px; scroll-behavior: smooth; }
 
 body {
   background: var(--background);
-  color: var(--foreground);
+  color: var(--text-primary);
   font-family: var(--font-main);
   -webkit-font-smoothing: antialiased;
 }
 
 .glass-panel {
-  background: rgba(19, 29, 42, 0.75);
+  background: rgba(16, 25, 39, 0.75);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(180, 244, 215, 0.15);
+  border: 1px solid var(--border);
 }
 
 .glass-card {
-  background: rgba(19, 29, 42, 0.85);
+  background: rgba(22, 33, 47, 0.85);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(180, 244, 215, 0.18);
+  border: 1px solid var(--border-strong);
 }
 
 .cyber-button {
@@ -96,7 +110,6 @@ body {
   to   { transform: rotate(360deg); }
 }
 
-/* Mobile-only hamburger toggle button (Strictly hidden on mid & desktop screens >= 768px) */
 @media (min-width: 768px) {
   .mobile-menu-toggle {
     display: none !important;
@@ -108,72 +121,16 @@ body {
   }
 }
 
-/* Landing Feature Card Hover & Responsive Grid */
 .landing-feature-card {
   transition: all 0.25s ease-in-out;
 }
 
 .landing-feature-card:hover {
   background: rgba(255, 255, 255, 0.035) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(180, 244, 215, 0.25) !important;
   transform: translateY(-2px);
 }
 
-.landing-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  width: 100%;
-}
-
-@media (max-width: 1024px) {
-  .landing-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-  }
-}
-
-@media (max-width: 640px) {
-  .landing-grid {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
-  .landing-card-title {
-    font-size: 14px !important;
-  }
-  .landing-card-desc {
-    font-size: 12.5px !important;
-  }
-
-  /* Forced 1-row Dashboard stats grid on mobile */
-  .dashboard-stats-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 8px !important;
-  }
-  .dashboard-stat-tile {
-    padding: 10px 8px !important;
-  }
-  .dashboard-stat-tile h2 {
-    font-size: 14px !important;
-  }
-  .dashboard-stat-tile p {
-    font-size: 10px !important;
-  }
-}
-
-/* Mobile-only Login Page layout: Hide dark branding panel on mobile */
-@media (max-width: 768px) {
-  .login-left-brand {
-    display: none !important;
-  }
-  .login-right-auth {
-    flex: 1 1 100% !important;
-    min-height: 100vh !important;
-    padding: 36px 24px !important;
-  }
-}
-
-/* Select & Option dark dropdown styling */
 select {
   background-color: #090e17 !important;
   color: #ffffff !important;
@@ -184,4 +141,3 @@ select option {
   color: #ffffff !important;
   padding: 10px !important;
 }
-

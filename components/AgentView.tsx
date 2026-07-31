@@ -154,12 +154,6 @@ export default function AgentView() {
   async function approveIntent(intent: StandingIntent) {
     setApprovingId(intent.id);
     try {
-      // Standing intents can carry multiple splits; self-custody approval
-      // signs a single native transfer covering the plan's first split — the
-      // simplification that keeps one-tap approval possible for arbitrary
-      // Command Hub plans (multi-split self-custody signing in one tap is a
-      // good next step, likely via a batched call once the source wallet
-      // supports it).
       const firstSplit = intent.plan.splits[0];
       if (!firstSplit?.address || !firstSplit.amount) throw new Error('This plan has no sendable split');
       const txHash = await sendUsdcSelfCustody(firstSplit.address, firstSplit.amount);
@@ -178,58 +172,53 @@ export default function AgentView() {
   const readyIntents = intents.filter(i => i.status === 'ready_to_execute');
 
   return (
-    <div style={{ padding: '32px 40px', maxWidth: '980px', margin: '0 auto' }} className="animate-fade-up">
-
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' }}>
+    <div className="py-8 px-4 sm:px-8 max-w-[980px] mx-auto animate-fade-up font-sans">
+      <header className="flex justify-between items-end mb-7">
         <div>
-          <span className="mono-tag" style={{ color: 'var(--mint)', marginBottom: '8px', display: 'block', fontSize: '11px' }}>Autonomous</span>
-          <h1 style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.03em' }} className="text-gradient">Agent</h1>
-          <p style={{ color: 'var(--muted)', fontSize: '15px', marginTop: '6px' }}>
-            Shops three rate providers before every move, then executes on its own, or waits for your one-tap approval if you're using your own wallet.
+          <span className="text-[11px] font-mono font-bold tracking-widest text-accent-mint uppercase block mb-1">Autonomous Agent</span>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-accent-primary via-accent-mint to-accent-success bg-clip-text text-transparent">Agent</h1>
+          <p className="text-text-secondary text-sm sm:text-base mt-1">
+            Shops three rate providers before every move, then executes on its own, or waits for your one-tap approval if using your wallet.
           </p>
         </div>
-        <button onClick={() => setShowForm(s => !s)} style={{ padding: '12px 20px', borderRadius: '12px', background: 'var(--lime)', color: '#000', fontWeight: 800, border: 'none', cursor: 'pointer', fontSize: '13px' }}>
+        <button
+          onClick={() => setShowForm(s => !s)}
+          className="py-2.5 px-5 rounded-lg bg-accent-primary text-primary-foreground font-extrabold text-xs cursor-pointer hover:brightness-110 transition-all border-0 shadow-md"
+        >
           {showForm ? 'Cancel' : '+ New Rule'}
         </button>
       </header>
 
-      {/* Live rate ticker */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '28px' }}>
+      {/* Live Rate Ticker */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-7">
         {(Object.keys(rates) as FxPair[]).map(p => (
-          <div key={p} className="glass-panel" style={{ padding: '18px 20px', borderRadius: '16px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div key={p} className="p-4 rounded-xl bg-surface border border-border flex justify-between items-center shadow-md">
             <div>
-              <p className="mono-tag" style={{ color: 'var(--muted)', fontSize: '10px', marginBottom: '6px' }}>{p} · indicative</p>
-              <p style={{ fontSize: '22px', fontWeight: 800, color: '#fff' }}>{rates[p].toFixed(4)}</p>
+              <p className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider mb-1">{p} · indicative</p>
+              <p className="text-xl font-bold font-mono text-text-primary">{rates[p].toFixed(4)}</p>
             </div>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--mint)', boxShadow: '0 0 8px var(--mint)' }} />
+            <div className="w-2.5 h-2.5 rounded-full bg-accent-mint shadow-[0_0_10px_var(--accent-mint)]" />
           </div>
         ))}
       </div>
 
-      {/* Ready-to-execute approvals (self-custody) */}
+      {/* Waiting Approvals */}
       {(readyRules.length > 0 || readyIntents.length > 0) && (
-        <div style={{ marginBottom: '28px' }}>
-          <SectionHeader icon={<Bell size={16} color="#fbbf24" />} title="Waiting for your approval" count={readyRules.length + readyIntents.length} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="mb-7">
+          <SectionHeader icon={<Bell size={16} className="text-amber-400" />} title="Waiting for your approval" count={readyRules.length + readyIntents.length} />
+          <div className="flex flex-col gap-2.5">
             {readyRules.map(r => (
-              <div key={r.id} className="glass-panel" style={{ padding: '16px 20px', borderRadius: '16px', border: '1px solid rgba(251,191,36,0.3)', background: 'rgba(251,191,36,0.04)', display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>{r.amount} USDC → {r.recipientLabel}</p>
-                  <p style={{ fontSize: '11px', color: 'var(--subtle)' }}>Trigger condition met: your wallet needs to sign this one.</p>
+              <div key={r.id} className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4 text-xs">
+                <div>
+                  <p className="font-bold text-text-primary">{r.amount} USDC → {r.recipientLabel}</p>
+                  <p className="text-text-tertiary">Trigger condition met: your wallet needs to sign this one.</p>
                 </div>
-                <button onClick={() => approveRule(r)} disabled={approvingId === r.id} style={approveBtnStyle}>
-                  {approvingId === r.id ? 'Confirm in wallet...' : 'Approve & Send'}
-                </button>
-              </div>
-            ))}
-            {readyIntents.map(i => (
-              <div key={i.id} className="glass-panel" style={{ padding: '16px 20px', borderRadius: '16px', border: '1px solid rgba(251,191,36,0.3)', background: 'rgba(251,191,36,0.04)', display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>"{i.intentText}"</p>
-                  <p style={{ fontSize: '11px', color: 'var(--subtle)' }}>Standing instruction is due: your wallet needs to sign this one.</p>
-                </div>
-                <button onClick={() => approveIntent(i)} disabled={approvingId === i.id} style={approveBtnStyle}>
-                  {approvingId === i.id ? 'Confirm in wallet...' : 'Approve & Send'}
+                <button
+                  onClick={() => approveRule(r)}
+                  disabled={approvingId === r.id}
+                  className="px-4 py-2 rounded-lg bg-amber-400 text-black font-extrabold text-xs cursor-pointer hover:bg-amber-300 border-0 shrink-0"
+                >
+                  {approvingId === r.id ? 'Confirming...' : 'Approve & Send'}
                 </button>
               </div>
             ))}
@@ -237,36 +226,31 @@ export default function AgentView() {
         </div>
       )}
 
-      {/* New rule form */}
+      {/* New Rule Form */}
       {showForm && (
-        <form onSubmit={handleCreateRule} className="glass-panel" style={{ padding: '24px', borderRadius: '20px', border: '1px solid var(--border)', marginBottom: '28px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+        <form onSubmit={handleCreateRule} className="p-6 rounded-xl bg-surface-raised border border-border mb-7 flex flex-col gap-3.5 shadow-xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <Field label="Recipient label">
-              <input value={recipientLabel} onChange={e => setRecipientLabel(e.target.value)} placeholder="e.g. Sister — Nairobi" style={inputStyle} />
+              <input value={recipientLabel} onChange={e => setRecipientLabel(e.target.value)} placeholder="e.g. Sister — Nairobi" className="w-full p-2.5 rounded-md bg-surface border border-border text-text-primary text-xs outline-none focus:border-accent-mint" />
             </Field>
             <Field label="Amount (USDC)">
-              <input value={amount} onChange={e => setAmount(e.target.value)} type="number" step="0.01" placeholder="200" style={inputStyle} />
+              <input value={amount} onChange={e => setAmount(e.target.value)} type="number" step="0.01" placeholder="200" className="w-full p-2.5 rounded-md bg-surface border border-border text-text-primary text-xs outline-none focus:border-accent-mint font-mono" />
             </Field>
           </div>
 
           <Field label="Recipient Wallet Address">
-            <input
-              value={recipientIdentifier}
-              onChange={e => setRecipientIdentifier(e.target.value)}
-              placeholder="0x..."
-              style={inputStyle}
-            />
+            <input value={recipientIdentifier} onChange={e => setRecipientIdentifier(e.target.value)} placeholder="0x..." className="w-full p-2.5 rounded-md bg-surface border border-border text-text-primary text-xs outline-none focus:border-accent-mint font-mono" />
           </Field>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <Field label="Currency pair">
-              <select value={pair} onChange={e => setPair(e.target.value as FxPair)} style={inputStyle}>
+              <select value={pair} onChange={e => setPair(e.target.value as FxPair)} className="w-full p-2.5 rounded-md bg-surface border border-border text-text-primary text-xs outline-none">
                 <option value="USDC/EURC">USDC → EURC</option>
                 <option value="EURC/USDC">EURC → USDC</option>
               </select>
             </Field>
             <Field label="Trigger">
-              <select value={triggerType} onChange={e => setTriggerType(e.target.value as TriggerType)} style={inputStyle}>
+              <select value={triggerType} onChange={e => setTriggerType(e.target.value as TriggerType)} className="w-full p-2.5 rounded-md bg-surface border border-border text-text-primary text-xs outline-none">
                 <option value="rate_gte">Rate rises to at least...</option>
                 <option value="rate_lte">Rate falls to at most...</option>
                 <option value="by_date">By this date, regardless of rate</option>
@@ -275,100 +259,56 @@ export default function AgentView() {
           </div>
 
           {triggerType === 'by_date' ? (
-            <Field label="Deadline"><input value={byDate} onChange={e => setByDate(e.target.value)} type="date" style={inputStyle} /></Field>
+            <Field label="Deadline"><input value={byDate} onChange={e => setByDate(e.target.value)} type="date" className="w-full p-2.5 rounded-md bg-surface border border-border text-text-primary text-xs outline-none" /></Field>
           ) : (
-            <Field label="Target rate"><input value={triggerValue} onChange={e => setTriggerValue(e.target.value)} type="number" step="0.0001" placeholder="0.93" style={inputStyle} /></Field>
+            <Field label="Target rate"><input value={triggerValue} onChange={e => setTriggerValue(e.target.value)} type="number" step="0.0001" placeholder="0.93" className="w-full p-2.5 rounded-md bg-surface border border-border text-text-primary text-xs outline-none font-mono" /></Field>
           )}
 
-          <div className="glass-card" style={{ padding: '14px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: isConnected ? 'pointer' : 'default' }}>
-              <input type="checkbox" checked={useConnectedWallet} disabled={!isConnected} onChange={e => setUseConnectedWallet(e.target.checked)} />
-              <span style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>Use my connected wallet as the source (self-custody)</span>
-            </label>
-            <p style={{ fontSize: '11px', color: 'var(--subtle)', marginTop: '6px', marginLeft: '26px' }}>
-              {isConnected
-                ? "You'll need to tap Approve each time this fires — Circle never holds your key."
-                : <>Not connected. <button type="button" onClick={connectInjected} style={{ color: 'var(--mint)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '11px', textDecoration: 'underline' }}>Connect a wallet</button> to enable this, or leave unchecked to use a Rova-managed wallet that runs fully unattended.</>}
-            </p>
-          </div>
+          {formError && <p className="text-accent-error text-xs">{formError}</p>}
 
-          {formError && <p style={{ color: '#ef4444', fontSize: '13px' }}>{formError}</p>}
-
-          <button type="submit" disabled={submitting} style={{ padding: '13px', borderRadius: '12px', background: 'var(--lime)', color: '#000', fontWeight: 800, border: 'none', cursor: 'pointer', fontSize: '13px', marginTop: '4px' }}>
+          <button type="submit" disabled={submitting} className="w-full py-3 rounded-lg bg-accent-primary text-primary-foreground font-extrabold text-xs cursor-pointer hover:brightness-110 border-0 shadow-md">
             {submitting ? 'Creating...' : 'Arm Rule'}
           </button>
         </form>
       )}
 
-      {/* Active rate rules */}
-      <SectionHeader icon={<Bot size={16} color="var(--mint)" />} title="Active rules" count={activeRules.length} />
+      {/* Active Rate Rules */}
+      <SectionHeader icon={<Bot size={16} className="text-accent-mint" />} title="Active rules" count={activeRules.length} />
       {activeRules.length === 0 ? <EmptyState text="No active rate rules. Create one above." /> : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
+        <div className="flex flex-col gap-2.5 mb-8">
           {activeRules.map(r => (
-            <div key={r.id} className="glass-panel" style={{ padding: '18px 22px', borderRadius: '18px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {r.triggerType === 'rate_gte' ? <TrendingUp size={16} color="var(--mint)" /> : r.triggerType === 'rate_lte' ? <TrendingDown size={16} color="#60a5fa" /> : <Clock size={16} color="#BFFF00" />}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>{r.amount} {r.pair.split('/')[0]} → {r.recipientLabel}
-                  <span style={{ marginLeft: '8px', fontSize: '10px', padding: '2px 7px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', color: 'var(--subtle)' }}>{r.recipientType === 'email' ? 'email' : 'wallet'} · {r.custodyMode === 'self_custody' ? 'self-custody' : 'managed'}</span>
-                </p>
-                <p style={{ fontSize: '12px', color: 'var(--subtle)', marginTop: '2px' }}>
-                  {r.triggerType === 'by_date' ? `Fires by ${r.byDate}` : `Fires when ${r.pair} ${r.triggerType === 'rate_gte' ? '≥' : '≤'} ${r.triggerValue}`}
-                </p>
-              </div>
-              <button onClick={() => cancelRule(r.id)} title="Cancel rule" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--subtle)', padding: '6px' }}><Trash2 size={16} /></button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Standing intents (Command Hub automations) */}
-      <SectionHeader icon={<Clock size={16} color="#BFFF00" />} title="Standing instructions" count={activeIntents.length} />
-      {activeIntents.length === 0 ? <EmptyState text='Nothing automated from Command Hub yet — plan an intent there and hit "Make this automatic."' /> : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
-          {activeIntents.map(i => (
-            <div key={i.id} className="glass-panel" style={{ padding: '18px 22px', borderRadius: '18px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {i.trigger.type === 'recurring' ? <Clock size={16} color="var(--mint)" /> : <Bell size={16} color="#fbbf24" />}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '14px', fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>"{i.intentText}"</p>
-                <p style={{ fontSize: '12px', color: 'var(--subtle)', marginTop: '2px' }}>
-                  {i.trigger.type === 'recurring' ? `Runs ${i.trigger.interval}` : `Runs when an incoming payment ≥ ${i.trigger.minAmountUsdc} USDC arrives`}
-                  {' · '}{i.runCount} run{i.runCount === 1 ? '' : 's'} so far
-                </p>
-              </div>
-              <button onClick={() => cancelIntent(i.id)} title="Cancel" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--subtle)', padding: '6px' }}><Trash2 size={16} /></button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Execution log */}
-      <SectionHeader icon={<Zap size={16} color="#BFFF00" />} title="Autonomous executions" count={executions.length} />
-      {executions.length === 0 ? <EmptyState text="Nothing has fired yet." /> : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {executions.map(ex => (
-            <div key={ex.id} className="glass-panel" style={{ padding: '18px 22px', borderRadius: '18px', border: '1px solid var(--border)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--mint)' }}>{ex.memo}</p>
-                <span className="mono-tag" style={{ fontSize: '10px', color: ex.mode === 'real' ? 'var(--mint)' : 'var(--subtle)' }}>{ex.mode === 'real' ? 'ON-CHAIN' : 'MOCK'}</span>
-              </div>
-
-              {ex.quoteShop && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', padding: '8px 12px', borderRadius: '10px', background: 'rgba(191,255,0,0.05)', border: '1px solid rgba(191,255,0,0.15)' }}>
-                  <ShoppingCart size={13} color="var(--lime)" />
-                  <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
-                    Shopped {ex.quoteShop.providersChecked} providers for ${ex.quoteShop.totalPaidUsdc.toFixed(4)} total — best was <strong style={{ color: 'var(--lime)' }}>{ex.quoteShop.bestProvider}</strong> @ {ex.quoteShop.bestRate}
-                  </span>
+            <div key={r.id} className="p-4 rounded-xl bg-surface border border-border flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-surface-raised border border-border flex items-center justify-center shrink-0">
+                  {r.triggerType === 'rate_gte' ? <TrendingUp size={14} className="text-accent-mint" /> : <TrendingDown size={14} className="text-blue-400" />}
                 </div>
-              )}
+                <div>
+                  <p className="text-sm font-bold text-text-primary">{r.amount} {r.pair.split('/')[0]} → {r.recipientLabel}</p>
+                  <p className="text-xs text-text-secondary">Fires when {r.pair} {r.triggerType === 'rate_gte' ? '≥' : '≤'} {r.triggerValue}</p>
+                </div>
+              </div>
+              <button onClick={() => cancelRule(r.id)} className="bg-transparent border-0 text-text-tertiary cursor-pointer hover:text-accent-error p-1">
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '11px', color: 'var(--subtle)' }}>
-                <a href={ex.arcScanUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>Transfer tx <ExternalLink size={11} /></a>
-                {ex.feeJobId && <span>Agent fee (ERC-8183): {ex.feeAmountUsdc} USDC</span>}
-                {ex.reputationTxHash && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle2 size={11} /> Reputation logged (ERC-8004)</span>}
+      {/* Execution Log */}
+      <SectionHeader icon={<Zap size={16} className="text-accent-primary" />} title="Autonomous executions" count={executions.length} />
+      {executions.length === 0 ? <EmptyState text="Nothing has fired yet." /> : (
+        <div className="flex flex-col gap-2.5">
+          {executions.map(ex => (
+            <div key={ex.id} className="p-4 rounded-xl bg-surface border border-border space-y-2 text-xs">
+              <div className="flex justify-between items-start">
+                <p className="font-bold text-accent-mint">{ex.memo}</p>
+                <span className="font-mono text-[10px] text-text-tertiary">{ex.mode === 'real' ? 'ON-CHAIN' : 'MOCK'}</span>
+              </div>
+              <div className="flex gap-4 text-text-secondary text-[11px]">
+                <a href={ex.arcScanUrl} target="_blank" rel="noreferrer" className="text-text-secondary hover:text-text-primary flex items-center gap-1">
+                  Explorer <ExternalLink size={11} />
+                </a>
               </div>
             </div>
           ))}
@@ -380,38 +320,27 @@ export default function AgentView() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--subtle)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{label}</span>
+    <label className="flex flex-col gap-1">
+      <span className="text-[10px] font-mono font-bold text-text-tertiary uppercase tracking-wider">{label}</span>
       {children}
     </label>
   );
 }
 
-function ModeTab({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
-  return (
-    <button type="button" onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', borderRadius: '8px', background: active ? 'rgba(191,255,0,0.1)' : 'rgba(255,255,255,0.02)', border: `1px solid ${active ? 'rgba(191,255,0,0.35)' : 'var(--border)'}`, color: active ? 'var(--lime)' : 'var(--muted)', fontWeight: 700, fontSize: '11px', cursor: 'pointer' }}>
-      {icon} {label}
-    </button>
-  );
-}
-
 function SectionHeader({ icon, title, count }: { icon: React.ReactNode; title: string; count: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-      {icon}<h2 style={{ fontSize: '15px', fontWeight: 700, color: '#fff' }}>{title}</h2>
-      <span className="mono-tag" style={{ fontSize: '10px', color: 'var(--subtle)' }}>{count}</span>
+    <div className="flex items-center gap-2 mb-3">
+      {icon}<h2 className="text-sm font-bold text-text-primary">{title}</h2>
+      <span className="text-xs font-mono text-text-tertiary">({count})</span>
     </div>
   );
 }
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="glass-panel" style={{ padding: '40px 32px', borderRadius: '20px', textAlign: 'center', marginBottom: '32px' }}>
-      <PauseCircle size={26} color="var(--subtle)" style={{ marginBottom: '10px' }} />
-      <p style={{ fontSize: '13px', color: 'var(--muted)' }}>{text}</p>
+    <div className="p-8 rounded-xl bg-surface border border-border text-center mb-8">
+      <PauseCircle size={24} className="text-text-tertiary mx-auto mb-2" />
+      <p className="text-xs text-text-secondary">{text}</p>
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = { padding: '11px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', color: '#fff', fontSize: '13px', outline: 'none' };
-const approveBtnStyle: React.CSSProperties = { padding: '10px 18px', borderRadius: '10px', background: '#fbbf24', color: '#000', fontWeight: 800, border: 'none', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' };

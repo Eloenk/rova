@@ -156,17 +156,11 @@ export default function LoginPage() {
         {/* Top Header with ROVA Logo on White Side */}
         <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '10px',
-              background: '#0f172a',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Send size={19} color="#ffffff" strokeWidth={3} />
-            </div>
+            <img
+              src="/logo.png"
+              alt="ROVA Logo"
+              style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'contain' }}
+            />
             <span style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a' }}>ROVA</span>
           </Link>
 

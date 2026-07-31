@@ -3,7 +3,8 @@
 import { useRova } from '@/hooks/useRova';
 import { useWallet } from '@/hooks/useWallet';
 import { useEffect, useState, useRef } from 'react';
-import { Send, Clock, Bell, Check, Loader, Sparkles } from 'lucide-react';
+import { Send, Clock, Bell, Check, Loader, Sparkles, TrendingUp } from 'lucide-react';
+import AssetRow from '@/components/viz/AssetRow';
 
 type TriggerChoice = 'recurring' | 'on_receive';
 
@@ -27,7 +28,7 @@ export default function Dashboard() {
   const rova = useRova();
   const { syncAgentStatus, plan, status, executionResult, isProcessing, planIntent, executePlan, reset } = rova;
 
-  const { isConnected, address } = useWallet();
+  const { isConnected, address, usdcBalance, eurcBalance } = useWallet();
   const [hasMounted, setHasMounted] = useState(false);
   const [intentText, setIntentText] = useState('');
   const [showTriggerPicker, setShowTriggerPicker] = useState(false);
@@ -39,6 +40,12 @@ export default function Dashboard() {
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const currentUsdc = isConnected ? (usdcBalance ?? '0.00') : '0.00';
+  const currentEurc = isConnected ? (eurcBalance ?? '0.00') : '0.00';
+  const usdcVal = parseFloat(currentUsdc) || 0;
+  const eurcVal = (parseFloat(currentEurc) || 0) * 1.08;
+  const totalUsd = (usdcVal + eurcVal).toFixed(2);
 
   useEffect(() => {
     setHasMounted(true);
@@ -104,109 +111,89 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: 'calc(100vh - 56px)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      position: 'relative',
-      padding: '24px 16px 16px',
-      fontFamily: 'Inter, -apple-system, sans-serif',
-      boxSizing: 'border-box',
-    }}>
+    <div className="w-full min-h-[calc(100vh-56px)] flex flex-col justify-between relative p-4 md:p-6 font-sans box-border">
       {/* Canvas Content Area */}
-      <div style={{
-        flex: 1,
-        maxWidth: '840px',
-        width: '100%',
-        margin: '0 auto',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: !hasChatStarted ? 'center' : 'flex-start',
-        alignItems: !hasChatStarted ? 'center' : 'stretch',
-        paddingBottom: '24px',
-        boxSizing: 'border-box',
-      }}>
-        {/* CENTERED HERO INPUT STATE (Before any chat message is sent) */}
+      <div className={`
+        flex-1 max-w-[840px] w-full mx-auto flex flex-col pb-6 box-border
+        ${!hasChatStarted ? 'justify-center items-center' : 'justify-start items-stretch'}
+      `}>
+        {/* COMPACT BALANCE SUMMARY STRIP (Idle state before chat starts) */}
         {!hasChatStarted && (
-          <div style={{
-            maxWidth: '720px',
-            width: '100%',
-            margin: 'auto 0',
-            padding: '0 12px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
-            boxSizing: 'border-box',
-          }}>
-            <h1 style={{
-              fontSize: 'clamp(30px, 4vw, 42px)',
-              fontWeight: 300,
-              color: '#ffffff',
-              letterSpacing: '-0.02em',
-              marginBottom: '28px',
-              lineHeight: 1.15,
-            }}>
+          <div className="w-full max-w-[720px] mb-8 space-y-4">
+            <div className="p-4 rounded-xl bg-surface-raised border border-border flex items-center justify-between shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-accent-mint/10 border border-accent-mint/20 flex items-center justify-center">
+                  <TrendingUp size={20} className="text-accent-mint" />
+                </div>
+                <div>
+                  <div className="text-xs text-text-secondary font-mono uppercase tracking-wider">Total Portfolio Balance</div>
+                  <div className="text-2xl font-bold text-text-primary font-mono">${totalUsd} <span className="text-xs text-accent-mint font-sans font-normal">+0.12% 24h</span></div>
+                </div>
+              </div>
+              <div className="text-right hidden sm:block">
+                <span className="text-xs text-accent-mint px-2 py-1 rounded bg-accent-mint/10 border border-accent-mint/20 font-mono">
+                  Arc Testnet
+                </span>
+              </div>
+            </div>
+
+            {/* Asset Row Feed */}
+            <div className="space-y-2">
+              <AssetRow
+                symbol="USDC"
+                name="USD Coin (Arc)"
+                amount={`${currentUsdc} USDC`}
+                usdValue={usdcVal.toFixed(2)}
+                iconBg="rgba(180, 244, 215, 0.1)"
+                iconColor="var(--accent-mint)"
+                sparklineData={[100, 102, 101, 105, 104, 108]}
+                change24h="+0.05%"
+              />
+              <AssetRow
+                symbol="EURC"
+                name="Euro Coin (Arc)"
+                amount={`${currentEurc} EURC`}
+                usdValue={eurcVal.toFixed(2)}
+                iconBg="rgba(191, 255, 0, 0.1)"
+                iconColor="var(--accent-primary)"
+                sparklineData={[90, 92, 95, 93, 98, 102]}
+                change24h="+0.24%"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* CENTERED HERO INPUT STATE */}
+        {!hasChatStarted && (
+          <div className="max-w-[720px] w-full my-auto px-3 flex flex-col items-center text-center box-border">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-light text-text-primary tracking-tight mb-7 leading-tight">
               Ready when you are
             </h1>
 
             {/* Centered Prompt Input Pill */}
-            <div style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '8px 12px 8px 20px',
-              borderRadius: '32px',
-              background: '#131d2a',
-              border: '1px solid rgba(180, 244, 215, 0.25)',
-              boxShadow: '0 16px 40px rgba(0, 0, 0, 0.6)',
-              boxSizing: 'border-box',
-              marginBottom: '20px',
-            }}>
+            <div className="w-full flex items-center gap-3 p-2 pl-5 rounded-full bg-surface border border-border-strong shadow-2xl mb-5 box-border focus-within:border-accent-mint transition-all">
               <input
                 value={intentText}
                 onChange={e => setIntentText(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSendChat()}
                 placeholder="Ask Rova to send, swap, or bridge..."
-                style={{
-                  flex: 1,
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#ffffff',
-                  fontSize: '15px',
-                  outline: 'none',
-                  fontFamily: 'Inter, sans-serif',
-                  minWidth: 0,
-                }}
+                className="flex-1 bg-transparent border-0 text-text-primary text-sm sm:text-base outline-none min-w-0 font-sans"
               />
 
               <button
                 onClick={() => handleSendChat()}
                 disabled={isProcessing || !intentText.trim()}
-                style={{
-
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  background: intentText.trim() ? '#BFFF00' : 'rgba(255,255,255,0.05)',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: intentText.trim() ? 'pointer' : 'default',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0,
-                }}
+                className={`
+                  w-10 h-10 rounded-full border-0 flex items-center justify-center shrink-0 transition-all cursor-pointer
+                  ${intentText.trim() ? 'bg-accent-primary text-primary-foreground hover:brightness-110' : 'bg-surface-raised text-text-secondary cursor-default'}
+                `}
               >
-                <Send size={16} color={intentText.trim() ? '#0d1520' : '#8b9ba8'} />
+                <Send size={16} />
               </button>
             </div>
 
-            {/* Quick Action Suggestion Text Links (No Boxes) */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'center', marginTop: '4px' }}>
+            {/* Quick Action Suggestion Links */}
+            <div className="flex flex-wrap gap-4 justify-center mt-1">
               {[
                 'Send 50 USDC to Alex',
                 'Swap 100 USDC for EURC on Arc',
@@ -215,16 +202,7 @@ export default function Dashboard() {
                 <button
                   key={idx}
                   onClick={() => handleSendChat(suggestion)}
-                  className="hover:text-white transition-colors"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    color: '#8b9ba8',
-                    fontSize: '12.5px',
-                    fontWeight: 400,
-                    cursor: 'pointer',
-                  }}
+                  className="bg-transparent border-0 p-0 text-text-secondary text-xs hover:text-text-primary transition-colors cursor-pointer"
                 >
                   {suggestion}
                 </button>
@@ -235,186 +213,106 @@ export default function Dashboard() {
 
         {/* ACTIVE CONVERSATIONAL CHAT FEED */}
         {hasChatStarted && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
+          <div className="flex flex-col gap-5 w-full">
             {messages.map(m => (
               <div
                 key={m.id}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: m.sender === 'user' ? 'flex-end' : 'flex-start',
-                  alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '82%',
-                }}
+                className={`
+                  flex flex-col max-w-[85%]
+                  ${m.sender === 'user' ? 'items-end self-end' : 'items-start self-start'}
+                `}
               >
-                <div style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: m.sender === 'user' ? '#8b9ba8' : '#BFFF00',
-                  marginBottom: '4px',
-                  paddingLeft: m.sender === 'user' ? 0 : '4px',
-                  paddingRight: m.sender === 'user' ? '4px' : 0,
-                }}>
+                <div className={`
+                  text-[11px] font-bold mb-1 px-1
+                  ${m.sender === 'user' ? 'text-text-secondary' : 'text-accent-primary'}
+                `}>
                   {m.sender === 'user' ? 'You' : 'Rova'}
                 </div>
-                <div style={{
-                  fontSize: '15px',
-                  lineHeight: 1.55,
-                  color: '#ffffff',
-                  fontWeight: 500,
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  background: m.sender === 'user' ? '#1e2c3d' : '#131d2a',
-                  border: m.sender === 'user' ? '1px solid rgba(180, 244, 215, 0.2)' : '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: m.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                  padding: '12px 18px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                }}>
+                <div className={`
+                  text-sm sm:text-base leading-relaxed font-medium whitespace-pre-wrap break-words p-3.5 px-4 shadow-md
+                  ${m.sender === 'user'
+                    ? 'bg-surface-raised border border-border-strong text-text-primary rounded-2xl rounded-tr-sm'
+                    : 'bg-surface border border-border text-text-primary rounded-2xl rounded-tl-sm'}
+                `}>
                   {m.text}
                 </div>
               </div>
             ))}
 
-            {/* Planning Loading Message */}
+            {/* Planning Loading State */}
             {status === 'planning' && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', alignSelf: 'flex-start', maxWidth: '85%' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#BFFF00', marginBottom: '4px', paddingLeft: '4px' }}>Rova</div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  background: '#131d2a',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '18px 18px 18px 4px',
-                  padding: '12px 18px',
-                  color: '#8b9ba8',
-                  fontSize: '14.5px',
-                }}>
-                  <Loader size={16} className="animate-spin" color="#BFFF00" />
+              <div className="flex flex-col items-start self-start max-w-[85%]">
+                <div className="text-[11px] font-bold text-accent-primary mb-1 pl-1">Rova</div>
+                <div className="flex items-center gap-2.5 bg-surface border border-border rounded-2xl rounded-tl-sm p-3.5 px-4 text-text-secondary text-sm">
+                  <Loader size={16} className="animate-spin text-accent-primary" />
                   <span>Thinking...</span>
                 </div>
               </div>
             )}
 
-
-            {/* Conversational AI Response + Inline Action Pills */}
+            {/* AI Plan Response & Controls */}
             {plan && status === 'planned' && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', alignSelf: 'flex-start', maxWidth: '85%', gap: '8px', marginTop: '4px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#BFFF00', paddingLeft: '4px' }}>Rova</div>
-                <div style={{
-                  fontSize: '15px',
-                  lineHeight: 1.55,
-                  color: '#ffffff',
-                  fontWeight: 500,
-                  background: '#131d2a',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '18px 18px 18px 4px',
-                  padding: '12px 18px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                }}>
+              <div className="flex flex-col items-start self-start max-w-[85%] gap-2 mt-1">
+                <div className="text-[11px] font-bold text-accent-primary pl-1">Rova</div>
+                <div className="text-sm sm:text-base leading-relaxed font-medium bg-surface border border-border text-text-primary rounded-2xl rounded-tl-sm p-3.5 px-4 shadow-md">
                   {plan.reasoning || plan.strategy || 'I have parsed your transaction request and prepared the execution path on Arc.'}
                 </div>
 
-
-                {/* Inline Action Pills (Only shown when there is an actual financial transaction to execute) */}
                 {!isConversationalPlan(plan) && (!showTriggerPicker ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '4px' }}>
+                  <div className="flex flex-wrap gap-2.5 mt-1">
                     <button
                       onClick={() => executePlan(isConnected && address ? address : undefined)}
-                      style={{
-                        padding: '10px 18px',
-                        borderRadius: '20px',
-                        background: '#BFFF00',
-                        color: '#0d1520',
-                        fontWeight: 800,
-                        fontSize: '13px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        transition: 'transform 0.15s ease',
-                      }}
+                      className="px-4 py-2.5 rounded-full bg-accent-primary text-primary-foreground font-extrabold text-xs border-0 cursor-pointer flex items-center gap-1.5 hover:brightness-110 transition-all"
                     >
-                      <Sparkles size={14} color="#0d1520" /> Confirm & Execute
+                      <Sparkles size={14} /> Confirm & Execute
                     </button>
 
                     <button
                       onClick={() => setShowTriggerPicker(true)}
-                      style={{
-                        padding: '10px 18px',
-                        borderRadius: '20px',
-                        background: 'rgba(180, 244, 215, 0.1)',
-                        border: '1px solid rgba(180, 244, 215, 0.25)',
-                        color: '#B4F4D7',
-                        fontWeight: 700,
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                      }}
+                      className="px-4 py-2.5 rounded-full bg-accent-mint/10 border border-accent-mint/25 text-accent-mint font-bold text-xs cursor-pointer flex items-center gap-1.5 hover:bg-accent-mint/20 transition-all"
                     >
                       <Clock size={14} /> Make Automatic
                     </button>
 
                     <button
                       onClick={() => reset()}
-                      style={{
-                        padding: '10px 16px',
-                        borderRadius: '20px',
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#8b9ba8',
-                        fontWeight: 600,
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                      }}
+                      className="px-4 py-2.5 rounded-full bg-transparent border-0 text-text-secondary font-semibold text-xs cursor-pointer hover:text-text-primary transition-all"
                     >
                       Cancel
                     </button>
                   </div>
                 ) : (
-                  <div style={{
-                    padding: '16px',
-                    borderRadius: '16px',
-                    background: '#131d2a',
-                    border: '1px solid rgba(180, 244, 215, 0.2)',
-                    maxWidth: '440px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                  }}>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#BFFF00' }}>Automation Trigger</span>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                  <div className="p-4 rounded-xl bg-surface border border-border-strong max-w-md flex flex-col gap-3">
+                    <span className="text-xs font-bold text-accent-primary">Automation Trigger</span>
+                    <div className="flex gap-2">
                       <TriggerTab active={triggerChoice === 'recurring'} onClick={() => setTriggerChoice('recurring')} icon={<Clock size={14} />} label="On schedule" />
                       <TriggerTab active={triggerChoice === 'on_receive'} onClick={() => setTriggerChoice('on_receive')} icon={<Bell size={14} />} label="On payment receive" />
                     </div>
 
                     {triggerChoice === 'recurring' ? (
-                      <select value={interval} onChange={e => setInterval_(e.target.value as any)} style={pickerInputStyle}>
+                      <select value={interval} onChange={e => setInterval_(e.target.value as any)} className="w-full p-2.5 rounded-lg bg-surface-raised border border-border text-text-primary text-xs outline-none">
                         <option value="daily">Every day</option>
                         <option value="weekly">Every week</option>
                         <option value="monthly">Every month</option>
                       </select>
                     ) : (
-                      <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ fontSize: '11px', color: '#8b9ba8' }}>Min payment trigger threshold</span>
-                        <input value={minAmount} onChange={e => setMinAmount(e.target.value)} type="number" step="1" style={pickerInputStyle} />
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[11px] text-text-secondary">Min payment trigger threshold</span>
+                        <input value={minAmount} onChange={e => setMinAmount(e.target.value)} type="number" step="1" className="w-full p-2.5 rounded-lg bg-surface-raised border border-border text-text-primary text-xs outline-none" />
                       </label>
                     )}
 
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                    <div className="flex gap-2 mt-1">
                       <button
                         onClick={handleMakeAutomatic}
                         disabled={automating}
-                        style={{ flex: 1, padding: '10px', borderRadius: '10px', background: '#BFFF00', color: '#0d1520', fontWeight: 800, border: 'none', cursor: 'pointer', fontSize: '13px' }}
+                        className="flex-1 p-2.5 rounded-lg bg-accent-primary text-primary-foreground font-extrabold text-xs border-0 cursor-pointer hover:brightness-110"
                       >
                         {automating ? 'Saving...' : 'Save Autonomous Trigger'}
                       </button>
                       <button
                         onClick={() => setShowTriggerPicker(false)}
-                        style={{ padding: '10px 14px', borderRadius: '10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8b9ba8', fontSize: '13px', cursor: 'pointer' }}
+                        className="px-3.5 p-2.5 rounded-lg bg-transparent border border-border text-text-secondary text-xs cursor-pointer hover:text-text-primary"
                       >
                         Back
                       </button>
@@ -424,37 +322,35 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Executing / Recording State */}
+            {/* Executing State */}
             {(status === 'executing' || status === 'recording') && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: '#BFFF00' }}>Rova</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ffffff', fontSize: '15px' }}>
-                  <Loader size={16} className="animate-spin" color="#BFFF00" />
+              <div className="flex flex-col gap-1">
+                <div className="text-xs font-bold text-accent-primary">Rova</div>
+                <div className="flex items-center gap-2 text-text-primary text-sm">
+                  <Loader size={16} className="animate-spin text-accent-primary" />
                   <span>Submitting transaction to Arc blockchain via Circle Wallets...</span>
                 </div>
               </div>
             )}
 
-            {/* Executed / Confirmed Success Message */}
+            {/* Confirmed State */}
             {(status === 'confirmed' || !!executionResult) && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: '#BFFF00' }}>Rova</div>
-                <div style={{ fontSize: '15px', color: '#ffffff', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} color="#22c55e" />
+              <div className="flex flex-col gap-2">
+                <div className="text-xs font-bold text-accent-primary">Rova</div>
+                <div className="text-sm text-text-primary flex items-center gap-2 font-medium">
+                  <Check size={16} className="text-accent-success" />
                   <span>Transaction executed successfully on Arc!</span>
                 </div>
                 {executionResult?.txHashes?.[0] && (
-                  <span style={{ fontSize: '12px', color: '#8b9ba8', fontFamily: 'monospace' }}>
+                  <span className="text-xs text-text-secondary font-mono">
                     TxHash: {executionResult.txHashes[0]}
                   </span>
                 )}
-
               </div>
             )}
 
-
             {automateMsg && (
-              <div style={{ marginTop: '8px', fontSize: '13.5px', color: automateMsg.startsWith("Couldn't") ? '#ef4444' : '#22c55e' }}>
+              <div className={`mt-2 text-xs font-semibold ${automateMsg.startsWith("Couldn't") ? 'text-accent-error' : 'text-accent-success'}`}>
                 {automateMsg}
               </div>
             )}
@@ -464,65 +360,27 @@ export default function Dashboard() {
         <div ref={chatEndRef} />
       </div>
 
-      {/* STICKY BOTTOM INPUT BAR (Only visible once a chat has been sent) */}
+      {/* STICKY BOTTOM INPUT BAR */}
       {hasChatStarted && (
-        <div style={{
-          position: 'sticky',
-          bottom: '16px',
-          maxWidth: '720px',
-          width: '100%',
-          margin: '0 auto',
-          zIndex: 30,
-          boxSizing: 'border-box',
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '8px 12px 8px 20px',
-            borderRadius: '32px',
-            background: '#131d2a',
-            border: '1px solid rgba(180, 244, 215, 0.2)',
-            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.6)',
-            width: '100%',
-            boxSizing: 'border-box',
-          }}>
+        <div className="sticky bottom-4 max-w-[720px] w-full mx-auto z-30 box-border">
+          <div className="flex items-center gap-3 p-2 pl-5 rounded-full bg-surface border border-border-strong shadow-2xl w-full box-border focus-within:border-accent-mint transition-all">
             <input
               value={intentText}
               onChange={e => setIntentText(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSendChat()}
               placeholder="Ask Rova..."
-              style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                color: '#ffffff',
-                fontSize: '15px',
-                outline: 'none',
-                fontFamily: 'Inter, sans-serif',
-                minWidth: 0,
-              }}
+              className="flex-1 bg-transparent border-0 text-text-primary text-sm sm:text-base outline-none font-sans min-w-0"
             />
 
             <button
               onClick={() => handleSendChat()}
               disabled={isProcessing || !intentText.trim()}
-              style={{
-
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                background: intentText.trim() ? '#BFFF00' : 'rgba(255,255,255,0.05)',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: intentText.trim() ? 'pointer' : 'default',
-                transition: 'all 0.2s ease',
-                flexShrink: 0,
-              }}
+              className={`
+                w-10 h-10 rounded-full border-0 flex items-center justify-center shrink-0 transition-all cursor-pointer
+                ${intentText.trim() ? 'bg-accent-primary text-primary-foreground hover:brightness-110' : 'bg-surface-raised text-text-secondary cursor-default'}
+              `}
             >
-              <Send size={16} color={intentText.trim() ? '#0d1520' : '#8b9ba8'} />
+              <Send size={16} />
             </button>
           </div>
         </div>
@@ -535,19 +393,14 @@ function TriggerTab({ active, onClick, icon, label }: { active: boolean; onClick
   return (
     <button
       onClick={onClick}
-      style={{
-        display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', borderRadius: '8px',
-        background: active ? 'rgba(191,255,0,0.1)' : 'rgba(255,255,255,0.02)',
-        border: `1px solid ${active ? 'rgba(191,255,0,0.35)' : 'rgba(180,244,215,0.15)'}`,
-        color: active ? '#BFFF00' : '#8b9ba8', fontWeight: 700, fontSize: '11px', cursor: 'pointer',
-      }}
+      className={`
+        flex items-center gap-1.5 px-3 py-2 rounded-lg font-bold text-xs border cursor-pointer transition-all
+        ${active
+          ? 'bg-accent-primary/10 border-accent-primary/35 text-accent-primary'
+          : 'bg-surface-raised border-border text-text-secondary hover:text-text-primary'}
+      `}
     >
       {icon} {label}
     </button>
   );
 }
-
-const pickerInputStyle: React.CSSProperties = {
-  width: '100%', padding: '9px 12px', borderRadius: '8px', background: '#131d2a',
-  border: '1px solid rgba(180,244,215,0.15)', color: '#ffffff', fontSize: '12px', outline: 'none',
-};
