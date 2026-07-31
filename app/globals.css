@@ -4,21 +4,21 @@
 
 :root {
   /* surfaces */
-  --background: #0a1018;       /* app background */
-  --surface: #101927;          /* card / panel background */
-  --surface-raised: #16212f;   /* elevated card */
-  --border: rgba(180, 244, 215, 0.12);
-  --border-strong: rgba(180, 244, 215, 0.25);
+  --background: #000000;       /* pure black app background */
+  --surface: #0a0a0c;          /* card / panel background */
+  --surface-raised: #121215;   /* elevated card */
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.2);
 
   /* text */
   --text-primary: #ffffff;
-  --text-secondary: #8b9ba8;
-  --text-tertiary: #5b6b78;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
 
-  /* accent — restored to previous primary green #25D366 */
-  --accent-primary: #25D366;   /* primary CTA color */
-  --accent-mint: #B4F4D7;      /* secondary accent, active nav states */
-  --accent-success: #22c55e;
+  /* accent — sleek emerald */
+  --accent-primary: #10b981;   /* subtle emerald */
+  --accent-mint: #34d399;      /* soft emerald accent */
+  --accent-success: #10b981;
   --accent-error: #ef4444;
 
   /* radii */
@@ -33,24 +33,24 @@
   --card: var(--surface);
   --card-foreground: var(--text-primary);
   --primary: var(--accent-primary);
-  --primary-foreground: #0d1520;
-  --secondary: #1a2636;
+  --primary-foreground: #000000;
+  --secondary: #121215;
   --secondary-foreground: var(--accent-mint);
   --muted: var(--text-secondary);
   --muted-foreground: var(--text-secondary);
-  --accent: #25D366;
-  --accent-foreground: #0d1520;
+  --accent: var(--accent-primary);
+  --accent-foreground: #000000;
   --destructive: #ef4444;
-  --input-background: rgba(16, 25, 39, 0.7);
+  --input-background: rgba(10, 10, 12, 0.8);
   --ring: var(--accent-primary);
-  --teal: #25D366;
+  --teal: var(--accent-primary);
   --mint: var(--accent-mint);
   --lime: var(--accent-primary);
   --surface2: var(--surface-raised);
   --border2: var(--border-strong);
   --subtle: var(--text-secondary);
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --sidebar: #070c13;
+  --sidebar: #000000;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -141,3 +141,41 @@ select option {
   color: #ffffff !important;
   padding: 10px !important;
 }
+
+/* Zebra stripe pattern CTA button */
+.btn-zebra-stripe {
+  background: repeating-linear-gradient(
+    -45deg,
+    #ffffff,
+    #ffffff 12px,
+    #000000 12px,
+    #000000 24px
+  );
+}
+
+.btn-zebra-emerald {
+  background: repeating-linear-gradient(
+    -45deg,
+    #10b981,
+    #10b981 12px,
+    #000000 12px,
+    #000000 24px
+  );
+}
+
+/* Infinite Marquee warning tape */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 25s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+

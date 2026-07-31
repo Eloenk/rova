@@ -39,11 +39,13 @@ export default function Sidebar({
         {/* Logo & Close button on mobile */}
         <div className="flex items-center justify-between pl-2">
           <Link href="/" className="flex items-center gap-2.5 no-underline group">
-            <img
-              src="/logo.png"
-              alt="ROVA Logo"
-              className="w-8 h-8 rounded-lg object-contain transition-transform group-hover:scale-105"
-            />
+            <div className="w-8 h-8 rounded-lg bg-white p-1 flex items-center justify-center transition-transform group-hover:scale-105">
+              <img
+                src="/logo.png"
+                alt="ROVA Logo"
+                className="w-full h-full object-contain"
+              />
+            </div>
             <span className="text-lg font-extrabold tracking-tight text-text-primary">ROVA</span>
           </Link>
 

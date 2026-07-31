@@ -22,6 +22,7 @@ import {
   Mail,
 } from 'lucide-react';
 import HeroChatDemo from '@/components/viz/HeroChatDemo';
+import WarningTapeMarquee from '@/components/viz/WarningTapeMarquee';
 
 export default function LandingPage() {
   const [hasSession, setHasSession] = useState(false);
@@ -40,11 +41,13 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border transition-all">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <img
-              src="/logo.png"
-              alt="ROVA Logo"
-              className="w-8 h-8 rounded-lg object-contain transition-transform group-hover:scale-105"
-            />
+            <div className="w-8 h-8 rounded-lg bg-white p-1 flex items-center justify-center transition-transform group-hover:scale-105">
+              <img
+                src="/logo.png"
+                alt="ROVA Logo"
+                className="w-full h-full object-contain"
+              />
+            </div>
             <span className="text-xl font-extrabold tracking-tight text-text-primary">ROVA</span>
             <span className="text-[10px] uppercase font-mono tracking-widest text-accent-mint bg-accent-mint/10 border border-accent-mint/20 px-2 py-0.5 rounded-full hidden sm:inline-block">
               ARC TESTNET
@@ -61,10 +64,13 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <Link
               href={hasSession ? '/dashboard' : '/login'}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition-all shadow-[0_0_20px_rgba(191,255,0,0.15)]"
+              className="relative inline-flex items-center justify-center p-[2px] rounded-xl overflow-hidden group shadow-lg"
             >
-              <span>{hasSession ? 'Go to Dashboard' : 'Launch App'}</span>
-              <ArrowRight size={16} />
+              <div className="btn-zebra-stripe absolute inset-0 transition-transform duration-300 group-hover:scale-110" />
+              <div className="relative px-5 py-2.5 rounded-[10px] bg-black text-white font-extrabold text-xs uppercase tracking-wider flex items-center gap-2">
+                <span>{hasSession ? 'Go to Dashboard' : 'Launch App'}</span>
+                <ArrowRight size={14} className="text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+              </div>
             </Link>
           </div>
         </div>
@@ -86,7 +92,7 @@ export default function LandingPage() {
 
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-text-primary leading-[1.08]">
                 A New Standard <br />
-                <span className="text-accent-mint">
+                <span className="text-text-secondary font-bold">
                   in Autonomous Capital.
                 </span>
               </h1>
@@ -98,10 +104,13 @@ export default function LandingPage() {
               <div className="flex flex-wrap items-center gap-4 pt-4">
                 <Link
                   href={hasSession ? '/dashboard' : '/login'}
-                  className="px-7 py-3.5 rounded-xl bg-accent-primary text-primary-foreground font-extrabold text-base hover:brightness-110 transition-all flex items-center gap-2 shadow-[0_0_30px_rgba(191,255,0,0.2)]"
+                  className="relative inline-flex items-center justify-center p-[2px] rounded-xl overflow-hidden group shadow-2xl"
                 >
-                  <span>{hasSession ? 'Access Command Hub' : 'Get Started Now'}</span>
-                  <ArrowRight size={18} />
+                  <div className="btn-zebra-stripe absolute inset-0 transition-transform duration-300 group-hover:scale-110" />
+                  <div className="relative px-7 py-3.5 rounded-[10px] bg-black text-white font-extrabold text-sm uppercase tracking-wider flex items-center gap-2">
+                    <span>{hasSession ? 'Access Command Hub' : 'Launch App Now'}</span>
+                    <ArrowRight size={16} className="text-emerald-400 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </Link>
                 <a
                   href="#architecture"
@@ -232,70 +241,67 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── 4. SYSTEM NODE DIAGRAM ───────────────────────────────────────── */}
-      <section id="architecture" className="py-24 bg-surface/30 border-t border-border">
-        <div className="max-w-7xl mx-auto px-6 text-center space-y-12">
-          <div className="max-w-3xl mx-auto space-y-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-text-tertiary">System Architecture</span>
-            <h2 className="text-3xl md:text-5xl font-extrabold text-text-primary tracking-tight">
+      {/* ── 4. SYSTEM NODE DIAGRAM (Full-Page Depth with Elevated Shadows) ────────────────── */}
+      <section id="architecture" className="py-28 bg-black border-t border-white/10 relative">
+        <div className="w-full max-w-[1400px] mx-auto px-6 text-center space-y-16">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <span className="text-xs font-mono uppercase tracking-widest text-text-tertiary bg-white/5 border border-white/10 px-3 py-1 rounded-full">System Architecture</span>
+            <h2 className="text-4xl md:text-6xl font-extrabold text-text-primary tracking-tight">
               One platform. Multiple intelligence layers.
             </h2>
-            <p className="text-text-secondary text-base">
-              Rova unifies plain-English intent understanding with native EVM execution.
+            <p className="text-text-secondary text-base md:text-lg max-w-2xl mx-auto">
+              Rova unifies plain-English intent understanding, micro-nanopayment shopping, and native EVM execution into a single high-availability stack.
             </p>
           </div>
 
-          {/* Diagram Grid */}
-          <div className="relative p-8 md:p-12">
-            {/* Central Node — No box, no border, no green, slimmer lighter type */}
-            <div className="flex items-center justify-center gap-2 text-xs font-medium tracking-widest text-text-secondary uppercase mb-12">
-              <Cpu size={16} className="text-text-tertiary" />
+          {/* Full-Page Diagram Grid Container with Elevated Shadow Depth */}
+          <div className="relative p-8 md:p-14 rounded-3xl bg-[#08080a] border border-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.95)]">
+            {/* Central Node — Big bold text */}
+            <div className="flex items-center justify-center gap-3 text-2xl md:text-3xl font-black tracking-widest text-white uppercase mb-14">
+              <Cpu size={30} className="text-emerald-400" />
               <span>ROVA CORE ENGINE</span>
             </div>
 
-            {/* Radiating Satellite Nodes — Neutral / Monochrome styling */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-              <div className="p-5 rounded-xl bg-surface-raised border border-border">
-                <div className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider mb-1">LAYER 1</div>
-                <h4 className="font-bold text-text-primary mb-2">Intent Parser</h4>
-                <p className="text-xs text-text-secondary">Natural language intent understanding with failsafe execution fast-paths.</p>
+            {/* Satellite Layer Grid with Deep Elevated Shadows */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-left">
+              <div className="p-8 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-3">
+                <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 1 • PARSER</div>
+                <h4 className="text-lg font-extrabold text-white">Intent Parser</h4>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Translates natural language prompts from WhatsApp & Web into structured smart contract transaction payload specs with failsafe fast-paths.
+                </p>
               </div>
 
-              <div className="p-5 rounded-xl bg-surface-raised border border-border">
-                <div className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider mb-1">LAYER 2</div>
-                <h4 className="font-bold text-text-primary mb-2">x402 / Gateway</h4>
-                <p className="text-xs text-text-secondary">Circle Gateway client for instant micro-nanopayments.</p>
+              <div className="p-8 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-3">
+                <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 2 • QUOTE</div>
+                <h4 className="text-lg font-extrabold text-white">x402 / Gateway</h4>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Queries 3 independent market liquidity desks over x402 HTTP headers, paying sub-cent micro-nanopayments for real-time rates.
+                </p>
               </div>
 
-              <div className="p-5 rounded-xl bg-surface-raised border border-border">
-                <div className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider mb-1">LAYER 3</div>
-                <h4 className="font-bold text-text-primary mb-2">CCTP V2 Bridge</h4>
-                <p className="text-xs text-text-secondary">Cross-chain stablecoin liquidity routing engine.</p>
+              <div className="p-8 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-3">
+                <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 3 • ROUTER</div>
+                <h4 className="text-lg font-extrabold text-white">CCTP V2 Bridge</h4>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Executes native burn-and-mint cross-chain liquidity routing between Sepolia, Base, Polygon, and Arc with 1:1 parity guarantee.
+                </p>
               </div>
 
-              <div className="p-5 rounded-xl bg-surface-raised border border-border">
-                <div className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider mb-1">LAYER 4</div>
-                <h4 className="font-bold text-text-primary mb-2">Arc Audit Ledger</h4>
-                <p className="text-xs text-text-secondary">Immutable smart contract execution logs on Arc Testnet.</p>
+              <div className="p-8 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-3">
+                <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 4 • AUDIT</div>
+                <h4 className="text-lg font-extrabold text-white">Arc Audit Ledger</h4>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Records every user action and automated trigger on `RovaExecutionLog` smart contract for immutable, verifiable proof of reserves.
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── 5. INTEGRATIONS STRIP ────────────────────────────────────────── */}
-      <section id="integrations" className="py-16 bg-background border-t border-border">
-        <div className="max-w-7xl mx-auto px-6 text-center space-y-8">
-          <span className="text-xs font-mono uppercase tracking-widest text-text-tertiary">Powered by Industry Leaders</span>
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16 opacity-75">
-            <span className="text-lg font-bold text-text-primary flex items-center gap-2">🌐 Circle</span>
-            <span className="text-lg font-bold text-text-primary flex items-center gap-2">⚡ Arc Network</span>
-            <span className="text-lg font-bold text-text-primary flex items-center gap-2">📱 WhatsApp</span>
-            <span className="text-lg font-bold text-text-primary flex items-center gap-2">🦊 MetaMask</span>
-            <span className="text-lg font-bold text-text-primary flex items-center gap-2">🛡️ Supabase</span>
-          </div>
-        </div>
-      </section>
+      {/* ── 5. INTEGRATIONS STRIP (Warning Tape Marquee Band) ────────────────────────────── */}
+      <WarningTapeMarquee />
 
       {/* ── 6. COMPARISON TABLE ─────────────────────────────────────────── */}
       <section id="comparison" className="py-24 bg-surface/40 border-t border-border">
