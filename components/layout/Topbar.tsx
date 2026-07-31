@@ -26,7 +26,7 @@ export default function Topbar({
   const pathname = usePathname();
   const router = useRouter();
   const meta = META[pathname] ?? META['/dashboard'];
-  const { isConnected, address, shortAddress, usdcBalance, eurcBalance, disconnect, connectInjected } = useWallet();
+  const { isConnected, address, shortAddress, usdcBalance, eurcBalance, disconnect, connectInjected, refetchBalance } = useWallet();
   const [showDrawer, setShowDrawer] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
@@ -72,6 +72,13 @@ export default function Topbar({
   const eurcUsd = (parseFloat(currentEurc) || 0) * 1.08;
   const usycUsd = (parseFloat(currentUsyc) || 0) * 1.00;
   const totalUsd = (usdcUsd + eurcUsd + usycUsd).toFixed(2);
+
+  // Refetch balances immediately whenever popover drawer is opened
+  useEffect(() => {
+    if (showDrawer) {
+      refetchBalance();
+    }
+  }, [showDrawer, refetchBalance]);
 
   // Click outside to close Phantom Wallet Popover Drawer
   useEffect(() => {
@@ -247,8 +254,8 @@ export default function Topbar({
               {/* Right Utility Icons (Refresh & Close) */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#a1a1aa' }}>
                 <button
-                  onClick={() => router.refresh()}
-                  title="Refresh"
+                  onClick={() => refetchBalance()}
+                  title="Refresh Balance"
                   style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
                 >
                   <RefreshCw size={15} />

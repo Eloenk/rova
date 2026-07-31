@@ -55,7 +55,14 @@ export function useWallet() {
 
   useEffect(() => {
     fetchServerBalance();
-  }, [fetchServerBalance]);
+    const interval = setInterval(() => {
+      fetchServerBalance();
+      if (web3Address) {
+        refetchWagmiBalance();
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [fetchServerBalance, web3Address, refetchWagmiBalance]);
 
 
   const isConnected = isWeb3Connected || isEmailSession;
