@@ -24,8 +24,22 @@ Rova enables users and autonomous AI agents to send, bridge, swap, and execute r
 - 👛 **Dynamic Multi-Token Drawer**
   - Phantom-inspired popover drawer rendering live onchain balances for USDC, EURC, and USYC.
   - Real-time wallet address resolution supporting both Web3 injected wallets and Circle Managed Wallets.
+- 🔒 **Autonomous Savings Vault System**
+  - Allocate a percentage of incoming funds into isolated storage protected from routine operational flows.
+  - Dual strategy engine configurable via `config.yaml`: **Smart Contract Timelock Vault** (`RovaSavingsVault.sol`) or **Circle Sub-Wallet SCA**.
 - 📜 **On-Chain Audit Ledger**
   - Full activity log linked to `RovaExecutionLog.sol` smart contract with Arc Transaction Memos.
+
+---
+
+## 🔒 Smart Contract Security Model (`RovaSavingsVault.sol`)
+
+Token access and security on `RovaSavingsVault.sol` are enforced through 4 distinct protocol layers:
+
+1. **Deposit Security (`depositSavings`)**: Transfers stablecoins into the vault contract using `IERC20.transferFrom`.
+2. **Strict Redemption Authorization (`redeemSavings`)**: Enforces `require(dep.user == msg.sender)` and `require(block.timestamp >= dep.lockUntil)`. Only the original depositor can redeem funds after timelock maturity; unauthorized third parties and contract admins cannot access user funds.
+3. **Emergency Circuit Breaker (`emergencyRelease`)**: Protected by `onlyOwner` and `whenPaused`. During emergency pauses, funds can only be returned **strictly back to the original depositor (`dep.user`)**.
+4. **Exploit Protection**: OpenZeppelin standard `ReentrancyGuard` (`nonReentrant` modifier) protects against reentrancy attacks during execution.
 
 ---
 

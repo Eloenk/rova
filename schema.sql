@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS users (
     whatsapp_number TEXT UNIQUE,
     email TEXT,
     circle_wallet_address TEXT,
+    savings_wallet_address TEXT,
     custodian_wallet_address TEXT,
     whatsapp_approval_threshold_usdc NUMERIC NOT NULL DEFAULT 100.00
 );

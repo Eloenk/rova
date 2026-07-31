@@ -3,27 +3,54 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
 import solc from 'solc';
+import yaml from 'js-yaml';
 
 // Load environment variables from .env.local and .env
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 dotenv.config();
 
+// Read config.yaml for primary RPC
+let configYamlRpc = 'https://arc-testnet.drpc.org';
+try {
+  const yamlPath = path.resolve(process.cwd(), 'config.yaml');
+  if (fs.existsSync(yamlPath)) {
+    const yamlContent = fs.readFileSync(yamlPath, 'utf8');
+    const parsed: any = yaml.load(yamlContent);
+    if (parsed?.arc?.rpc_url) {
+      configYamlRpc = parsed.arc.rpc_url;
+    }
+  }
+} catch (e) {
+  console.warn("⚠️ Could not parse config.yaml, using fallback RPC");
+}
+
 const RPC_ENDPOINTS = [
+  configYamlRpc,
   process.env.ARC_RPC_URL,
+  "https://arc-testnet.drpc.org",
   "https://5042002.rpc.thirdweb.com",
   "https://rpc.testnet.arc.network",
   "https://testnet.arc.network/rpc"
 ].filter(Boolean) as string[];
 
-function compileContract() {
-  console.log("🔨 Compiling RovaExecutionLog.sol using solc...");
-  const contractPath = path.resolve(process.cwd(), 'deploy/contracts/RovaExecutionLog.sol');
+function compileContract(contractFileName: string, contractName: string) {
+  console.log(`🔨 Compiling ${contractFileName} using solc...`);
+  
+  let contractPath = path.resolve(process.cwd(), 'contracts', contractFileName);
+  if (!fs.existsSync(contractPath)) {
+    contractPath = path.resolve(process.cwd(), 'deploy/contracts', contractFileName);
+  }
+
+  if (!fs.existsSync(contractPath)) {
+    throw new Error(`Contract file not found at: ${contractPath}`);
+  }
+
   const source = fs.readFileSync(contractPath, 'utf8');
 
   const input = {
     language: 'Solidity',
     sources: {
-      'RovaExecutionLog.sol': { content: source }
+      [contractFileName]: { content: source }
     },
     settings: {
       optimizer: { enabled: true, runs: 200 },
@@ -45,7 +72,11 @@ function compileContract() {
     }
   }
 
-  const contractObj = output.contracts['RovaExecutionLog.sol']['RovaExecutionLog'];
+  const contractObj = output.contracts[contractFileName][contractName];
+  if (!contractObj) {
+    throw new Error(`Contract ${contractName} not found in compiled output of ${contractFileName}`);
+  }
+
   const abi = contractObj.abi;
   const bytecode = contractObj.evm.bytecode.object;
 
@@ -58,7 +89,7 @@ async function getProviderWithFallback() {
     try {
       console.log(`🌐 Trying Arc RPC endpoint: ${url}...`);
       const provider = new ethers.JsonRpcProvider(url, undefined, { staticNetwork: true });
-      const balance = await provider.getBalance("0x0000000000000000000000000000000000000000");
+      await provider.getBalance("0x0000000000000000000000000000000000000000");
       console.log(`✅ Connected successfully to RPC endpoint: ${url}`);
       return { provider, url };
     } catch (err: any) {
@@ -69,11 +100,17 @@ async function getProviderWithFallback() {
 }
 
 async function main() {
+  const targetFile = process.argv[2] || 'RovaSavingsVault.sol';
+  const targetContract = process.argv[3] || (targetFile.includes('ExecutionLog') ? 'RovaExecutionLog' : 'RovaSavingsVault');
+
+  console.log(`\n====================================================`);
+  console.log(`🚀 Preparing Deployment for: ${targetContract} (${targetFile})`);
+  console.log(`====================================================\n`);
+
   const rawKey = process.env.PRIVATE_KEY || process.env.ROVA_AGENT_PRIVATE_KEY || "0x8c19a26e23643800dc538dc6343c28a79be73fb07536184a9b48f542a07febb6";
   const cleanKey = rawKey.startsWith('0x') ? rawKey : `0x${rawKey}`;
 
-  const { abi, bytecode } = compileContract();
-
+  const { abi, bytecode } = compileContract(targetFile, targetContract);
   const { provider, url } = await getProviderWithFallback();
   const wallet = new ethers.Wallet(cleanKey, provider);
 
@@ -81,7 +118,7 @@ async function main() {
   const balance = await provider.getBalance(wallet.address);
   console.log(`💰 Wallet Balance: ${ethers.formatEther(balance)} USDC/ARC`);
 
-  console.log(`🚀 Deploying RovaExecutionLog contract...`);
+  console.log(`🚀 Deploying ${targetContract} contract to Arc...`);
 
   const factory = new ethers.ContractFactory(abi, bytecode, wallet);
   
@@ -109,10 +146,15 @@ async function main() {
   const deployedAddress = await contract.getAddress();
 
   console.log("\n====================================================");
-  console.log(`🎉 SUCCESS! RovaExecutionLog deployed to: ${deployedAddress}`);
+  console.log(`🎉 SUCCESS! ${targetContract} deployed to: ${deployedAddress}`);
   console.log("====================================================\n");
   console.log("Add this address to your environment files:");
-  console.log(`NEXT_PUBLIC_ROVA_EXECUTION_LOG_ADDRESS=${deployedAddress}`);
+  if (targetContract === 'RovaSavingsVault') {
+    console.log(`NEXT_PUBLIC_ROVA_SAVINGS_VAULT_ADDRESS=${deployedAddress}`);
+    console.log(`ROVA_SAVINGS_VAULT_ADDRESS=${deployedAddress}`);
+  } else {
+    console.log(`NEXT_PUBLIC_ROVA_EXECUTION_LOG_ADDRESS=${deployedAddress}`);
+  }
 }
 
 main().catch((err) => {

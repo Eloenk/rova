@@ -76,12 +76,32 @@ export async function POST(req: NextRequest) {
             console.warn('[Verify OTP] Circle wallet dynamic creation note:', circleErr);
           }
         }
+
+        if (!existingUser.savings_wallet_address) {
+          try {
+            const { createSavingsSubWallet } = await import('@/lib/circle');
+            const savingsRes = await createSavingsSubWallet(cleanEmail);
+            if (savingsRes?.address) {
+              await supabase
+                .from('users')
+                .update({ savings_wallet_address: savingsRes.address })
+                .eq('id', userId);
+            }
+          } catch (savErr) {
+            console.warn('[Verify OTP] Savings wallet dynamic creation note:', savErr);
+          }
+        }
       } else {
+        let savingsWalletAddress = '';
         try {
-          const { createSingleWallet } = await import('@/lib/circle');
+          const { createSingleWallet, createSavingsSubWallet } = await import('@/lib/circle');
           const walletRes = await createSingleWallet(cleanEmail);
           if (walletRes?.address) {
             circleWalletAddress = walletRes.address;
+          }
+          const savingsRes = await createSavingsSubWallet(cleanEmail, walletRes?.walletSetId);
+          if (savingsRes?.address) {
+            savingsWalletAddress = savingsRes.address;
           }
         } catch (circleErr) {
           console.warn('[Verify OTP] Circle wallet dynamic creation note:', circleErr);
@@ -91,6 +111,7 @@ export async function POST(req: NextRequest) {
           id: userId,
           email: cleanEmail,
           circle_wallet_address: circleWalletAddress,
+          savings_wallet_address: savingsWalletAddress,
           whatsapp_approval_threshold_usdc: 100.0,
         });
       }

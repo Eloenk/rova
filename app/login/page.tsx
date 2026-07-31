@@ -343,7 +343,7 @@ export default function LoginPage() {
                     gap: '8px',
                   }}
                 >
-                  {loading ? 'Verifying...' : 'Verify & Launch Dashboard'}
+                  {loading ? 'Verifying...' : 'Verify'}
                   <CheckCircle2 size={16} />
                 </button>
 
