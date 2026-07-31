@@ -34,7 +34,7 @@ execution:
   fallback_to_mock: false
 
 arc:
-  rpc_url: "https://rpc.testnet.arc.network"
+  rpc_url: "https://arc-testnet.drpc.org"
   chain_id: 5042002
   execution_log_address: "0x58d1e3e11C7a93cb26C371B115f2710aF68d427a"
   usdc_address: "0x3600000000000000000000000000000000000000"
