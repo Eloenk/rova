@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useWallet } from '@/hooks/useWallet';
 import {
   Menu, X, Copy, Check, MessageCircle, Send, Repeat,
-  Monitor, Clock, Home, CheckCircle2, MoreHorizontal, Wallet, LogOut
+  Monitor, Clock, Home, CheckCircle2, MoreHorizontal, Wallet, LogOut, RefreshCw
 } from 'lucide-react';
 
 const META: Record<string, { title: string; sub: string }> = {
@@ -31,13 +31,27 @@ export default function Topbar({
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [linkToken, setLinkToken] = useState('LINK-8492');
+
+  useEffect(() => {
+    if (showWhatsAppModal) {
+      fetch('/api/user/generate-link-token', { method: 'POST' })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.ok && data?.token) {
+            setLinkToken(data.token);
+          }
+        })
+        .catch((err) => console.error('Failed to generate WhatsApp link token:', err));
+    }
+  }, [showWhatsAppModal]);
 
   const rawWaConfig = process.env.NEXT_PUBLIC_WHATSAPP_LINK || 'https://wa.me/+447446132243';
   const waDeepLink = rawWaConfig.includes('?')
-    ? `${rawWaConfig}&text=LINK-8492`
+    ? `${rawWaConfig}&text=${linkToken}`
     : rawWaConfig.startsWith('http')
-      ? `${rawWaConfig}?text=LINK-8492`
-      : `https://wa.me/${rawWaConfig.replace(/[^0-9+]/g, '')}?text=LINK-8492`;
+      ? `${rawWaConfig}?text=${linkToken}`
+      : `https://wa.me/${rawWaConfig.replace(/[^0-9+]/g, '')}?text=${linkToken}`;
 
   const drawerRef = useRef<HTMLDivElement>(null);
   const walletBtnRef = useRef<HTMLButtonElement>(null);
@@ -212,11 +226,11 @@ export default function Topbar({
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '24px', lineHeight: 1 }}>👾</span>
                 <div>
-                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff', lineHeight: 1.1 }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff', lineHeight: 1.1 }}>
                     {isConnected ? 'Custodian Wallet' : 'Circle Wallet'}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                    <span style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 500, fontFamily: 'monospace' }}>
+                    <span style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 400, fontFamily: 'monospace' }}>
                       {displayShort}
                     </span>
                     <button
@@ -230,12 +244,18 @@ export default function Topbar({
                 </div>
               </div>
 
-              {/* Right Utility Icons (Monitor & Close) */}
+              {/* Right Utility Icons (Refresh & Close) */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#a1a1aa' }}>
-                <Monitor size={17} style={{ cursor: 'pointer' }} />
+                <button
+                  onClick={() => router.refresh()}
+                  title="Refresh"
+                  style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                >
+                  <RefreshCw size={15} />
+                </button>
                 <button
                   onClick={() => setShowDrawer(false)}
-                  style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', padding: 0 }}
+                  style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
                 >
                   <X size={18} />
                 </button>
@@ -245,27 +265,24 @@ export default function Topbar({
             {/* Main Content Body */}
             <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-              {/* Huge Centered Hero Total Balance */}
+              {/* Centered Hero Total Balance */}
               <div style={{ textAlign: 'center', padding: '12px 0 4px' }}>
-                <div style={{ fontSize: '40px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  ${totalUsd} <span style={{ fontSize: '18px', color: '#8b9ba8', fontWeight: 600 }}>USD</span>
+                <div style={{ fontSize: '38px', fontWeight: 500, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                  ${totalUsd} <span style={{ fontSize: '16px', color: '#8b9ba8', fontWeight: 400 }}>USD</span>
                 </div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#BFFF00' }}>Arc Testnet</span>
                   <span style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    color: '#BFFF00',
-                    background: 'rgba(191, 255, 0, 0.12)',
-                    padding: '2px 6px',
-                    borderRadius: '6px',
-                  }}>
-                    Live RPC
-                  </span>
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: '#ffffff',
+                    display: 'inline-block',
+                  }} />
+                  <span style={{ fontSize: '13px', fontWeight: 400, color: '#ffffff' }}>Arc Testnet</span>
                 </div>
               </div>
 
-              {/* 3 Rounded Action Buttons Row (Send, Swap, Connect) */}
+              {/* 3 Rounded Action Buttons Row (Send, Swap, Disconnect) */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                 {/* Send */}
                 <button
@@ -287,7 +304,7 @@ export default function Topbar({
                   onMouseLeave={(e) => (e.currentTarget.style.background = '#18181b')}
                 >
                   <Send size={19} color="#ffffff" style={{ transform: 'rotate(-45deg)' }} />
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>Send</span>
+                  <span style={{ fontSize: '12px', fontWeight: 500, color: '#ffffff' }}>Send</span>
                 </button>
 
                 {/* Swap */}
@@ -310,7 +327,7 @@ export default function Topbar({
                   onMouseLeave={(e) => (e.currentTarget.style.background = '#18181b')}
                 >
                   <Repeat size={19} color="#ffffff" />
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>Swap</span>
+                  <span style={{ fontSize: '12px', fontWeight: 500, color: '#ffffff' }}>Swap</span>
                 </button>
 
                 {/* Sign Out / Disconnect */}
@@ -326,8 +343,8 @@ export default function Topbar({
                     router.push('/');
                   }}
                   style={{
-                    background: 'rgba(239, 68, 68, 0.08)',
-                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    background: '#18181b',
+                    border: 'none',
                     borderRadius: '16px',
                     padding: '14px 4px',
                     display: 'flex',
@@ -338,11 +355,11 @@ export default function Topbar({
                     cursor: 'pointer',
                     transition: 'background 0.15s ease',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#27272a')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '#18181b')}
                 >
-                  <LogOut size={19} color="#ef4444" />
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444' }}>
+                  <LogOut size={19} color="#ffffff" />
+                  <span style={{ fontSize: '12px', fontWeight: 500, color: '#ffffff' }}>
                     {isConnected ? 'Disconnect' : 'Sign Out'}
                   </span>
                 </button>
@@ -369,9 +386,9 @@ export default function Topbar({
                     justifyContent: 'center',
                     flexShrink: 0,
                   }}>
-                    <Monitor size={18} color="#22c55e" />
+                    <RefreshCw size={16} color="#ffffff" />
                   </div>
-                  <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#ffffff', lineHeight: 1.3, paddingRight: '16px' }}>
+                  <div style={{ fontSize: '12.5px', fontWeight: 400, color: '#ffffff', lineHeight: 1.3, paddingRight: '16px' }}>
                     Meet Rova AI, your new home for automated stablecoin trading
                   </div>
                   <button
@@ -393,7 +410,7 @@ export default function Topbar({
 
               {/* Tokens Section Header */}
               <div style={{ marginTop: '4px' }}>
-                <span style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff' }}>
+                <span style={{ fontSize: '15px', fontWeight: 500, color: '#ffffff' }}>
                   Tokens
                 </span>
               </div>
@@ -418,24 +435,23 @@ export default function Topbar({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      color: '#2563eb',
+                      fontSize: '15px',
+                      fontWeight: 500,
+                      color: '#ffffff',
                     }}>
                       $
                     </div>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>USDC</span>
-                        <CheckCircle2 size={13} color="#2563eb" />
+                        <span style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff' }}>USDC</span>
                       </div>
-                      <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 500, marginTop: '2px' }}>
+                      <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 400, marginTop: '2px' }}>
                         {currentUsdc} USDC
                       </div>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>${usdcUsd.toFixed(2)}</div>
+                    <div style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff' }}>${usdcUsd.toFixed(2)}</div>
                   </div>
                 </div>
 
@@ -457,24 +473,23 @@ export default function Topbar({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      color: '#6366f1',
+                      fontSize: '15px',
+                      fontWeight: 500,
+                      color: '#ffffff',
                     }}>
                       €
                     </div>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>EURC</span>
-                        <CheckCircle2 size={13} color="#6366f1" />
+                        <span style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff' }}>EURC</span>
                       </div>
-                      <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 500, marginTop: '2px' }}>
+                      <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 400, marginTop: '2px' }}>
                         {currentEurc} EURC
                       </div>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>${eurcUsd.toFixed(2)}</div>
+                    <div style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff' }}>${eurcUsd.toFixed(2)}</div>
                   </div>
                 </div>
 
@@ -496,24 +511,23 @@ export default function Topbar({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      color: '#22c55e',
+                      fontSize: '15px',
+                      fontWeight: 500,
+                      color: '#ffffff',
                     }}>
                       Y
                     </div>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>USYC</span>
-                        <CheckCircle2 size={13} color="#22c55e" />
+                        <span style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff' }}>USYC</span>
                       </div>
-                      <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 500, marginTop: '2px' }}>
+                      <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 400, marginTop: '2px' }}>
                         {currentUsyc} USYC
                       </div>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#ffffff' }}>${usycUsd.toFixed(2)}</div>
+                    <div style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff' }}>${usycUsd.toFixed(2)}</div>
                   </div>
                 </div>
               </div>
@@ -627,7 +641,7 @@ export default function Topbar({
             }}>
               <div>
                 <span style={{ fontSize: '11px', color: '#8b9ba8', display: 'block', textAlign: 'center' }}>Verification Token</span>
-                <span style={{ fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', fontWeight: 700 }}>LINK-8492</span>
+                <span style={{ fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', fontWeight: 500 }}>{linkToken}</span>
               </div>
             </div>
 
