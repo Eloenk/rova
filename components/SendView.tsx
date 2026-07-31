@@ -194,7 +194,7 @@ export default function SendView() {
         <button
           onClick={handleSubmit}
           disabled={isProcessing || status === 'loading'}
-          className="w-full py-3.5 rounded-lg bg-accent-primary text-primary-foreground font-extrabold text-sm border-0 cursor-pointer flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-md"
+          className="w-full py-3.5 rounded-lg bg-[#BFFF00] text-black font-semibold text-sm border-0 cursor-pointer flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-md"
         >
           {isProcessing || status === 'loading'
             ? <><Loader size={16} className="animate-spin" /> Processing...</>

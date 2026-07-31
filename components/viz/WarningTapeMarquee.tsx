@@ -36,12 +36,12 @@ export default function WarningTapeMarquee() {
     <section
       id="integrations"
       ref={containerRef}
-      className="w-full py-8 md:py-11 bg-[#0b131e] border-y border-accent-primary/30 overflow-hidden relative select-none shadow-xl"
+      className="w-full py-5 md:py-7 bg-[#0b131e] border-y-2 border-accent-primary/40 overflow-hidden relative select-none shadow-2xl"
       style={{
-        backgroundImage: 'repeating-linear-gradient(-45deg, #0b131e, #0b131e 20px, #132030 20px, #132030 40px)',
+        backgroundImage: 'repeating-linear-gradient(-45deg, #0b131e, #0b131e 35px, #152438 35px, #152438 70px)',
       }}
     >
-      <div className="w-full overflow-hidden flex whitespace-nowrap">
+      <div className="w-full overflow-hidden flex whitespace-nowrap items-center">
         <div
           className="animate-marquee flex items-center shrink-0"
           style={{
@@ -52,10 +52,10 @@ export default function WarningTapeMarquee() {
           {[1, 2, 3, 4].map((idx) => (
             <div
               key={idx}
-              className="flex items-center text-xl md:text-2xl lg:text-3xl font-mono font-black uppercase tracking-[0.35em] text-white/95 shrink-0 pr-12"
+              className="flex items-center text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-mono font-black italic uppercase tracking-[0.22em] leading-none text-white shrink-0 pr-14"
             >
               <span>{textBlock}</span>
-              <span className="ml-12 text-accent-primary">•</span>
+              <span className="ml-14 text-[#BFFF00] not-italic">•</span>
             </div>
           ))}
         </div>

@@ -183,7 +183,7 @@ export default function AgentView() {
         </div>
         <button
           onClick={() => setShowForm(s => !s)}
-          className="py-2.5 px-5 rounded-lg bg-accent-primary text-primary-foreground font-extrabold text-xs cursor-pointer hover:brightness-110 transition-all border-0 shadow-md"
+          className="py-2.5 px-5 rounded-lg bg-[#BFFF00] text-black font-semibold text-xs cursor-pointer hover:brightness-110 transition-all border-0 shadow-md"
         >
           {showForm ? 'Cancel' : '+ New Rule'}
         </button>
@@ -216,7 +216,7 @@ export default function AgentView() {
                 <button
                   onClick={() => approveRule(r)}
                   disabled={approvingId === r.id}
-                  className="px-4 py-2 rounded-lg bg-amber-400 text-black font-extrabold text-xs cursor-pointer hover:bg-amber-300 border-0 shrink-0"
+                  className="px-4 py-2 rounded-lg bg-amber-400 text-black font-semibold text-xs cursor-pointer hover:bg-amber-300 border-0 shrink-0"
                 >
                   {approvingId === r.id ? 'Confirming...' : 'Approve & Send'}
                 </button>
@@ -266,7 +266,7 @@ export default function AgentView() {
 
           {formError && <p className="text-accent-error text-xs">{formError}</p>}
 
-          <button type="submit" disabled={submitting} className="w-full py-3 rounded-lg bg-accent-primary text-primary-foreground font-extrabold text-xs cursor-pointer hover:brightness-110 border-0 shadow-md">
+          <button type="submit" disabled={submitting} className="w-full py-3 rounded-lg bg-[#BFFF00] text-black font-semibold text-xs cursor-pointer hover:brightness-110 border-0 shadow-md">
             {submitting ? 'Creating...' : 'Arm Rule'}
           </button>
         </form>

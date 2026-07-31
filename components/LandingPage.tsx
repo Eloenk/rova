@@ -49,7 +49,7 @@ export default function LandingPage() {
               />
             </div>
             <span className="text-xl font-extrabold tracking-tight text-text-primary">ROVA</span>
-            <span className="text-[10px] uppercase font-mono tracking-widest text-accent-mint bg-accent-mint/10 border border-accent-mint/20 px-2 py-0.5 rounded-full hidden sm:inline-block">
+            <span className="text-[9px] uppercase font-mono font-normal tracking-widest text-white/70 hidden sm:inline-block">
               ARC TESTNET
             </span>
           </Link>
@@ -293,36 +293,104 @@ export default function LandingPage() {
       <WarningTapeMarquee />
 
       {/* ── 6. COMPARISON TABLE ─────────────────────────────────────────── */}
-      <section id="comparison" className="py-24 bg-surface/40 border-t border-border">
-        <div className="max-w-5xl mx-auto px-6 space-y-12">
+      <section id="comparison" className="py-28 bg-[#0a1017] border-t border-border/80 relative overflow-hidden">
+        {/* Ambient Radial Background Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-[#BFFF00]/5 blur-[160px] pointer-events-none rounded-full" />
+
+        <div className="max-w-5xl mx-auto px-6 space-y-12 relative z-10">
           <div className="text-center space-y-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-accent-mint">Unmatched Efficiency</span>
+            <span className="inline-block px-3 py-1 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/25 text-xs font-mono font-bold uppercase tracking-widest text-[#BFFF00]">
+              Unmatched Efficiency
+            </span>
             <h2 className="text-3xl md:text-5xl font-extrabold text-text-primary tracking-tight">
-              Built for modern capital, not legacy systems.
+              Built for modern capital, <br className="hidden sm:inline" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#BFFF00] via-emerald-300 to-accent-mint font-extrabold">
+                not legacy systems.
+              </span>
             </h2>
           </div>
 
-          <div className="rounded-2xl bg-surface border border-border overflow-hidden">
-            <div className="grid grid-cols-12 bg-surface-raised border-b border-border p-4 font-bold text-sm text-text-primary">
-              <div className="col-span-6">Capability</div>
-              <div className="col-span-3 text-center text-accent-primary">ROVA</div>
-              <div className="col-span-3 text-center text-text-tertiary">Legacy Platforms</div>
+          {/* High-Contrast Glassmorphic Matrix Table */}
+          <div className="rounded-2xl bg-[#0f1722] border border-[#BFFF00]/20 shadow-[0_20px_60px_rgba(0,0,0,0.7)] overflow-hidden">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 bg-[#14202e] border-b border-border/80 px-6 py-5 items-center font-extrabold text-sm">
+              <div className="col-span-6 text-text-secondary uppercase tracking-wider text-xs font-mono">
+                System Capability
+              </div>
+              <div className="col-span-3 flex justify-center">
+                <span className="px-3.5 py-1 rounded-md bg-[#BFFF00] text-black font-extrabold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(191,255,0,0.3)]">
+                  ROVA
+                </span>
+              </div>
+              <div className="col-span-3 flex justify-center">
+                <span className="text-text-tertiary uppercase tracking-wider text-xs font-mono font-medium">
+                  Legacy Platforms
+                </span>
+              </div>
             </div>
 
+            {/* Table Body Rows */}
             {[
-              { cap: 'x402 Nanopayment Rate Shopping', rova: true, legacy: false },
-              { cap: '24/7 Autonomous Background Daemons', rova: true, legacy: false },
-              { cap: 'Natural Language Prompting (WhatsApp & Web)', rova: true, legacy: false },
-              { cap: 'Zero-Slippage Atomic FX Swaps (StableFX)', rova: true, legacy: false },
-              { cap: 'Circle Programmable Wallet Security', rova: true, legacy: true },
+              {
+                cap: 'x402 Nanopayment Rate Shopping',
+                desc: 'Real-time HTTP header quotes across 3 liquidity desks via micro-nanopayments',
+                rova: true,
+                legacy: false,
+              },
+              {
+                cap: '24/7 Autonomous Execution Daemons',
+                desc: 'Native Go background engine executes standing rules continuously without user intervention',
+                rova: true,
+                legacy: false,
+              },
+              {
+                cap: 'Natural Language Intent Engine',
+                desc: 'Translates plain English prompts from WhatsApp & Web into valid smart contract calls',
+                rova: true,
+                legacy: false,
+              },
+              {
+                cap: 'Zero-Slippage Atomic FX Settlement',
+                desc: 'Direct 1:1 Circle CCTP V2 burn-and-mint settlement across 5 chains',
+                rova: true,
+                legacy: false,
+              },
+              {
+                cap: 'Circle Programmable Wallet Security',
+                desc: 'Enterprise MPC key management with optional user self-custody fallback',
+                rova: true,
+                legacy: true,
+              },
             ].map((item, idx) => (
-              <div key={idx} className="grid grid-cols-12 p-4 border-b border-border/50 items-center text-sm">
-                <div className="col-span-6 text-text-primary font-medium">{item.cap}</div>
-                <div className="col-span-3 flex justify-center text-accent-success">
-                  <CheckCircle2 size={18} />
+              <div
+                key={idx}
+                className="grid grid-cols-12 px-6 py-5 border-b border-border/40 last:border-b-0 items-center hover:bg-[#152333]/80 transition-all duration-200"
+              >
+                <div className="col-span-6 space-y-1">
+                  <div className="text-text-primary font-bold text-sm sm:text-base">
+                    {item.cap}
+                  </div>
+                  <div className="text-text-secondary text-xs font-normal leading-relaxed max-w-md">
+                    {item.desc}
+                  </div>
                 </div>
-                <div className="col-span-3 flex justify-center text-text-tertiary">
-                  {item.legacy ? <CheckCircle2 size={18} /> : <XCircle size={18} className="text-accent-error/60" />}
+
+                <div className="col-span-3 flex justify-center">
+                  <div className="w-8 h-8 rounded-full bg-[#BFFF00]/15 border border-[#BFFF00]/40 flex items-center justify-center text-[#BFFF00] shadow-[0_0_12px_rgba(191,255,0,0.2)]">
+                    <CheckCircle2 size={18} />
+                  </div>
+                </div>
+
+                <div className="col-span-3 flex justify-center">
+                  {item.legacy ? (
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400/80">
+                      <CheckCircle2 size={18} />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400/70">
+                      <XCircle size={18} />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

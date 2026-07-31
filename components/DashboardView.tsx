@@ -217,7 +217,7 @@ export default function Dashboard() {
                   <div className="flex flex-wrap gap-2.5 mt-1">
                     <button
                       onClick={() => executePlan(isConnected && address ? address : undefined)}
-                      className="px-4 py-2.5 rounded-full bg-accent-primary text-primary-foreground font-extrabold text-xs border-0 cursor-pointer flex items-center gap-1.5 hover:brightness-110 transition-all"
+                      className="px-4 py-2.5 rounded-full bg-[#BFFF00] text-black font-semibold text-xs border-0 cursor-pointer flex items-center gap-1.5 hover:brightness-110 transition-all"
                     >
                       <Sparkles size={14} /> Confirm & Execute
                     </button>
@@ -261,7 +261,7 @@ export default function Dashboard() {
                       <button
                         onClick={handleMakeAutomatic}
                         disabled={automating}
-                        className="flex-1 p-2.5 rounded-lg bg-accent-primary text-primary-foreground font-extrabold text-xs border-0 cursor-pointer hover:brightness-110"
+                        className="flex-1 p-2.5 rounded-lg bg-[#BFFF00] text-black font-semibold text-xs border-0 cursor-pointer hover:brightness-110"
                       >
                         {automating ? 'Saving...' : 'Save Autonomous Trigger'}
                       </button>
