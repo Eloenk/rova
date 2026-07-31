@@ -236,45 +236,45 @@ export default function LandingPage() {
       <section id="architecture" className="py-24 bg-surface/30 border-t border-border">
         <div className="max-w-7xl mx-auto px-6 text-center space-y-12">
           <div className="max-w-3xl mx-auto space-y-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-accent-mint">System Architecture</span>
+            <span className="text-xs font-mono uppercase tracking-widest text-text-tertiary">System Architecture</span>
             <h2 className="text-3xl md:text-5xl font-extrabold text-text-primary tracking-tight">
               One platform. Multiple intelligence layers.
             </h2>
             <p className="text-text-secondary text-base">
-              Rova unifies high-frequency AI reasoning with native EVM execution.
+              Rova unifies plain-English intent understanding with native EVM execution.
             </p>
           </div>
 
-          {/* Diagram Cards Grid */}
-          <div className="relative p-8 md:p-12 rounded-3xl bg-surface border border-border-strong">
-            {/* Central Node */}
-            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-accent-primary text-primary-foreground font-extrabold text-lg shadow-[0_0_30px_rgba(191,255,0,0.3)] mb-12">
-              <Cpu size={22} />
+          {/* Diagram Grid */}
+          <div className="relative p-8 md:p-12">
+            {/* Central Node — No box, no border, no green, slimmer lighter type */}
+            <div className="flex items-center justify-center gap-2 text-xs font-medium tracking-widest text-text-secondary uppercase mb-12">
+              <Cpu size={16} className="text-text-tertiary" />
               <span>ROVA CORE ENGINE</span>
             </div>
 
-            {/* Radiating Satellite Nodes */}
+            {/* Radiating Satellite Nodes — Neutral / Monochrome styling */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
               <div className="p-5 rounded-xl bg-surface-raised border border-border">
-                <div className="text-xs font-mono text-accent-mint mb-1">LAYER 1</div>
-                <h4 className="font-bold text-text-primary mb-2">AI Intelligence</h4>
-                <p className="text-xs text-text-secondary">Claude 3.7 & Gemini intent parsing with failsafe fast-paths.</p>
+                <div className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider mb-1">LAYER 1</div>
+                <h4 className="font-bold text-text-primary mb-2">Intent Parser</h4>
+                <p className="text-xs text-text-secondary">Natural language intent understanding with failsafe execution fast-paths.</p>
               </div>
 
               <div className="p-5 rounded-xl bg-surface-raised border border-border">
-                <div className="text-xs font-mono text-accent-mint mb-1">LAYER 2</div>
+                <div className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider mb-1">LAYER 2</div>
                 <h4 className="font-bold text-text-primary mb-2">x402 / Gateway</h4>
                 <p className="text-xs text-text-secondary">Circle Gateway client for instant micro-nanopayments.</p>
               </div>
 
               <div className="p-5 rounded-xl bg-surface-raised border border-border">
-                <div className="text-xs font-mono text-accent-mint mb-1">LAYER 3</div>
+                <div className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider mb-1">LAYER 3</div>
                 <h4 className="font-bold text-text-primary mb-2">CCTP V2 Bridge</h4>
                 <p className="text-xs text-text-secondary">Cross-chain stablecoin liquidity routing engine.</p>
               </div>
 
               <div className="p-5 rounded-xl bg-surface-raised border border-border">
-                <div className="text-xs font-mono text-accent-mint mb-1">LAYER 4</div>
+                <div className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider mb-1">LAYER 4</div>
                 <h4 className="font-bold text-text-primary mb-2">Arc Audit Ledger</h4>
                 <p className="text-xs text-text-secondary">Immutable smart contract execution logs on Arc Testnet.</p>
               </div>
