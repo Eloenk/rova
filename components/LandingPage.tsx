@@ -41,7 +41,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border transition-all">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 rounded-lg bg-white p-1 flex items-center justify-center transition-transform group-hover:scale-105">
+            <div className="w-8 h-8 flex items-center justify-center transition-transform group-hover:scale-105">
               <img
                 src="/logo.png"
                 alt="ROVA Logo"
@@ -64,13 +64,10 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <Link
               href={hasSession ? '/dashboard' : '/login'}
-              className="relative inline-flex items-center justify-center p-[2px] rounded-xl overflow-hidden group shadow-lg"
+              className="px-5 py-2.5 rounded-xl bg-[#047857] text-white font-extrabold text-xs uppercase tracking-wider hover:bg-[#065f46] transition-all border border-[#10b981]/40 shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center gap-2"
             >
-              <div className="btn-zebra-stripe absolute inset-0 transition-transform duration-300 group-hover:scale-110" />
-              <div className="relative px-5 py-2.5 rounded-[10px] bg-black text-white font-extrabold text-xs uppercase tracking-wider flex items-center gap-2">
-                <span>{hasSession ? 'Go to Dashboard' : 'Launch App'}</span>
-                <ArrowRight size={14} className="text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
-              </div>
+              <span>{hasSession ? 'Go to Dashboard' : 'Launch App'}</span>
+              <ArrowRight size={14} />
             </Link>
           </div>
         </div>
@@ -85,11 +82,6 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Hero Pitch */}
             <div className="lg:col-span-7 space-y-6 text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-border text-xs font-mono text-text-secondary">
-                <span className="w-2 h-2 rounded-full bg-accent-success animate-pulse" />
-                <span>Next-Gen Stablecoin Infrastructure</span>
-              </div>
-
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-text-primary leading-[1.08]">
                 A New Standard <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-primary via-emerald-300 to-accent-mint font-extrabold">
@@ -104,13 +96,10 @@ export default function LandingPage() {
               <div className="flex flex-wrap items-center gap-4 pt-4">
                 <Link
                   href={hasSession ? '/dashboard' : '/login'}
-                  className="relative inline-flex items-center justify-center p-[2px] rounded-xl overflow-hidden group shadow-2xl"
+                  className="px-7 py-3.5 rounded-xl bg-[#047857] text-white font-extrabold text-sm uppercase tracking-wider hover:bg-[#065f46] transition-all border border-[#10b981]/40 shadow-[0_0_30px_rgba(16,185,129,0.35)] flex items-center gap-2.5"
                 >
-                  <div className="btn-zebra-stripe absolute inset-0 transition-transform duration-300 group-hover:scale-110" />
-                  <div className="relative px-7 py-3.5 rounded-[10px] bg-black text-white font-extrabold text-sm uppercase tracking-wider flex items-center gap-2">
-                    <span>{hasSession ? 'Access Command Hub' : 'Launch App Now'}</span>
-                    <ArrowRight size={16} className="text-emerald-400 group-hover:translate-x-1 transition-transform" />
-                  </div>
+                  <span>{hasSession ? 'Access Command Hub' : 'Launch App Now'}</span>
+                  <ArrowRight size={16} />
                 </Link>
                 <a
                   href="#architecture"

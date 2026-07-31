@@ -36,9 +36,9 @@ export default function WarningTapeMarquee() {
     <section
       id="integrations"
       ref={containerRef}
-      className="w-full py-7 md:py-9 bg-[#0b131e] border-y border-accent-primary/25 overflow-hidden relative select-none shadow-lg"
+      className="w-full py-8 md:py-11 bg-[#0b131e] border-y border-accent-primary/30 overflow-hidden relative select-none shadow-xl"
       style={{
-        backgroundImage: 'repeating-linear-gradient(-45deg, #0b131e, #0b131e 16px, #132030 16px, #132030 32px)',
+        backgroundImage: 'repeating-linear-gradient(-45deg, #0b131e, #0b131e 20px, #132030 20px, #132030 40px)',
       }}
     >
       <div className="w-full overflow-hidden flex whitespace-nowrap">
@@ -52,10 +52,10 @@ export default function WarningTapeMarquee() {
           {[1, 2, 3, 4].map((idx) => (
             <div
               key={idx}
-              className="flex items-center text-sm md:text-lg lg:text-xl font-mono font-black uppercase tracking-[0.3em] text-white/95 shrink-0 pr-10"
+              className="flex items-center text-xl md:text-2xl lg:text-3xl font-mono font-black uppercase tracking-[0.35em] text-white/95 shrink-0 pr-12"
             >
               <span>{textBlock}</span>
-              <span className="ml-10 text-accent-primary">•</span>
+              <span className="ml-12 text-accent-primary">•</span>
             </div>
           ))}
         </div>
