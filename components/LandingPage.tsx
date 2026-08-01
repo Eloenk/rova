@@ -74,11 +74,11 @@ export default function LandingPage() {
       </header>
 
       {/* ── 1. HERO SECTION ──────────────────────────────────────────────── */}
-      <section className="relative pt-16 pb-24 md:pt-24 md:pb-36 overflow-hidden">
+      <section className="relative min-h-[calc(100vh-64px)] flex items-center justify-center py-16 md:py-24 overflow-hidden snap-start snap-always">
         {/* Subtle Background Glow Radial */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-accent-mint/10 blur-[140px] pointer-events-none rounded-full" />
 
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="max-w-7xl mx-auto px-6 relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Hero Pitch */}
             <div className="lg:col-span-7 space-y-6 text-left">
@@ -90,7 +90,7 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-lg md:text-xl text-text-secondary max-w-2xl font-normal leading-relaxed">
-                Send, bridge, and swap stablecoins on Arc using plain English. Powered by Circle Programmable Wallets, x402 nanopayments, and 24/7 background execution daemons.
+                Save, send, bridge, and swap stablecoins using plain English. Just tell Rova what you want from the web or WhatsApp, and it takes care of the rest by discovering the best execution path, coordinating every transaction, and automating repetitive financial tasks for you.
               </p>
 
               <div className="flex flex-wrap items-center gap-4 pt-4">
@@ -120,7 +120,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 2. FEATURE TRIPTYCH ─────────────────────────────────────────── */}
-      <section id="features" className="py-20 bg-surface/50 border-y border-border">
+      <section id="features" className="py-24 bg-surface/50 border-y border-border snap-start snap-always">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <span className="text-xs font-mono uppercase tracking-widest text-accent-mint">Engineered for Precision</span>
@@ -194,7 +194,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 3. FLOATING MICRO-INSIGHT CALLOUTS ────────────────────────────── */}
-      <section className="py-20 bg-background relative">
+      <section className="py-20 bg-background relative snap-start snap-always">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-6 rounded-xl bg-surface border border-border flex items-center gap-4">
@@ -231,7 +231,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 4. SYSTEM NODE DIAGRAM (Full-Page Depth with Elevated Shadows) ────────────────── */}
-      <section id="architecture" className="py-28 bg-black border-t border-white/10 relative">
+      <section id="architecture" className="py-28 bg-black border-t border-white/10 relative snap-start snap-always">
         <div className="w-full max-w-[1400px] mx-auto px-6 text-center space-y-16">
           <div className="max-w-4xl mx-auto space-y-4">
             <span className="text-xs font-mono uppercase tracking-widest text-text-tertiary bg-white/5 border border-white/10 px-3 py-1 rounded-full">System Architecture</span>
@@ -293,7 +293,7 @@ export default function LandingPage() {
       <WarningTapeMarquee />
 
       {/* ── 6. COMPARISON TABLE ─────────────────────────────────────────── */}
-      <section id="comparison" className="py-28 bg-[#0a1017] border-t border-border/80 relative overflow-hidden">
+      <section id="comparison" className="py-28 bg-[#0a1017] border-t border-border/80 relative overflow-hidden snap-start snap-always">
         {/* Ambient Radial Background Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-[#BFFF00]/5 blur-[160px] pointer-events-none rounded-full" />
 
@@ -399,7 +399,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 7. CLOSING CTA & LIVE SYSTEM ACTIVITY ───────────────────────── */}
-      <section className="py-24 bg-background relative overflow-hidden">
+      <section className="py-24 bg-background relative overflow-hidden snap-start snap-always">
         <div className="max-w-5xl mx-auto px-6 text-center space-y-8">
           <h2 className="text-4xl md:text-6xl font-extrabold text-text-primary tracking-tight">
             Ready to automate your money movement?
