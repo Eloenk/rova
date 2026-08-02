@@ -107,7 +107,7 @@ export default function LandingPage() {
       </header>
 
       {/* ── 1. HERO SECTION ──────────────────────────────────────────────── */}
-      <section className="relative min-h-[calc(100vh-64px)] flex items-center justify-center py-16 md:py-24 overflow-hidden snap-start snap-always">
+      <section className="relative min-h-[calc(100vh-64px)] lg:h-[calc(100vh-64px)] flex items-center justify-center py-12 overflow-hidden snap-start snap-always">
         {/* Subtle Background Glow Radial */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-accent-mint/10 blur-[140px] pointer-events-none rounded-full" />
 
@@ -153,9 +153,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── 2. FEATURE TRIPTYCH ─────────────────────────────────────────── */}
-      <section id="features" className="py-24 bg-surface/50 border-y border-border snap-start snap-always">
-        <div className="max-w-7xl mx-auto px-6">
-          <ScrollReveal className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+      <section id="features" className="min-h-screen lg:h-screen flex flex-col justify-center py-16 bg-surface/50 border-y border-border snap-start snap-always relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 w-full">
+          <ScrollReveal className="text-center max-w-3xl mx-auto mb-12 space-y-3">
             <span className="text-xs font-mono uppercase tracking-widest text-accent-mint">Engineered for Precision</span>
             <h2 className="text-3xl md:text-5xl font-extrabold text-text-primary tracking-tight">
               Clarity and control for every part of your portfolio.
@@ -227,11 +227,11 @@ export default function LandingPage() {
       </section>
 
       {/* ── 4. SYSTEM NODE DIAGRAM (Full-Page Depth with Elevated Shadows) ────────────────── */}
-      <section id="architecture" className="py-28 bg-black border-t border-white/10 relative snap-start snap-always">
-        <div className="w-full max-w-[1400px] mx-auto px-6 text-center space-y-16">
-          <ScrollReveal className="max-w-4xl mx-auto space-y-4">
+      <section id="architecture" className="min-h-screen lg:h-screen flex flex-col justify-center py-16 bg-black border-t border-white/10 relative snap-start snap-always overflow-hidden">
+        <div className="w-full max-w-[1400px] mx-auto px-6 text-center space-y-10">
+          <ScrollReveal className="max-w-4xl mx-auto space-y-3">
             <span className="text-xs font-mono uppercase tracking-widest text-text-tertiary bg-white/5 border border-white/10 px-3 py-1 rounded-full">System Architecture</span>
-            <h2 className="text-4xl md:text-6xl font-extrabold text-text-primary tracking-tight">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-text-primary tracking-tight">
               One platform. Multiple intelligence layers.
             </h2>
             <p className="text-text-secondary text-base md:text-lg max-w-2xl mx-auto">
@@ -240,42 +240,42 @@ export default function LandingPage() {
           </ScrollReveal>
 
           {/* Full-Page Diagram Grid Container with Elevated Shadow Depth */}
-          <ScrollReveal delayMs={150} className="relative p-8 md:p-14 rounded-3xl bg-[#08080a] border border-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.95)]">
+          <ScrollReveal delayMs={150} className="relative p-6 md:p-10 rounded-3xl bg-[#08080a] border border-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.95)]">
             {/* Central Node — Big bold text */}
-            <div className="flex items-center justify-center gap-3 text-2xl md:text-3xl font-black tracking-widest text-white uppercase mb-14">
-              <Cpu size={30} className="text-emerald-400" />
+            <div className="flex items-center justify-center gap-3 text-xl md:text-2xl font-black tracking-widest text-white uppercase mb-8">
+              <Cpu size={26} className="text-emerald-400" />
               <span>ROVA CORE ENGINE</span>
             </div>
 
             {/* Satellite Layer Grid with Deep Elevated Shadows */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-left">
-              <div className="p-8 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+              <div className="p-6 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-2.5">
                 <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 1 • PARSER</div>
-                <h4 className="text-lg font-extrabold text-white">Intent Parser</h4>
+                <h4 className="text-base font-extrabold text-white">Intent Parser</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
                   Translates natural language prompts from WhatsApp & Web into structured smart contract transaction payload specs with failsafe fast-paths.
                 </p>
               </div>
 
-              <div className="p-8 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-3">
+              <div className="p-6 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-2.5">
                 <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 2 • QUOTE</div>
-                <h4 className="text-lg font-extrabold text-white">x402 / Gateway</h4>
+                <h4 className="text-base font-extrabold text-white">x402 / Gateway</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
                   Queries 3 independent market liquidity desks over x402 HTTP headers, paying sub-cent micro-nanopayments for real-time rates.
                 </p>
               </div>
 
-              <div className="p-8 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-3">
+              <div className="p-6 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-2.5">
                 <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 3 • ROUTER</div>
-                <h4 className="text-lg font-extrabold text-white">CCTP V2 Bridge</h4>
+                <h4 className="text-base font-extrabold text-white">CCTP V2 Bridge</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
                   Executes native burn-and-mint cross-chain liquidity routing between Sepolia, Base, Polygon, and Arc with 1:1 parity guarantee.
                 </p>
               </div>
 
-              <div className="p-8 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-3">
+              <div className="p-6 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-2.5">
                 <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 4 • AUDIT</div>
-                <h4 className="text-lg font-extrabold text-white">Arc Audit Ledger</h4>
+                <h4 className="text-base font-extrabold text-white">Arc Audit Ledger</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
                   Records every user action and automated trigger on `RovaExecutionLog` smart contract for immutable, verifiable proof of reserves.
                 </p>
@@ -289,12 +289,12 @@ export default function LandingPage() {
       <WarningTapeMarquee />
 
       {/* ── 6. COMPARISON TABLE ─────────────────────────────────────────── */}
-      <section id="comparison" className="py-28 bg-[#0a1017] border-t border-border/80 relative overflow-hidden snap-start snap-always">
+      <section id="comparison" className="min-h-screen lg:h-screen flex flex-col justify-center py-16 bg-[#0a1017] border-t border-border/80 relative overflow-hidden snap-start snap-always">
         {/* Ambient Radial Background Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-[#BFFF00]/5 blur-[160px] pointer-events-none rounded-full" />
 
-        <ScrollReveal className="max-w-5xl mx-auto px-6 space-y-12 relative z-10">
-          <div className="text-center space-y-4">
+        <ScrollReveal className="max-w-5xl mx-auto px-6 space-y-8 relative z-10 w-full">
+          <div className="text-center space-y-3">
             <span className="inline-block px-3 py-1 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/25 text-xs font-mono font-bold uppercase tracking-widest text-[#BFFF00]">
               Unmatched Efficiency
             </span>
@@ -309,7 +309,7 @@ export default function LandingPage() {
           {/* High-Contrast Glassmorphic Matrix Table */}
           <div className="rounded-2xl bg-[#0f1722] border border-[#BFFF00]/20 shadow-[0_20px_60px_rgba(0,0,0,0.7)] overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-12 bg-[#14202e] border-b border-border/80 px-6 py-5 items-center font-extrabold text-sm">
+            <div className="grid grid-cols-12 bg-[#14202e] border-b border-border/80 px-6 py-4 items-center font-extrabold text-sm">
               <div className="col-span-6 text-text-secondary uppercase tracking-wider text-xs font-mono">
                 System Capability
               </div>
@@ -360,7 +360,7 @@ export default function LandingPage() {
             ].map((item, idx) => (
               <div
                 key={idx}
-                className="grid grid-cols-12 px-6 py-5 border-b border-border/40 last:border-b-0 items-center hover:bg-[#152333]/80 transition-all duration-200"
+                className="grid grid-cols-12 px-6 py-4 border-b border-border/40 last:border-b-0 items-center hover:bg-[#152333]/80 transition-all duration-200"
               >
                 <div className="col-span-6 space-y-1">
                   <div className="text-text-primary font-bold text-sm sm:text-base">
@@ -372,19 +372,19 @@ export default function LandingPage() {
                 </div>
 
                 <div className="col-span-3 flex justify-center">
-                  <div className="w-8 h-8 rounded-full bg-[#BFFF00]/15 border border-[#BFFF00]/40 flex items-center justify-center text-[#BFFF00] shadow-[0_0_12px_rgba(191,255,0,0.2)]">
-                    <CheckCircle2 size={18} />
+                  <div className="w-7 h-7 rounded-full bg-[#BFFF00]/15 border border-[#BFFF00]/40 flex items-center justify-center text-[#BFFF00] shadow-[0_0_12px_rgba(191,255,0,0.2)]">
+                    <CheckCircle2 size={16} />
                   </div>
                 </div>
 
                 <div className="col-span-3 flex justify-center">
                   {item.legacy ? (
-                    <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400/80">
-                      <CheckCircle2 size={18} />
+                    <div className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400/80">
+                      <CheckCircle2 size={16} />
                     </div>
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400/70">
-                      <XCircle size={18} />
+                    <div className="w-7 h-7 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400/70">
+                      <XCircle size={16} />
                     </div>
                   )}
                 </div>
@@ -394,47 +394,49 @@ export default function LandingPage() {
         </ScrollReveal>
       </section>
 
-      {/* ── 7. CLOSING CTA & LIVE SYSTEM ACTIVITY ───────────────────────── */}
-      <section className="py-24 bg-background relative overflow-hidden snap-start snap-always">
-        <ScrollReveal className="max-w-5xl mx-auto px-6 text-center space-y-8">
-          <h2 className="text-4xl md:text-6xl font-extrabold text-text-primary tracking-tight">
-            Ready to automate your money movement?
-          </h2>
-          <p className="text-text-secondary text-lg max-w-xl mx-auto">
-            Experience sub-second finality and autonomous capital execution on Arc Testnet.
-          </p>
+      {/* ── 7. CLOSING CTA & FOOTER (Combined Full Screen Slide) ───────────────────────── */}
+      <section className="min-h-screen lg:h-screen flex flex-col justify-between py-12 bg-background relative overflow-hidden snap-start snap-always">
+        <div className="flex-1 flex flex-col justify-center">
+          <ScrollReveal className="max-w-5xl mx-auto px-6 text-center space-y-8">
+            <h2 className="text-4xl md:text-6xl font-extrabold text-text-primary tracking-tight">
+              Ready to automate your money movement?
+            </h2>
+            <p className="text-text-secondary text-lg max-w-xl mx-auto">
+              Experience sub-second finality and autonomous capital execution on Arc Testnet.
+            </p>
 
-          <div className="pt-4">
-            <Link
-              href={hasSession ? '/dashboard' : '/login'}
-              className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-[#BFFF00] text-black font-semibold text-base uppercase tracking-wider hover:brightness-110 transition-all shadow-[0_0_30px_rgba(191,255,0,0.25)]"
-            >
-              <span>Launch Application</span>
-              <ArrowRight size={20} />
-            </Link>
-          </div>
-        </ScrollReveal>
-      </section>
-
-      {/* ── 8. FOOTER ────────────────────────────────────────────────────── */}
-      <footer className="py-12 bg-surface border-t border-border text-xs text-text-secondary">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="ROVA" className="w-6 h-6 rounded" />
-            <span className="font-bold text-text-primary">ROVA</span>
-            <span>© 2026 Rova Protocol. Built on Arc.</span>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <a href="mailto:support@rova.network" className="hover:text-text-primary transition-colors flex items-center gap-1.5">
-              <Mail size={14} /> Support
-            </a>
-            <a href="https://docs.arc.network" target="_blank" rel="noreferrer" className="hover:text-text-primary transition-colors flex items-center gap-1.5">
-              <ExternalLink size={14} /> Arc Docs
-            </a>
-          </div>
+            <div className="pt-4">
+              <Link
+                href={hasSession ? '/dashboard' : '/login'}
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-[#BFFF00] text-black font-semibold text-base uppercase tracking-wider hover:brightness-110 transition-all shadow-[0_0_30px_rgba(191,255,0,0.25)]"
+              >
+                <span>Launch Application</span>
+                <ArrowRight size={20} />
+              </Link>
+            </div>
+          </ScrollReveal>
         </div>
-      </footer>
+
+        {/* ── 8. FOOTER ────────────────────────────────────────────────────── */}
+        <footer className="py-6 bg-surface/80 border-t border-border text-xs text-text-secondary">
+          <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="ROVA" className="w-6 h-6 rounded" />
+              <span className="font-bold text-text-primary">ROVA</span>
+              <span>© 2026 Rova Protocol. Built on Arc.</span>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <a href="mailto:support@rova.network" className="hover:text-text-primary transition-colors flex items-center gap-1.5">
+                <Mail size={14} /> Support
+              </a>
+              <a href="https://docs.arc.network" target="_blank" rel="noreferrer" className="hover:text-text-primary transition-colors flex items-center gap-1.5">
+                <ExternalLink size={14} /> Arc Docs
+              </a>
+            </div>
+          </div>
+        </footer>
+      </section>
     </div>
   );
 }

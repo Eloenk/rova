@@ -9,9 +9,12 @@ html {
 
 :root {
   /* surfaces */
-  --background: #0d1520;       /* base navy app background */
-  --surface: #131d2a;          /* card / panel background */
-  --surface-raised: #1a2636;   /* elevated card */
+  --background: #0d1520;
+  /* base navy app background */
+  --surface: #131d2a;
+  /* card / panel background */
+  --surface-raised: #1a2636;
+  /* elevated card */
   --border: rgba(191, 255, 0, 0.15);
   --border-strong: rgba(191, 255, 0, 0.3);
 
@@ -21,8 +24,10 @@ html {
   --text-tertiary: #5b6b78;
 
   /* accent — vibrant lime green #BFFF00 */
-  --accent-primary: #BFFF00;   /* primary CTA color */
-  --accent-mint: #B4F4D7;      /* mint highlight */
+  --accent-primary: #BFFF00;
+  /* primary CTA color */
+  --accent-mint: #B4F4D7;
+  /* mint highlight */
   --accent-success: #BFFF00;
   --accent-error: #ef4444;
 
@@ -58,9 +63,18 @@ html {
   --sidebar: #090e17;
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-html { font-size: 16px; scroll-behavior: smooth; }
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
 
 body {
   background: var(--background);
@@ -102,17 +116,34 @@ body {
   letter-spacing: 0.05em;
 }
 
-.animate-fade-up { animation: fadeUp 0.4s ease-out; }
-.animate-spin { animation: spin 1s linear infinite; }
+.animate-fade-up {
+  animation: fadeUp 0.4s ease-out;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (min-width: 768px) {
@@ -120,6 +151,7 @@ body {
     display: none !important;
   }
 }
+
 @media (max-width: 767px) {
   .mobile-menu-toggle {
     display: inline-flex !important;
@@ -149,29 +181,30 @@ select option {
 
 /* Zebra stripe pattern CTA button */
 .btn-zebra-stripe {
-  background: repeating-linear-gradient(
-    -45deg,
-    #ffffff,
-    #ffffff 12px,
-    #000000 12px,
-    #000000 24px
-  );
+  background: repeating-linear-gradient(-45deg,
+      #ffffff,
+      #ffffff 12px,
+      #000000 12px,
+      #000000 24px);
 }
 
 .btn-zebra-emerald {
-  background: repeating-linear-gradient(
-    -45deg,
-    #10b981,
-    #10b981 12px,
-    #000000 12px,
-    #000000 24px
-  );
+  background: repeating-linear-gradient(-45deg,
+      #10b981,
+      #10b981 12px,
+      #000000 12px,
+      #000000 24px);
 }
 
 /* Infinite Marquee warning tape */
 @keyframes marquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .animate-marquee {
@@ -183,4 +216,3 @@ select option {
 .animate-marquee:hover {
   animation-play-state: paused;
 }
-

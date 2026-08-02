@@ -18,12 +18,11 @@ export default function ScrollReveal({ children, className = '', delayMs = 0 }: 
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.unobserve(el);
-        }
+        setIsVisible(entry.isIntersecting);
       },
-      { threshold: 0.1 }
+      {
+        threshold: 0.25,
+      }
     );
 
     observer.observe(el);
@@ -33,10 +32,12 @@ export default function ScrollReveal({ children, className = '', delayMs = 0 }: 
   return (
     <div
       ref={ref}
-      className={`transition-all duration-700 ease-out ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'
+      className={`transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) transform-gpu ${
+        isVisible
+          ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
+          : 'opacity-0 translate-y-8 scale-[0.97] pointer-events-none'
       } ${className}`}
-      style={{ transitionDelay: `${delayMs}ms` }}
+      style={{ transitionDelay: isVisible ? `${delayMs}ms` : '0ms' }}
     >
       {children}
     </div>
