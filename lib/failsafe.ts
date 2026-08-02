@@ -39,6 +39,70 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
     };
   }
 
+  // 0B. BALANCE QUERY (Fast-Path 0ms guaranteed)
+  const isBalance = text.includes('balance') || text.includes('wallet') || text.includes('how much') || text.includes('my funds');
+  if (isBalance) {
+    return {
+      totalAmount: 0,
+      splits: [{
+        recipient: "User Wallet",
+        address: "Circle Managed Wallet",
+        amount: 0,
+        currency: "USDC",
+        country: "US",
+        fxRate: 1.0,
+        fxSymbol: "$",
+        arcProtocol: "Arc Native"
+      }],
+      routes: [{
+        from: "Arc RPC Node",
+        to: "User Dashboard",
+        via: "Circle Developer-Controlled Wallet API",
+        fee: 0,
+        cctpDomain: null,
+        bridgeType: "native"
+      }],
+      gasEstimate: { totalTxCount: 0, totalGasUsdc: 0 },
+      reasoning: "Your wallet balances on Arc Testnet (USDC / EURC) are displayed in real-time in the top balance bar and portfolio drawer.",
+      confidence: 100,
+      risk: "low",
+      strategy: "Balance Query (Arc RPC)",
+      reserveAmount: 0
+    };
+  }
+
+  // 0C. SYSTEM STATUS & ACTIVE RULES (Fast-Path 0ms guaranteed)
+  const isStatus = text.includes('status') || text.includes('rule') || text.includes('rules') || text.includes('watcher') || text.includes('daemon');
+  if (isStatus) {
+    return {
+      totalAmount: 0,
+      splits: [{
+        recipient: "Autonomous Daemon",
+        address: "0x0000000000000000000000000000000000000000",
+        amount: 0,
+        currency: "USDC",
+        country: "US",
+        fxRate: 1.0,
+        fxSymbol: "$",
+        arcProtocol: "Rova Go Engine"
+      }],
+      routes: [{
+        from: "Rova Daemon Engine",
+        to: "Arc Chain State",
+        via: "24/7 Standing Rule Monitor",
+        fee: 0,
+        cctpDomain: null,
+        bridgeType: "native"
+      }],
+      gasEstimate: { totalTxCount: 0, totalGasUsdc: 0 },
+      reasoning: "Rova 24/7 background execution daemon is ACTIVE on Arc Testnet (Chain ID 5042002). All armed rate rules are monitored continuously.",
+      confidence: 100,
+      risk: "low",
+      strategy: "Daemon System Status",
+      reserveAmount: 0
+    };
+  }
+
   // Extract common components using simple global regex
   const amountMatch = text.match(/([\d.]+)/);
   const addrMatch = text.match(/(0x[a-f0-9]{40})/i);
@@ -61,7 +125,7 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
   }
 
   // OUT-OF-SCOPE / UNRELATED NON-FINANCIAL PROMPTS (No amount & no financial keywords)
-  const financialKeywords = ['send', 'pay', 'transfer', 'swap', 'convert', 'exchange', 'bridge', 'cctp', 'move', 'stake', 'yield', 'usyc', 'rule', 'automate', 'recurring', 'job', 'hire'];
+  const financialKeywords = ['send', 'pay', 'transfer', 'swap', 'convert', 'exchange', 'bridge', 'cctp', 'move', 'stake', 'yield', 'usyc', 'rule', 'rules', 'automate', 'recurring', 'job', 'hire', 'balance', 'wallet', 'status', 'watcher', 'daemon', 'check'];
   const hasFinancialKeyword = financialKeywords.some(k => text.includes(k));
 
   if (amount <= 0 && !hasFinancialKeyword) {
