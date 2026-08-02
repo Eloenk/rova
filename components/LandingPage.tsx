@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import HeroChatDemo from '@/components/viz/HeroChatDemo';
 import WarningTapeMarquee from '@/components/viz/WarningTapeMarquee';
+import ScrollReveal from '@/components/viz/ScrollReveal';
 
 export default function LandingPage() {
   const [hasSession, setHasSession] = useState(false);
@@ -33,6 +34,38 @@ export default function LandingPage() {
       const email = localStorage.getItem('rova_user_email') || document.cookie.includes('rova_user_email=');
       setHasSession(!!email);
     }
+  }, []);
+
+  // Keyboard & auto scroll jump between sections
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      const sections = Array.from(document.querySelectorAll('section'));
+      if (!sections.length) return;
+
+      const currentScroll = window.scrollY || document.documentElement.scrollTop;
+
+      if (['ArrowDown', 'PageDown'].includes(e.key) || (e.key === ' ' && !e.shiftKey)) {
+        e.preventDefault();
+        const nextSection = sections.find((sec) => sec.offsetTop > currentScroll + 50);
+        if (nextSection) {
+          nextSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else if (['ArrowUp', 'PageUp'].includes(e.key) || (e.key === ' ' && e.shiftKey)) {
+        e.preventDefault();
+        const prevSections = sections.filter((sec) => sec.offsetTop < currentScroll - 50);
+        if (prevSections.length > 0) {
+          prevSections[prevSections.length - 1].scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   return (
@@ -81,7 +114,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Hero Pitch */}
-            <div className="lg:col-span-7 space-y-6 text-left">
+            <ScrollReveal className="lg:col-span-7 space-y-6 text-left">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-text-primary leading-[1.08]">
                 A New Standard <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-primary via-emerald-300 to-accent-mint font-extrabold">
@@ -109,12 +142,12 @@ export default function LandingPage() {
                   <ChevronRight size={16} className="text-text-secondary" />
                 </a>
               </div>
-            </div>
+            </ScrollReveal>
 
             {/* Right Product Preview Floating HeroChatDemo */}
-            <div className="lg:col-span-5 flex justify-center lg:justify-end">
+            <ScrollReveal className="lg:col-span-5 flex justify-center lg:justify-end" delayMs={150}>
               <HeroChatDemo />
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -122,7 +155,7 @@ export default function LandingPage() {
       {/* ── 2. FEATURE TRIPTYCH ─────────────────────────────────────────── */}
       <section id="features" className="py-24 bg-surface/50 border-y border-border snap-start snap-always">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <ScrollReveal className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <span className="text-xs font-mono uppercase tracking-widest text-accent-mint">Engineered for Precision</span>
             <h2 className="text-3xl md:text-5xl font-extrabold text-text-primary tracking-tight">
               Clarity and control for every part of your portfolio.
@@ -130,11 +163,11 @@ export default function LandingPage() {
             <p className="text-text-secondary text-base md:text-lg">
               Three core execution pillars power Rova's cross-border capital engine.
             </p>
-          </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Pillar 1 */}
-            <div className="p-8 rounded-2xl bg-surface border border-border hover:border-border-strong transition-all duration-300 flex flex-col justify-between">
+            <ScrollReveal delayMs={100} className="p-8 rounded-2xl bg-surface border border-border hover:border-border-strong transition-all duration-300 flex flex-col justify-between">
               <div className="space-y-4">
                 <span className="text-sm font-mono font-bold text-accent-primary">[1]</span>
                 <h3 className="text-xl font-bold text-text-primary">x402 Nanopayments</h3>
@@ -152,10 +185,10 @@ export default function LandingPage() {
                   <span className="text-accent-mint font-bold">1.0845 EUR/USD (Best)</span>
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
 
             {/* Pillar 2 */}
-            <div className="p-8 rounded-2xl bg-surface border border-border hover:border-border-strong transition-all duration-300 flex flex-col justify-between">
+            <ScrollReveal delayMs={200} className="p-8 rounded-2xl bg-surface border border-border hover:border-border-strong transition-all duration-300 flex flex-col justify-between">
               <div className="space-y-4">
                 <span className="text-sm font-mono font-bold text-accent-primary">[2]</span>
                 <h3 className="text-xl font-bold text-text-primary">Autonomous Daemons</h3>
@@ -170,10 +203,10 @@ export default function LandingPage() {
                 </div>
                 <div className="text-text-secondary">Trigger: Rate &gt; $1.02 • Swapped 500 USDC</div>
               </div>
-            </div>
+            </ScrollReveal>
 
             {/* Pillar 3 */}
-            <div className="p-8 rounded-2xl bg-surface border border-border hover:border-border-strong transition-all duration-300 flex flex-col justify-between">
+            <ScrollReveal delayMs={300} className="p-8 rounded-2xl bg-surface border border-border hover:border-border-strong transition-all duration-300 flex flex-col justify-between">
               <div className="space-y-4">
                 <span className="text-sm font-mono font-bold text-accent-primary">[3]</span>
                 <h3 className="text-xl font-bold text-text-primary">CCTP V2 Cross-Chain</h3>
@@ -188,44 +221,7 @@ export default function LandingPage() {
                 </div>
                 <div className="text-accent-mint font-bold">Circle Gateway Verified</div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 3. FLOATING MICRO-INSIGHT CALLOUTS ────────────────────────────── */}
-      <section className="py-20 bg-background relative snap-start snap-always">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-xl bg-surface border border-border flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-accent-mint/10 border border-accent-mint/20 flex items-center justify-center shrink-0">
-                <TrendingUp size={24} className="text-accent-mint" />
-              </div>
-              <div>
-                <div className="text-2xl font-extrabold text-text-primary font-mono">+$12,840</div>
-                <div className="text-xs text-text-secondary">Captured FX Arbitrage Value</div>
-              </div>
-            </div>
-
-            <div className="p-6 rounded-xl bg-surface border border-border flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-accent-primary/10 border border-accent-primary/20 flex items-center justify-center shrink-0">
-                <Zap size={24} className="text-accent-primary" />
-              </div>
-              <div>
-                <div className="text-2xl font-extrabold text-text-primary font-mono">400ms</div>
-                <div className="text-xs text-text-secondary">Average x402 Quote Settlement</div>
-              </div>
-            </div>
-
-            <div className="p-6 rounded-xl bg-surface border border-border flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-accent-success/10 border border-accent-success/20 flex items-center justify-center shrink-0">
-                <Shield size={24} className="text-accent-success" />
-              </div>
-              <div>
-                <div className="text-2xl font-extrabold text-text-primary font-mono">100%</div>
-                <div className="text-xs text-text-secondary">On-Chain Verified (`RovaExecutionLog`)</div>
-              </div>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -233,7 +229,7 @@ export default function LandingPage() {
       {/* ── 4. SYSTEM NODE DIAGRAM (Full-Page Depth with Elevated Shadows) ────────────────── */}
       <section id="architecture" className="py-28 bg-black border-t border-white/10 relative snap-start snap-always">
         <div className="w-full max-w-[1400px] mx-auto px-6 text-center space-y-16">
-          <div className="max-w-4xl mx-auto space-y-4">
+          <ScrollReveal className="max-w-4xl mx-auto space-y-4">
             <span className="text-xs font-mono uppercase tracking-widest text-text-tertiary bg-white/5 border border-white/10 px-3 py-1 rounded-full">System Architecture</span>
             <h2 className="text-4xl md:text-6xl font-extrabold text-text-primary tracking-tight">
               One platform. Multiple intelligence layers.
@@ -241,10 +237,10 @@ export default function LandingPage() {
             <p className="text-text-secondary text-base md:text-lg max-w-2xl mx-auto">
               Rova unifies plain-English intent understanding, micro-nanopayment shopping, and native EVM execution into a single high-availability stack.
             </p>
-          </div>
+          </ScrollReveal>
 
           {/* Full-Page Diagram Grid Container with Elevated Shadow Depth */}
-          <div className="relative p-8 md:p-14 rounded-3xl bg-[#08080a] border border-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.95)]">
+          <ScrollReveal delayMs={150} className="relative p-8 md:p-14 rounded-3xl bg-[#08080a] border border-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.95)]">
             {/* Central Node — Big bold text */}
             <div className="flex items-center justify-center gap-3 text-2xl md:text-3xl font-black tracking-widest text-white uppercase mb-14">
               <Cpu size={30} className="text-emerald-400" />
@@ -285,7 +281,7 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -297,7 +293,7 @@ export default function LandingPage() {
         {/* Ambient Radial Background Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-[#BFFF00]/5 blur-[160px] pointer-events-none rounded-full" />
 
-        <div className="max-w-5xl mx-auto px-6 space-y-12 relative z-10">
+        <ScrollReveal className="max-w-5xl mx-auto px-6 space-y-12 relative z-10">
           <div className="text-center space-y-4">
             <span className="inline-block px-3 py-1 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/25 text-xs font-mono font-bold uppercase tracking-widest text-[#BFFF00]">
               Unmatched Efficiency
@@ -395,12 +391,12 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* ── 7. CLOSING CTA & LIVE SYSTEM ACTIVITY ───────────────────────── */}
       <section className="py-24 bg-background relative overflow-hidden snap-start snap-always">
-        <div className="max-w-5xl mx-auto px-6 text-center space-y-8">
+        <ScrollReveal className="max-w-5xl mx-auto px-6 text-center space-y-8">
           <h2 className="text-4xl md:text-6xl font-extrabold text-text-primary tracking-tight">
             Ready to automate your money movement?
           </h2>
@@ -417,7 +413,7 @@ export default function LandingPage() {
               <ArrowRight size={20} />
             </Link>
           </div>
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* ── 8. FOOTER ────────────────────────────────────────────────────── */}
