@@ -87,34 +87,25 @@ export function useExecuteFlow() {
         let operation: ExecOperation;
 
         // ── SWAP: USDC ↔ EURC via Arc StableFX ─────────────────────────────
+        // ── SWAP: USDC ↔ EURC via Arc StableFX ─────────────────────────────
         if (split.arcProtocol === 'Arc StableFX') {
-          const kitKey = process.env.NEXT_PUBLIC_CIRCLE_KIT_KEY;
-
-          if (!kitKey) {
-            // Fallback to Circle DCW initiateStableFX
-            const { initiateStableFX } = await import('@/lib/circle');
-            setStatus('confirming');
-            const swapRes = await initiateStableFX({
-              walletAddress: (adapter as any).walletAddress ?? split.address,
-              sellCurrency:  split.currency === 'EURC' ? 'EURC' : 'USDC',
-              buyCurrency:   split.currency === 'EURC' ? 'USDC' : 'EURC',
+          setStatus('confirming');
+          const res = await fetch('/api/swap', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              walletAddress: (adapter as any)?.walletAddress || undefined,
+              sellCurrency:  split.currency === 'EURC' ? 'USDC' : 'EURC',
+              buyCurrency:   split.currency === 'EURC' ? 'EURC' : 'USDC',
               amount:        split.amount,
-            });
-            txHash    = swapRes.txHash;
-            operation = 'swap';
-          } else {
-            setStatus('confirming');
-            const swapResult = await kit.swap({
-              from:     { adapter: adapter as any, chain: 'Arc_Testnet' as any },
-              tokenIn:  split.currency === 'EURC' ? 'USDC' : split.currency,
-              tokenOut: split.currency === 'EURC' ? 'EURC' : 'USDC',
-              amountIn: amountStr,
-              config:   { kitKey, slippageBps: 50 }, // 0.5% slippage
-            });
-
-            txHash    = swapResult.txHash;
-            operation = 'swap';
+            }),
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            throw new Error(data.error || 'StableFX Swap failed');
           }
+          txHash    = data.result.txHash;
+          operation = 'swap';
         }
         // ── BRIDGE: Cross-chain via CCTP V2 / Circle Gateway ────────────────
         else if (

@@ -133,13 +133,25 @@ export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: str
   } = await import('./circle');
 
   const sourceWallet = rule.sourceWallet || process.env.ROVA_OWNER_WALLET!;
-  const destCurrency = rule.pair === 'USDC/EURC' ? 'EURC' : 'USDC';
+  let txHash: string;
+  let arcScanUrl: string;
 
-  if (destCurrency === 'EURC') {
-    await initiateStableFX({ walletAddress: sourceWallet, sellCurrency: 'USDC', buyCurrency: 'EURC', amount: rule.amount });
+  if (rule.pair === 'USDC/EURC' || rule.pair === 'EURC/USDC') {
+    const sellCurrency = rule.pair === 'USDC/EURC' ? 'USDC' : 'EURC';
+    const buyCurrency = rule.pair === 'USDC/EURC' ? 'EURC' : 'USDC';
+    const swapRes = await initiateStableFX({
+      walletAddress: sourceWallet,
+      sellCurrency,
+      buyCurrency,
+      amount: rule.amount,
+    });
+    txHash = swapRes.txHash;
+    arcScanUrl = swapRes.arcScanUrl;
+  } else {
+    const sendRes = await sendUsdcOnArc(sourceWallet, recipientAddress, rule.amount);
+    txHash = sendRes.txHash;
+    arcScanUrl = sendRes.arcScanUrl;
   }
-
-  const { txHash, arcScanUrl } = await sendUsdcOnArc(sourceWallet, recipientAddress, rule.amount);
 
   let feeJobId: string | undefined;
   try {

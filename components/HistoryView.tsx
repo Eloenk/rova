@@ -111,12 +111,21 @@ export default function HistoryView() {
                     ${e.totalAmount}
                   </p>
                   <div className="flex items-center gap-1 justify-end">
-                    {e.status === 'executed'
-                      ? <Zap size={11} className="text-accent-mint" />
-                      : <Clock size={11} className="text-text-tertiary" />
-                    }
-                    <span className={`text-[10px] font-mono font-bold ${e.status === 'executed' ? 'text-accent-mint' : 'text-text-tertiary'}`}>
-                      {e.status === 'executed' ? 'SETTLED' : 'PENDING'}
+                    {e.status === 'executed' ? (
+                      <Zap size={11} className="text-accent-mint" />
+                    ) : e.status === 'failed' ? (
+                      <Clock size={11} className="text-red-400" />
+                    ) : (
+                      <Clock size={11} className="text-text-tertiary" />
+                    )}
+                    <span className={`text-[10px] font-mono font-bold ${
+                      e.status === 'executed'
+                        ? 'text-accent-mint'
+                        : e.status === 'failed'
+                        ? 'text-red-400'
+                        : 'text-text-tertiary'
+                    }`}>
+                      {e.status === 'executed' ? 'SETTLED' : e.status === 'failed' ? 'FAILED' : 'PENDING'}
                     </span>
                   </div>
                 </div>

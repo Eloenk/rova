@@ -22,10 +22,12 @@ export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, ow
     console.log(`[Executor] Processing split: ${split.amount} ${split.currency} via ${split.arcProtocol}`);
 
     if (split.arcProtocol === 'Arc StableFX') {
+      const sellCurrency = split.currency === 'EURC' ? 'USDC' : 'EURC';
+      const buyCurrency = split.currency === 'EURC' ? 'EURC' : 'USDC';
       const { txHash } = await initiateStableFX({
         walletAddress: ownerWallet,
-        sellCurrency: 'USDC',
-        buyCurrency:  split.currency as 'EURC',
+        sellCurrency,
+        buyCurrency,
         amount:       split.amount,
       });
       txHashes.push(txHash);
