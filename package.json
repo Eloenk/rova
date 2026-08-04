@@ -13,9 +13,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
-    "@circle-fin/adapter-circle-wallets": "^1.2.0",
+    "@circle-fin/adapter-circle-wallets": "^1.5.0",
     "@circle-fin/adapter-viem-v2": "^1.14.1",
-    "@circle-fin/app-kit": "^1.2.1",
+    "@circle-fin/app-kit": "^1.11.0",
     "@circle-fin/bridge-kit": "^1.6.0",
     "@circle-fin/developer-controlled-wallets": "^10.1.0",
     "@circle-fin/x402-batching": "^3.2.0",
@@ -37,6 +37,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "resend": "^6.18.1",
+    "server-only": "^0.0.1",
     "viem": "^2.55.4",
     "wagmi": "^2.12.0",
     "zustand": "^4.5.4"
