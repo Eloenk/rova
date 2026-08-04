@@ -12,8 +12,6 @@
 // change any call site.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { getIsMockMode } from './ai-provider';
-
 interface WalletRecord {
   address: string;
   walletId: string;
@@ -51,17 +49,6 @@ export async function resolveRecipient(identifier: string): Promise<{ address: s
   const key = normalize(trimmed);
   const existing = emailToWallet.get(key);
   if (existing) return { address: existing.address, isNewWallet: false };
-
-  const mock = getIsMockMode();
-
-  if (mock) {
-    // Deterministic fake address so the same email always mocks to the same
-    // "wallet" within a session — useful for demoing repeat sends.
-    const hash = Array.from(key).reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) >>> 0, 7);
-    const address = '0x' + hash.toString(16).padStart(8, '0') + 'e'.repeat(32);
-    emailToWallet.set(key, { address, walletId: `MOCK-${hash}`, createdAt: new Date().toISOString() });
-    return { address, isNewWallet: true };
-  }
 
   const { createSingleWallet } = await import('./circle');
   const { address, walletId } = await createSingleWallet(key);

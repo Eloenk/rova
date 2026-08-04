@@ -18,24 +18,13 @@ import { arcScan } from './config';
 import type { AgentRule, QuoteShopResult } from './agentStore';
 import { resolveRecipient } from './emailWallets';
 import { shopRates, pickBest } from './nanopay';
-import { getIsMockMode } from './ai-provider';
 
 const AGENT_FEE_USDC = 0.05;
-
-function isMockMode(): boolean {
-  if (getIsMockMode()) return true;
-  return false;
-}
-
-function fakeHash(seed: string): string {
-  const h = seed.padEnd(64, '0').slice(0, 64);
-  return '0x' + h.replace(/[^a-f0-9]/gi, 'a');
-}
 
 export interface FireResult {
   txHash: string;
   arcScanUrl: string;
-  mode: 'mock' | 'real';
+  mode: 'real';
   feeJobId?: string;
   reputationTxHash?: string;
   quoteShop: QuoteShopResult;
@@ -77,14 +66,6 @@ export async function confirmSelfCustodyExecution(opts: {
   rateAtExecution?: number;
   memo: string;
 }): Promise<ConfirmResult> {
-  const mock = isMockMode();
-  if (mock) {
-    return {
-      feeJobId: `MOCK-FEE-${opts.ruleOrIntentId.slice(0, 8)}`,
-      reputationTxHash: fakeHash(`rep-${opts.ruleOrIntentId}-${Date.now()}`),
-    };
-  }
-
   const {
     createErc8183Job, setErc8183Budget, approveErc8183USDC, fundErc8183Job, completeErc8183Job,
     recordReputation, logExecutionOnchain,
@@ -130,8 +111,6 @@ export async function confirmSelfCustodyExecution(opts: {
 }
 
 export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: string): Promise<FireResult> {
-  const mock = isMockMode();
-
   // 1. Shop for the best rate before spending anything real.
   const quoteShop = await shopForBestRate(rule.pair, baseUrl);
   const rate = quoteShop.bestRate;
@@ -140,14 +119,6 @@ export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: str
   // 2. Resolve the recipient — email gets a Circle-managed wallet (created on
   //    first use), a raw address passes through unchanged.
   const { address: recipientAddress } = await resolveRecipient(rule.recipientIdentifier);
-
-  if (mock) {
-    const txHash = fakeHash(`agent-${rule.id}-${Date.now()}`);
-    const feeJobId = `MOCK-FEE-${rule.id.slice(0, 8)}`;
-    const reputationTxHash = fakeHash(`rep-${rule.id}-${Date.now()}`);
-    const res: FireResult = { txHash, arcScanUrl: arcScan.tx(txHash), mode: 'mock', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
-    return res;
-  }
 
   const {
     sendUsdcOnArc,
@@ -199,9 +170,13 @@ export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: str
     console.warn('[Agent] Onchain execution log failed (non-fatal):', e);
   }
 
-  const result: FireResult = { txHash: mock ? fakeHash(`agent-${rule.id}-${Date.now()}`) : (undefined as any), arcScanUrl: mock ? arcScan.tx(fakeHash(`agent-${rule.id}-${Date.now()}`)) : (undefined as any), mode: mock ? 'mock' : 'real', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
-
-  return mock
-    ? result
-    : { txHash: (result as any).txHash || (await import('./config')).arcScan.tx('0x'), arcScanUrl: (result as any).arcScanUrl || '', mode: 'real', feeJobId, reputationTxHash, quoteShop, resolvedRecipient: recipientAddress };
+  return {
+    txHash,
+    arcScanUrl,
+    mode: 'real',
+    feeJobId,
+    reputationTxHash,
+    quoteShop,
+    resolvedRecipient: recipientAddress,
+  };
 }

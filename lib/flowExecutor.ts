@@ -7,7 +7,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { FlowPlan } from './types';
-import { getIsMockMode } from './ai-provider';
 
 export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, ownerWalletOverride?: string) {
   const { sendUsdcOnArc, initiateStableFX, appKitBridge, createErc8183Job } = await import('./circle');
@@ -64,35 +63,16 @@ export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, ow
   return { txHashes, jobId };
 }
 
-export function executeFlowPlanMock(plan: FlowPlan, intentHash: string) {
-  const txHashes = plan.splits.map((_, i) =>
-    '0x' + (i + 1).toString().padStart(2, '0') + 'ff' + 'a'.repeat(60)
-  );
-
-  const hasJob = plan.splits.some(s => s.arcProtocol === 'ERC-8183 Job');
-  const jobId = hasJob ? `MOCK-J-${intentHash.slice(0, 8)}` : undefined;
-
-  console.log('[Executor] MOCK MODE — no real transactions sent');
-  return { txHashes, jobId };
-}
-
-export function isMockMode(): boolean {
-  if (getIsMockMode()) return true;
-  return false;
-}
-
 /// Single entry point both /api/execute and the Agent's standing-intent runner call.
 export async function executeFlowPlan(plan: FlowPlan, intentHash: string, ownerWalletOverride?: string) {
-  const mock = isMockMode();
-  const { txHashes, jobId } = mock
-    ? executeFlowPlanMock(plan, intentHash)
-    : await executeFlowPlanReal(plan, intentHash, ownerWalletOverride);
+  const { txHashes, jobId } = await executeFlowPlanReal(plan, intentHash, ownerWalletOverride);
 
   return {
-    mode: mock ? ('mock' as const) : ('real' as const),
+    mode: 'real' as const,
     txHashes,
     jobId,
-    status: jobId ? 'JOB_CREATED' as const : 'COMPLETE' as const,
+    status: jobId ? ('JOB_CREATED' as const) : ('COMPLETE' as const),
     executedAt: new Date().toISOString(),
   };
 }
+

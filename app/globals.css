@@ -216,3 +216,15 @@ select option {
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+/* Login Page Mobile Responsive Rules (Phones Only) */
+@media (max-width: 640px) {
+  .login-left-brand {
+    display: none !important;
+  }
+  .login-right-auth {
+    flex: 1 1 100% !important;
+    min-height: 100vh !important;
+    padding: 32px 24px !important;
+  }
+}

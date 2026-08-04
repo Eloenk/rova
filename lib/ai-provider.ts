@@ -18,10 +18,6 @@ export interface RovaAIConfig {
   database?: {
     supabase_enabled: boolean;
   };
-  execution?: {
-    mock_mode?: boolean;
-    fallback_to_mock?: boolean;
-  };
 }
 
 const defaultConfig: RovaAIConfig = {
@@ -30,10 +26,6 @@ const defaultConfig: RovaAIConfig = {
     model: ROVA_MODEL || 'gemini-2.0-flash',
     temperature: TEMPERATURE || 0.1,
     max_tokens: MAX_TOKENS || 8192,
-  },
-  execution: {
-    mock_mode: false,
-    fallback_to_mock: false,
   },
 };
 
@@ -52,7 +44,6 @@ export function getRovaConfig(): RovaAIConfig {
             max_tokens: parsed.ai.max_tokens ?? defaultConfig.ai.max_tokens,
           },
           database: parsed.database,
-          execution: parsed.execution || defaultConfig.execution,
         };
       }
     }
@@ -63,10 +54,6 @@ export function getRovaConfig(): RovaAIConfig {
 }
 
 export function getIsMockMode(): boolean {
-  const config = getRovaConfig();
-  if (config.execution && typeof config.execution.mock_mode === 'boolean') {
-    return config.execution.mock_mode;
-  }
   return false;
 }
 

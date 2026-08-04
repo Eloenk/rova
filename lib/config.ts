@@ -95,7 +95,7 @@ export const ERC8183 = {
 // Address comes from env because it's set once at deploy time, not baked into
 // the repo (so a fresh deploy doesn't require an app code change).
 export const ROVA_EXECUTION_LOG = {
-  address: (process.env.NEXT_PUBLIC_ROVA_EXECUTION_LOG_ADDRESS || '') as `0x${string}`,
+  address: (process.env.NEXT_PUBLIC_ROVA_EXECUTION_LOG_ADDRESS || '0x58d1e3e11C7a93cb26C371B115f2710aF68d427a') as `0x${string}`,
   abiFunctionSignature: 'logExecution(bytes32,address,uint256,uint256,string)',
 } as const;
 

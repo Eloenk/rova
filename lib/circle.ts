@@ -26,8 +26,7 @@ export function getCircleClient() {
   if (!apiKey || !entitySecret) {
     throw new Error(
       'CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET are required.\n' +
-      'Get them free at: https://console.circle.com\n' +
-      'Or set mock_mode: true in config.yaml for testing.'
+      'Get them at: https://console.circle.com'
     );
   }
 
@@ -148,7 +147,7 @@ export async function executeAndConfirm(opts: {
     const { data } = await client.getTransaction({ id: txId });
     const state = data?.transaction?.state;
     if (state === 'COMPLETE') return data!.transaction!.txHash!;
-    if (state === 'FAILED')   throw new Error(`Transaction failed on Arc`);
+    if (state === 'FAILED')   throw new Error(`Transaction failed on Arc: ${data?.transaction?.errorReason || 'Execution reverted'}`);
   }
 
   throw new Error('Transaction timed out after 30s');
@@ -203,6 +202,8 @@ export async function requestValidation(
     abiParameters:        [validatorAddress, agentId, requestURI, requestHash],
   });
 }
+
+// ── Respond Validation ────────────────────────────────────────────────────────
 
 export async function respondValidation(
   validatorAddress: string,
@@ -281,19 +282,13 @@ export async function appKitBridge(opts: {
   const destinationDomain = opts.toChain.toLowerCase().includes('base') ? 6 : 0;
   const recipientBytes32 = '0x' + opts.walletAddress.replace('0x', '').padStart(64, '0');
 
-  try {
-    const txHash = await executeAndConfirm({
-      walletAddress:        opts.walletAddress,
-      contractAddress:      '0x9f3b8679c73c2Fef8b59B4f3444d4e156fb70AA5',
-      abiFunctionSignature: 'depositForBurn(uint64,bytes32,uint256,address)',
-      abiParameters:        [String(destinationDomain), recipientBytes32, String(amountInt), TOKENS.USDC.address],
-    });
-    return { txHash, success: true, arcScanUrl: arcScan.tx(txHash) };
-  } catch (err) {
-    console.warn('[AppKit Bridge Fallback] Executing on-chain Circle settlement transfer:', err);
-    const res = await sendUsdcOnArc(opts.walletAddress, opts.walletAddress, opts.amount);
-    return { txHash: res.txHash, success: true, arcScanUrl: res.arcScanUrl };
-  }
+  const txHash = await executeAndConfirm({
+    walletAddress:        opts.walletAddress,
+    contractAddress:      '0x9f3b8679c73c2Fef8b59B4f3444d4e156fb70AA5',
+    abiFunctionSignature: 'depositForBurn(uint64,bytes32,uint256,address)',
+    abiParameters:        [String(destinationDomain), recipientBytes32, String(amountInt), TOKENS.USDC.address],
+  });
+  return { txHash, success: true, arcScanUrl: arcScan.tx(txHash) };
 }
 
 export async function initiateStableFX(opts: {
@@ -303,22 +298,16 @@ export async function initiateStableFX(opts: {
   amount:       number;
 }) {
   console.log(`[StableFX] Executing real atomic swap: ${opts.amount} ${opts.sellCurrency} -> ${opts.buyCurrency}`);
-  const targetTokenAddress = opts.buyCurrency === 'EURC' ? TOKENS.EURC.address : TOKENS.USDC.address;
+  const sellTokenAddress = opts.sellCurrency === 'EURC' ? TOKENS.EURC.address : TOKENS.USDC.address;
   const amountInt = Math.round(opts.amount * 10 ** TOKENS.USDC.decimals);
 
-  try {
-    const txHash = await executeAndConfirm({
-      walletAddress:        opts.walletAddress,
-      contractAddress:      targetTokenAddress,
-      abiFunctionSignature: 'transfer(address,uint256)',
-      abiParameters:        [opts.walletAddress, String(amountInt)],
-    });
-    return { txHash, success: true, arcScanUrl: arcScan.tx(txHash) };
-  } catch (err) {
-    console.warn('[StableFX Swap Fallback] Executing on-chain settlement transfer:', err);
-    const res = await sendUsdcOnArc(opts.walletAddress, opts.walletAddress, opts.amount);
-    return { txHash: res.txHash, success: true, arcScanUrl: res.arcScanUrl };
-  }
+  const txHash = await executeAndConfirm({
+    walletAddress:        opts.walletAddress,
+    contractAddress:      sellTokenAddress,
+    abiFunctionSignature: 'transfer(address,uint256)',
+    abiParameters:        [opts.walletAddress, String(amountInt)],
+  });
+  return { txHash, success: true, arcScanUrl: arcScan.tx(txHash) };
 }
 
 // ── USDC transfer on Arc ────────────────────────────────────────────────────────
