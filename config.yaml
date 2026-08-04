@@ -53,3 +53,11 @@ vault:
   #   "smart_contract" - On-chain Timelocked Storage Vault contract (RovaSavingsVault.sol)
   strategy: "circle_wallet"
 
+swap:
+  # Swap strategy options:
+  #   "circle_agent_stack" - Circle Agent Stack Native Swap Engine
+  #   "smart_contract"     - Uniswap-style Swap Router smart contract (RovaSwapRouter.sol)
+  strategy: "circle_agent_stack"
+  router_address: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA"
+  slippage_bps: 50
+  enable_fallback: false

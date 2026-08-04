@@ -91,28 +91,30 @@ export function useExecuteFlow() {
           const kitKey = process.env.NEXT_PUBLIC_CIRCLE_KIT_KEY;
 
           if (!kitKey) {
-            // Kit key not configured — flag and skip (don't fail entire flow)
-            collected.push({
-              splitIndex: i, recipient: split.recipient, amount: split.amount,
-              currency: split.currency, txHash: 'NEEDS_KIT_KEY',
-              arcScanUrl: 'https://console.circle.com', protocol: split.arcProtocol,
-              operation: 'pending_key',
+            // Fallback to Circle DCW initiateStableFX
+            const { initiateStableFX } = await import('@/lib/circle');
+            setStatus('confirming');
+            const swapRes = await initiateStableFX({
+              walletAddress: (adapter as any).walletAddress ?? split.address,
+              sellCurrency:  split.currency === 'EURC' ? 'EURC' : 'USDC',
+              buyCurrency:   split.currency === 'EURC' ? 'USDC' : 'EURC',
+              amount:        split.amount,
             });
-            continue;
+            txHash    = swapRes.txHash;
+            operation = 'swap';
+          } else {
+            setStatus('confirming');
+            const swapResult = await kit.swap({
+              from:     { adapter: adapter as any, chain: 'Arc_Testnet' as any },
+              tokenIn:  split.currency === 'EURC' ? 'USDC' : split.currency,
+              tokenOut: split.currency === 'EURC' ? 'EURC' : 'USDC',
+              amountIn: amountStr,
+              config:   { kitKey, slippageBps: 50 }, // 0.5% slippage
+            });
+
+            txHash    = swapResult.txHash;
+            operation = 'swap';
           }
-
-          setStatus('confirming');
-          const swapResult = await kit.swap({
-            from:     { adapter, chain: 'Arc_Testnet' as any },
-            tokenIn:  split.currency === 'EURC' ? 'USDC' : split.currency,
-            tokenOut: split.currency === 'EURC' ? 'EURC' : 'USDC',
-            amountIn: amountStr,
-            config:   { kitKey, slippageBps: 50 }, // 0.5% slippage
-          });
-
-          txHash    = swapResult.txHash;
-          operation = 'swap';
-
         }
         // ── BRIDGE: Cross-chain via CCTP V2 / Circle Gateway ────────────────
         else if (
@@ -122,8 +124,8 @@ export function useExecuteFlow() {
           setStatus('confirming');
           const destChain    = getBridgeDestChain(split.arcProtocol);
           const bridgeResult = await kit.bridge({
-            from:   { adapter, chain: 'Arc_Testnet' as any },
-            to:     { adapter, chain: destChain as any },
+            from:   { adapter: adapter as any, chain: 'Arc_Testnet' as any },
+            to:     { adapter: adapter as any, chain: destChain as any },
             amount: amountStr,
             token:  'USDC',
           });
@@ -246,7 +248,7 @@ export function useExecuteFlow() {
         else {
           setStatus('awaiting_signature');
           const sendResult = await kit.send({
-            from:   { adapter, chain: 'Arc_Testnet' as any },
+            from:   { adapter: adapter as any, chain: 'Arc_Testnet' as any },
             to:     split.address,
             amount: amountStr,
             token:  split.currency, // 'USDC' or 'EURC'

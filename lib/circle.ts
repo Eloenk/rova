@@ -125,7 +125,7 @@ export async function executeAndConfirm(opts: {
   walletAddress:        string;
   contractAddress:      string;
   abiFunctionSignature: string;
-  abiParameters:        (string | number)[];
+  abiParameters:        any[];
 }): Promise<string> {
   const client = getCircleClient();
 
@@ -297,17 +297,8 @@ export async function initiateStableFX(opts: {
   buyCurrency:  'USDC' | 'EURC';
   amount:       number;
 }) {
-  console.log(`[StableFX] Executing real atomic swap: ${opts.amount} ${opts.sellCurrency} -> ${opts.buyCurrency}`);
-  const sellTokenAddress = opts.sellCurrency === 'EURC' ? TOKENS.EURC.address : TOKENS.USDC.address;
-  const amountInt = Math.round(opts.amount * 10 ** TOKENS.USDC.decimals);
-
-  const txHash = await executeAndConfirm({
-    walletAddress:        opts.walletAddress,
-    contractAddress:      sellTokenAddress,
-    abiFunctionSignature: 'transfer(address,uint256)',
-    abiParameters:        [opts.walletAddress, String(amountInt)],
-  });
-  return { txHash, success: true, arcScanUrl: arcScan.tx(txHash) };
+  const { executeSwap } = await import('./swapService');
+  return executeSwap(opts);
 }
 
 // ── USDC transfer on Arc ────────────────────────────────────────────────────────
