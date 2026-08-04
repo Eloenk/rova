@@ -77,13 +77,8 @@ export function useWallet() {
     fetchServerBalance();
   };
 
-  const finalUsdc = isEmailSession
-    ? (apiUsdc ?? '0.00')
-    : (usdcBal ? parseFloat(usdcBal.formatted).toFixed(2) : (apiUsdc ?? '0.00'));
-
-  const finalEurc = isEmailSession
-    ? (apiEurc ?? '0.00')
-    : (eurcBal ? parseFloat(eurcBal.formatted).toFixed(2) : (apiEurc ?? '0.00'));
+  const finalUsdc = apiUsdc ?? (usdcBal ? parseFloat(usdcBal.formatted).toFixed(2) : '0.00');
+  const finalEurc = apiEurc ?? (eurcBal ? parseFloat(eurcBal.formatted).toFixed(2) : '0.00');
 
   const isOnArc = chain?.id === arcTestnet.id || isEmailSession;
   const wrongChain = isWeb3Connected && !isOnArc;
