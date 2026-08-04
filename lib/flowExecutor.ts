@@ -8,10 +8,10 @@
 
 import type { FlowPlan } from './types';
 
-export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, ownerWalletOverride?: string) {
+export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, walletAddressOverride?: string) {
   const { sendUsdcOnArc, initiateStableFX, appKitBridge, createErc8183Job } = await import('./circle');
-  const ownerWallet = ownerWalletOverride || process.env.ROVA_OWNER_WALLET;
-  if (!ownerWallet) throw new Error('ROVA_OWNER_WALLET not configured');
+  const targetWallet = walletAddressOverride;
+  if (!targetWallet) throw new Error('Wallet address is required for flow execution');
 
   const txHashes: string[] = [];
   let jobId: string | undefined;
@@ -25,7 +25,7 @@ export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, ow
       const sellCurrency = split.currency === 'EURC' ? 'USDC' : 'EURC';
       const buyCurrency = split.currency === 'EURC' ? 'EURC' : 'USDC';
       const { txHash } = await initiateStableFX({
-        walletAddress: ownerWallet,
+        walletAddress: targetWallet,
         sellCurrency,
         buyCurrency,
         amount:       split.amount,
@@ -33,7 +33,7 @@ export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, ow
       txHashes.push(txHash);
     } else if (split.arcProtocol === 'Circle Gateway' || split.arcProtocol === 'CCTP V2') {
       const { txHash } = await appKitBridge({
-        walletAddress: ownerWallet,
+        walletAddress: targetWallet,
         fromChain: 'Arc_Testnet',
         toChain:   split.country === 'US' ? 'Ethereum_Sepolia' : 'Base_Sepolia',
         amount:    split.amount,
@@ -47,9 +47,9 @@ export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, ow
       const expiredAt = now + (meta.expiryDays || 7) * 86400;
 
       const txHash = await createErc8183Job(
-        ownerWallet,
+        targetWallet,
         meta.provider,
-        meta.evaluator || ownerWallet,
+        meta.evaluator || targetWallet,
         meta.description,
         expiredAt,
       );
@@ -57,7 +57,7 @@ export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, ow
       jobId = `J-${intentHash.slice(0, 8)}`;
       txHashes.push(txHash);
     } else {
-      const { txHash } = await sendUsdcOnArc(ownerWallet, split.address, split.amount);
+      const { txHash } = await sendUsdcOnArc(targetWallet, split.address, split.amount);
       txHashes.push(txHash);
     }
   }

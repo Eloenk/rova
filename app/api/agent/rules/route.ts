@@ -59,8 +59,9 @@ export async function POST(req: NextRequest) {
     if (!['managed', 'self_custody'].includes(custodyMode)) {
       return NextResponse.json({ ok: false, error: 'Invalid custody mode' }, { status: 400 });
     }
-    if (custodyMode === 'self_custody' && !isAddress(sourceWallet || '')) {
-      return NextResponse.json({ ok: false, error: 'Connect a wallet first to create a self-custody rule' }, { status: 400 });
+    const activeWallet = sourceWallet || req.cookies.get('rova_user_wallet')?.value;
+    if (!activeWallet || !isAddress(activeWallet)) {
+      return NextResponse.json({ ok: false, error: 'A valid wallet address is required to create an automation rule' }, { status: 400 });
     }
 
     const rule = createRule({
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
       byDate,
       toleranceBps: toleranceBps ?? 10,
       custodyMode,
-      sourceWallet: custodyMode === 'self_custody' ? sourceWallet : (process.env.ROVA_OWNER_WALLET || 'managed-wallet-pending-config'),
+      sourceWallet: activeWallet,
     });
 
     return NextResponse.json({ ok: true, rule });

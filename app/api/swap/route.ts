@@ -6,9 +6,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { walletAddress, sellCurrency, buyCurrency, amount, maxSlippageBps } = body;
 
-    const wallet = walletAddress || process.env.ROVA_OWNER_WALLET;
+    const wallet = walletAddress;
     if (!wallet) {
-      return NextResponse.json({ ok: false, error: 'walletAddress or ROVA_OWNER_WALLET required' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'walletAddress is required for swap execution' }, { status: 400 });
     }
 
     const sell = sellCurrency || (buyCurrency === 'USDC' ? 'EURC' : 'USDC');

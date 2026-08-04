@@ -41,6 +41,13 @@ export function useWallet() {
         ? (storedAddr || '')
         : (web3Address || storedAddr || '');
 
+      if (!addrQuery && !isEmailSession) {
+        setApiUsdc(null);
+        setApiEurc(null);
+        setApiAddress(null);
+        return;
+      }
+
       const res = await fetch(`/api/user/balance${addrQuery ? `?address=${addrQuery}` : ''}`);
       const data = await res.json();
       if (data.ok) {
@@ -64,7 +71,6 @@ export function useWallet() {
     return () => clearInterval(interval);
   }, [fetchServerBalance, web3Address, refetchWagmiBalance]);
 
-
   const isConnected = isWeb3Connected || isEmailSession;
   const storedWallet = typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null;
 
@@ -77,8 +83,13 @@ export function useWallet() {
     fetchServerBalance();
   };
 
-  const finalUsdc = apiUsdc ?? (usdcBal ? parseFloat(usdcBal.formatted).toFixed(2) : '0.00');
-  const finalEurc = apiEurc ?? (eurcBal ? parseFloat(eurcBal.formatted).toFixed(2) : '0.00');
+  const finalUsdc = isEmailSession
+    ? (apiUsdc ?? '0.00')
+    : (usdcBal ? parseFloat(usdcBal.formatted).toFixed(2) : (apiUsdc ?? '0.00'));
+
+  const finalEurc = isEmailSession
+    ? (apiEurc ?? '0.00')
+    : (eurcBal ? parseFloat(eurcBal.formatted).toFixed(2) : (apiEurc ?? '0.00'));
 
   const isOnArc = chain?.id === arcTestnet.id || isEmailSession;
   const wrongChain = isWeb3Connected && !isOnArc;

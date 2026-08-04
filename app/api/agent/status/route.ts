@@ -5,7 +5,6 @@ import { arcTestnet } from '@/lib/arcChain';
 
 export async function GET() {
   const agentId = process.env.NEXT_PUBLIC_ROVA_AGENT_ID;
-  const ownerWallet = process.env.ROVA_OWNER_WALLET;
 
   let reputationScore = 75; // Default for new agents
   let isValidated = true;

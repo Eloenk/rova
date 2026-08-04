@@ -71,7 +71,7 @@ export async function confirmSelfCustodyExecution(opts: {
     recordReputation, logExecutionOnchain,
   } = await import('./circle');
 
-  const attestor = process.env.ROVA_VALIDATOR_WALLET || process.env.ROVA_OWNER_WALLET!;
+  const attestor = process.env.ROVA_VALIDATOR_WALLET || process.env.FLOWFI_VALIDATOR_WALLET || '0xd70e45e52b7fbee59f4d014b5a6a1c5532f49556';
 
   let feeJobId: string | undefined;
   try {
@@ -132,7 +132,8 @@ export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: str
     logExecutionOnchain,
   } = await import('./circle');
 
-  const sourceWallet = rule.sourceWallet || process.env.ROVA_OWNER_WALLET!;
+  const sourceWallet = rule.sourceWallet;
+  if (!sourceWallet) throw new Error(`Source wallet address missing for rule ${rule.id}`);
   let txHash: string;
   let arcScanUrl: string;
 
