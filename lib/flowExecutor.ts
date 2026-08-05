@@ -57,7 +57,9 @@ export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, wa
       jobId = `J-${intentHash.slice(0, 8)}`;
       txHashes.push(txHash);
     } else {
-      const { txHash } = await sendUsdcOnArc(targetWallet, split.address, split.amount);
+      const { resolveRecipient } = await import('./emailWallets');
+      const { address: targetAddress } = await resolveRecipient(split.address);
+      const { txHash } = await sendUsdcOnArc(targetWallet, targetAddress, split.amount);
       txHashes.push(txHash);
     }
   }
