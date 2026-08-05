@@ -7,6 +7,8 @@ import path from 'path';
 import * as yaml from 'js-yaml';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 function getRpcUrlFromConfig(): string {
   if (process.env.ARC_RPC_URL) return process.env.ARC_RPC_URL;
@@ -104,6 +106,10 @@ export async function GET(req: NextRequest) {
       rpcUrlUsed: rpcUrl,
       usdcBalance,
       eurcBalance,
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      },
     });
   } catch (err: any) {
     console.error('[Balance API Error]', err);
