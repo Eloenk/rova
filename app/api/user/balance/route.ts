@@ -28,24 +28,30 @@ function getRpcUrlFromConfig(): string {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    let targetAddress = searchParams.get('address');
+    let targetAddress: string | null = null;
 
-    if (!targetAddress) {
-      const cookieEmail = req.cookies.get('rova_user_email')?.value;
-      if (cookieEmail) {
-        const supabase = getSupabaseClient();
-        if (supabase) {
-          const { data: user } = await supabase
-            .from('users')
-            .select('circle_wallet_address')
-            .eq('email', cookieEmail.toLowerCase().trim())
-            .single();
+    const cookieWallet = req.cookies.get('rova_user_wallet')?.value;
+    const cookieEmail = req.cookies.get('rova_user_email')?.value;
 
-          if (user?.circle_wallet_address) {
-            targetAddress = user.circle_wallet_address;
-          }
+    if (cookieWallet) {
+      targetAddress = cookieWallet;
+    } else if (cookieEmail) {
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        const { data: user } = await supabase
+          .from('users')
+          .select('circle_wallet_address')
+          .eq('email', cookieEmail.toLowerCase().trim())
+          .single();
+
+        if (user?.circle_wallet_address) {
+          targetAddress = user.circle_wallet_address;
         }
       }
+    }
+
+    if (!targetAddress) {
+      targetAddress = searchParams.get('address');
     }
 
     if (!targetAddress) {

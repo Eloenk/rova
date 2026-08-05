@@ -127,12 +127,22 @@ export async function POST(req: NextRequest) {
     });
 
     response.cookies.set('rova_user_email', cleanEmail, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
       maxAge: 30 * 24 * 60 * 60,
     });
+
+    if (circleWalletAddress) {
+      response.cookies.set('rova_user_wallet', circleWalletAddress, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 30 * 24 * 60 * 60,
+      });
+    }
 
     return response;
   } catch (err: any) {

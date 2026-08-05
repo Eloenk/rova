@@ -18,26 +18,25 @@ export function useWallet() {
 
   const fetchServerBalance = useCallback(async () => {
     try {
-      const targetAddr = storedWallet || apiAddress;
+      const storedAddr = typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null;
+      const url = storedAddr ? `/api/user/balance?address=${storedAddr}` : '/api/user/balance';
 
-      if (!targetAddr) {
-        setApiUsdc('0.00');
-        setApiEurc('0.00');
-        setApiAddress(null);
-        return;
-      }
-
-      const res = await fetch(`/api/user/balance?address=${targetAddr}`);
+      const res = await fetch(url);
       const data = await res.json();
       if (data.ok) {
         setApiUsdc(data.usdcBalance);
         setApiEurc(data.eurcBalance);
-        setApiAddress(data.address || targetAddr);
+        if (data.address) {
+          setApiAddress(data.address);
+          if (typeof window !== 'undefined' && data.address !== storedAddr) {
+            localStorage.setItem('rova_user_wallet', data.address);
+          }
+        }
       }
     } catch (e) {
       console.warn('[useWallet] Server balance fetch error:', e);
     }
-  }, [storedWallet, apiAddress]);
+  }, []);
 
   useEffect(() => {
     fetchServerBalance();
