@@ -112,6 +112,23 @@ export function useWallet() {
     connectInjected();
   };
 
+  const logout = useCallback(() => {
+    try {
+      disconnect();
+    } catch {}
+
+    if (typeof window !== 'undefined') {
+      localStorage.clear();
+      sessionStorage.clear();
+      document.cookie = 'rova_user_email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'rova_user_wallet=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    }
+
+    setApiUsdc(null);
+    setApiEurc(null);
+    setApiAddress(null);
+  }, [disconnect]);
+
   const switchToArc = () => switchChain?.({ chainId: arcTestnet.id });
 
   return {
@@ -126,7 +143,8 @@ export function useWallet() {
     connectInjected,
     connectWalletConnect,
     openConnectModal,
-    disconnect,
+    disconnect: logout,
+    logout,
     switchToArc,
     refetchBalance,
     arcChainId: ARC_TESTNET.chainId,

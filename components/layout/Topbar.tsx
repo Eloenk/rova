@@ -341,11 +341,6 @@ export default function Topbar({
                 <button
                   onClick={() => {
                     disconnect();
-                    if (typeof window !== 'undefined') {
-                      localStorage.removeItem('rova_user_email');
-                      localStorage.removeItem('rova_user_wallet');
-                      document.cookie = 'rova_user_email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                    }
                     setShowDrawer(false);
                     router.push('/');
                   }}
