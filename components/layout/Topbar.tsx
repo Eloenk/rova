@@ -74,12 +74,10 @@ export default function Topbar({
   // Dynamic Token Amounts & Real USD Values
   const currentUsdc = isConnected ? (usdcBalance ?? '0.00') : '0.00';
   const currentEurc = isConnected ? (eurcBalance ?? '0.00') : '0.00';
-  const currentUsyc = '0.00';
 
   const usdcUsd = parseFloat(currentUsdc) || 0;
   const eurcUsd = (parseFloat(currentEurc) || 0) * 1.08;
-  const usycUsd = (parseFloat(currentUsyc) || 0) * 1.00;
-  const totalUsd = (usdcUsd + eurcUsd + usycUsd).toFixed(2);
+  const totalUsd = (usdcUsd + eurcUsd).toFixed(2);
 
   // Compulsory refetch whenever Phantom popover drawer is opened
   useEffect(() => {
@@ -519,44 +517,6 @@ export default function Topbar({
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff' }}>${eurcUsd.toFixed(2)}</div>
-                  </div>
-                </div>
-
-                {/* USYC */}
-                <div style={{
-                  background: '#18181b',
-                  borderRadius: '16px',
-                  padding: '12px 14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '50%',
-                      background: '#27272a',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '15px',
-                      fontWeight: 500,
-                      color: '#ffffff',
-                    }}>
-                      Y
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff' }}>USYC</span>
-                      </div>
-                      <div style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 400, marginTop: '2px' }}>
-                        {currentUsyc} USYC
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '13.5px', fontWeight: 500, color: '#ffffff' }}>${usycUsd.toFixed(2)}</div>
                   </div>
                 </div>
               </div>
