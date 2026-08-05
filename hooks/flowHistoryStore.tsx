@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { useAccount } from 'wagmi';
+import { useWallet } from '@/hooks/useWallet';
 import type { FlowEntry } from '@/lib/types';
 
 // ─── Per-wallet storage key ──────────────────────────────────────────────────
@@ -8,7 +8,7 @@ import type { FlowEntry } from '@/lib/types';
 // Unconnected users see an empty slate — never someone else's data.
 const LEGACY_KEY = 'rova_history_v2'; // cleaned up on first load
 
-function storageKey(address?: string) {
+function storageKey(address?: string | null) {
   if (!address) return null; // no wallet = no storage
   return `rova_history_v3_${address.toLowerCase()}`;
 }
@@ -73,7 +73,7 @@ function rebuildEntry(e: SafeEntry): FlowEntry {
 }
 
 export function FlowHistoryProvider({ children }: { children: ReactNode }) {
-  const { address } = useAccount();
+  const { address } = useWallet();
   const [entries, setEntries] = useState<FlowEntry[]>([]);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
 

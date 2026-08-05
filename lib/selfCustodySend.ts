@@ -1,24 +1,22 @@
 'use client';
-// ─────────────────────────────────────────────────────────────────────────────
-// Rova — Self-Custody Send
-//
-// Used only for the "ready_to_execute" approval step on self-custody Agent
-// rules/intents. USDC is Arc's native gas token (see lib/config.ts), so this
-// is a plain native value transfer signed by the user's own connected wallet
-// via wagmi — Circle's server-side DCW signing is never involved here, which
-// is the whole point of the self-custody path.
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { sendTransaction } from 'wagmi/actions';
-import { parseUnits } from 'viem';
-import { wagmiConfig } from './wagmiConfig';
+import { createWalletClient, custom, parseUnits } from 'viem';
 import { arcTestnet } from './arcChain';
 
 export async function sendUsdcSelfCustody(toAddress: string, amountUsdc: number): Promise<string> {
-  const hash = await sendTransaction(wagmiConfig, {
+  if (typeof window === 'undefined' || !(window as any).ethereum) {
+    throw new Error('No Web3 wallet extension found');
+  }
+  const client = createWalletClient({
+    chain: arcTestnet,
+    transport: custom((window as any).ethereum),
+  });
+  const [account] = await client.getAddresses();
+  if (!account) throw new Error('Wallet not connected');
+
+  const hash = await client.sendTransaction({
+    account,
     to: toAddress as `0x${string}`,
     value: parseUnits(String(amountUsdc), 6),
-    chainId: arcTestnet.id,
   });
   return hash;
 }

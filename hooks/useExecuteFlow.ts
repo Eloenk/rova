@@ -17,11 +17,11 @@ const kit = new AppKit();
 
 // ── Adapter factory — creates a MetaMask-backed adapter ─────────────────────
 async function getBrowserAdapter() {
-  if (typeof window === 'undefined' || !window.ethereum) {
+  if (typeof window === 'undefined' || !(window as any).ethereum) {
     throw new Error('No wallet detected. Please install MetaMask or another EVM wallet.');
   }
   return createViemAdapterFromProvider({
-    provider: window.ethereum as EIP1193Provider,
+    provider: (window as any).ethereum as EIP1193Provider,
   });
 }
 
@@ -145,7 +145,7 @@ export function useExecuteFlow() {
           });
 
           setStatus('awaiting_signature');
-          const provider = (window.ethereum as any);
+          const provider = ((window as any).ethereum as any);
           txHash = await provider.request({
             method: 'eth_sendTransaction',
             params: [{
@@ -172,7 +172,7 @@ export function useExecuteFlow() {
           });
 
           setStatus('awaiting_signature');
-          const provider = (window.ethereum as any);
+          const provider = ((window as any).ethereum as any);
           txHash = await provider.request({
             method: 'eth_sendTransaction',
             params: [{
@@ -223,7 +223,7 @@ export function useExecuteFlow() {
 
           // Call via adapter's provider
           setStatus('awaiting_signature');
-          const provider = (window.ethereum as any);
+          const provider = ((window as any).ethereum as any);
           txHash = await provider.request({
             method: 'eth_sendTransaction',
             params: [{
@@ -340,7 +340,7 @@ export function useExecuteFlow() {
         }],
         args: [
           params.provider as `0x${string}`,
-          (params.evaluator || (window.ethereum as any).selectedAddress) as `0x${string}`,
+          (params.evaluator || ((window as any).ethereum as any)?.selectedAddress) as `0x${string}`,
           BigInt(expiredAt),
           params.description,
           '0x0000000000000000000000000000000000000000'
@@ -348,7 +348,7 @@ export function useExecuteFlow() {
       });
 
       setStatus('awaiting_signature');
-      const provider = (window.ethereum as any);
+      const provider = ((window as any).ethereum as any);
       const accounts = await provider.request({ method: 'eth_accounts' });
       const txHash = await provider.request({
         method: 'eth_sendTransaction',

@@ -176,7 +176,13 @@ export default function Topbar({
         {/* Phantom Wallet Pill Toggle Button */}
         <button
           ref={walletBtnRef}
-          onClick={() => setShowDrawer(!showDrawer)}
+          onClick={() => {
+            if (!isConnected) {
+              router.push('/login');
+            } else {
+              setShowDrawer(!showDrawer);
+            }
+          }}
           style={{
             padding: '7px 12px',
             borderRadius: '8px',
@@ -195,10 +201,10 @@ export default function Topbar({
             width: '8px',
             height: '8px',
             borderRadius: '50%',
-            background: isConnected ? '#25D366' : '#BFFF00',
+            background: isConnected ? '#25D366' : '#71717a',
             display: 'inline-block',
           }} />
-          <span style={{ fontFamily: 'Inter, sans-serif' }}>{displayShort}</span>
+          <span style={{ fontFamily: 'Inter, sans-serif' }}>{isConnected ? displayShort : 'Sign In'}</span>
         </button>
 
         {/* CUSTOM PHANTOM WALLET POPOVER DRAWER */}

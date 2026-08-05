@@ -1,11 +1,11 @@
 'use client';
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { useAccount } from 'wagmi';
+import { useWallet } from '@/hooks/useWallet';
 import type { FlowJob } from '@/lib/types';
 
 // Wallet-scoped ERC-8183 job history, same isolation pattern as flowHistoryStore.tsx —
 // each wallet only ever sees its own jobs, unconnected users see an empty slate.
-function storageKey(address?: string) {
+function storageKey(address?: string | null) {
   if (!address) return null;
   return `rova_erc8183_jobs_v1_${address.toLowerCase()}`;
 }
@@ -20,7 +20,7 @@ interface Erc8183ContextType {
 const Erc8183Context = createContext<Erc8183ContextType | undefined>(undefined);
 
 export function Erc8183Provider({ children }: { children: ReactNode }) {
-  const { address } = useAccount();
+  const { address } = useWallet();
   const [jobs, setJobs] = useState<FlowJob[]>([]);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
 

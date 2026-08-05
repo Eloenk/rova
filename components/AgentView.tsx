@@ -39,7 +39,7 @@ interface AgentExecution {
 const TICK_INTERVAL_MS = 5000;
 
 export default function AgentView() {
-  const { isConnected, address, connectInjected } = useWallet();
+  const { isConnected, address } = useWallet();
   const [rules, setRules] = useState<AgentRule[]>([]);
   const [intents, setIntents] = useState<StandingIntent[]>([]);
   const [executions, setExecutions] = useState<AgentExecution[]>([]);
