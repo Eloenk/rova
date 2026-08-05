@@ -21,10 +21,10 @@ export default function LoginPage() {
     const hasEmailSession = typeof window !== 'undefined' && (
       localStorage.getItem('rova_user_email') || document.cookie.includes('rova_user_email=')
     );
-    if (isConnected || hasEmailSession) {
+    if (hasEmailSession) {
       router.replace('/dashboard');
     }
-  }, [isConnected, router]);
+  }, [router]);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +76,7 @@ export default function LoginPage() {
 
   const handleWeb3Connect = () => {
     connectInjected();
+    router.replace('/dashboard');
   };
 
 
