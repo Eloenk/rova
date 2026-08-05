@@ -173,9 +173,10 @@ export default function FlowPlanCard({
                         href={scanUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[10px] font-mono text-emerald-400/70 hover:text-emerald-300 transition-colors"
+                        className="text-[10px] font-mono text-emerald-400/70 hover:text-emerald-300 transition-colors truncate max-w-[400px]"
+                        title={scanUrl}
                       >
-                        {txHash.slice(0, 18)}…{txHash.slice(-6)} ↗
+                        {scanUrl} ↗
                       </a>
                     </div>
                   )}

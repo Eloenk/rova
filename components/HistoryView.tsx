@@ -90,9 +90,9 @@ export default function HistoryView() {
                   <p className="font-semibold text-sm text-text-primary truncate mb-1">{e.intent}</p>
                   <div className="flex items-center gap-2 flex-wrap text-xs text-text-secondary">
                     {txHash ? (
-                      <a href={arcScan.tx(txHash)} target="_blank" rel="noopener noreferrer" className="font-mono text-[11px] text-text-secondary hover:text-text-primary flex items-center gap-1">
-                        <span>{txHash.slice(0, 18)}...</span>
-                        <ArrowUpRight size={11} />
+                      <a href={arcScan.tx(txHash)} target="_blank" rel="noopener noreferrer" className="font-mono text-[11px] text-text-secondary hover:text-text-primary flex items-center gap-1 truncate max-w-[360px]" title={arcScan.tx(txHash)}>
+                        <span>{arcScan.tx(txHash)}</span>
+                        <ArrowUpRight size={11} className="shrink-0" />
                       </a>
                     ) : (
                       <span className="font-mono text-[11px] text-text-tertiary">{e.id.slice(0, 18)}...</span>
