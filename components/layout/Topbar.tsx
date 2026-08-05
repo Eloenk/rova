@@ -32,6 +32,13 @@ export default function Topbar({
   const [showBanner, setShowBanner] = useState(true);
   const [copied, setCopied] = useState(false);
   const [linkToken, setLinkToken] = useState('LINK-8492');
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  const triggerRefresh = () => {
+    setIsSpinning(true);
+    refetchBalance();
+    setTimeout(() => setIsSpinning(false), 750);
+  };
 
   useEffect(() => {
     if (showWhatsAppModal) {
@@ -61,8 +68,6 @@ export default function Topbar({
     ? `${userAddr.slice(0, 6)}…${userAddr.slice(-4)}`
     : 'Not Connected';
 
-
-
   // Dynamic Token Amounts & Real USD Values
   const currentUsdc = isConnected ? (usdcBalance ?? '0.00') : '0.00';
   const currentEurc = isConnected ? (eurcBalance ?? '0.00') : '0.00';
@@ -73,12 +78,12 @@ export default function Topbar({
   const usycUsd = (parseFloat(currentUsyc) || 0) * 1.00;
   const totalUsd = (usdcUsd + eurcUsd + usycUsd).toFixed(2);
 
-  // Refetch balances immediately whenever popover drawer is opened
+  // Compulsory refetch whenever Phantom popover drawer is opened
   useEffect(() => {
     if (showDrawer) {
-      refetchBalance();
+      triggerRefresh();
     }
-  }, [showDrawer, refetchBalance]);
+  }, [showDrawer]);
 
   // Click outside to close Phantom Wallet Popover Drawer
   useEffect(() => {
@@ -260,11 +265,17 @@ export default function Topbar({
               {/* Right Utility Icons (Refresh & Close) */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#a1a1aa' }}>
                 <button
-                  onClick={() => refetchBalance()}
+                  onClick={triggerRefresh}
                   title="Refresh Balance"
                   style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
                 >
-                  <RefreshCw size={15} />
+                  <RefreshCw
+                    size={15}
+                    style={{
+                      transition: 'transform 0.75s ease-in-out',
+                      transform: isSpinning ? 'rotate(360deg)' : 'rotate(0deg)',
+                    }}
+                  />
                 </button>
                 <button
                   onClick={() => setShowDrawer(false)}

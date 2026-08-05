@@ -40,9 +40,10 @@ export function useWallet() {
 
   useEffect(() => {
     fetchServerBalance();
+    // Poll balance every 3 minutes (180,000 ms)
     const interval = setInterval(() => {
       fetchServerBalance();
-    }, 5000);
+    }, 3 * 60 * 1000);
     return () => clearInterval(interval);
   }, [fetchServerBalance]);
 
