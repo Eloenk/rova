@@ -173,10 +173,11 @@ export default function FlowPlanCard({
                         href={scanUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[10px] font-mono text-emerald-400/70 hover:text-emerald-300 transition-colors truncate max-w-[400px]"
-                        title={scanUrl}
+                        className="text-[10px] font-mono text-emerald-400/80 hover:text-emerald-300 transition-colors flex items-center gap-1"
+                        title={`View on ArcScan: ${scanUrl}`}
                       >
-                        {scanUrl} ↗
+                        <span>{txHash.slice(0, 10)}…{txHash.slice(-8)}</span>
+                        <span>↗</span>
                       </a>
                     </div>
                   )}
