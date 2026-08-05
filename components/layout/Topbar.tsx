@@ -56,7 +56,7 @@ export default function Topbar({
   const drawerRef = useRef<HTMLDivElement>(null);
   const walletBtnRef = useRef<HTMLButtonElement>(null);
 
-  const userAddr = address || (typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null);
+  const userAddr = address;
   const displayShort = userAddr
     ? `${userAddr.slice(0, 6)}…${userAddr.slice(-4)}`
     : 'Not Connected';

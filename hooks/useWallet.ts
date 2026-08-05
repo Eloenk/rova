@@ -16,80 +16,83 @@ export function useWallet() {
   const [apiEurc, setApiEurc] = useState<string | null>(null);
   const [apiAddress, setApiAddress] = useState<string | null>(null);
 
+  const isEmailSession = typeof window !== 'undefined' && Boolean(
+    localStorage.getItem('rova_user_email') || (typeof document !== 'undefined' && document.cookie.includes('rova_user_email='))
+  );
+
   const { data: usdcBal, refetch: refetchWagmiBalance } = useBalance({
     address: web3Address,
     token: TOKENS.USDC.address,
     chainId: arcTestnet.id,
-    query: { enabled: !!web3Address },
+    query: { enabled: !!web3Address && !isEmailSession },
   });
 
   const { data: eurcBal } = useBalance({
     address: web3Address,
     token: TOKENS.EURC.address,
     chainId: arcTestnet.id,
-    query: { enabled: !!web3Address },
+    query: { enabled: !!web3Address && !isEmailSession },
   });
-
-  const isEmailSession = typeof window !== 'undefined' && Boolean(
-    localStorage.getItem('rova_user_email') || (typeof document !== 'undefined' && document.cookie.includes('rova_user_email='))
-  );
 
   const fetchServerBalance = useCallback(async () => {
     try {
       const storedAddr = typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null;
-      const addrQuery = isEmailSession
-        ? (storedAddr || '')
-        : (web3Address || storedAddr || '');
+      const targetAddr = isEmailSession
+        ? storedAddr
+        : (isWeb3Connected ? web3Address : storedAddr);
 
-      if (!addrQuery && !isEmailSession) {
-        setApiUsdc(null);
-        setApiEurc(null);
+      if (!targetAddr) {
+        setApiUsdc('0.00');
+        setApiEurc('0.00');
         setApiAddress(null);
         return;
       }
 
-      const res = await fetch(`/api/user/balance${addrQuery ? `?address=${addrQuery}` : ''}`);
+      const res = await fetch(`/api/user/balance?address=${targetAddr}`);
       const data = await res.json();
       if (data.ok) {
         setApiUsdc(data.usdcBalance);
         setApiEurc(data.eurcBalance);
-        setApiAddress(data.address);
+        setApiAddress(data.address || targetAddr);
       }
     } catch (e) {
       console.warn('[useWallet] Server balance fetch error:', e);
     }
-  }, [web3Address, isEmailSession]);
+  }, [web3Address, isWeb3Connected, isEmailSession]);
 
   useEffect(() => {
     fetchServerBalance();
     const interval = setInterval(() => {
       fetchServerBalance();
-      if (web3Address) {
+      if (web3Address && !isEmailSession) {
         refetchWagmiBalance();
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [fetchServerBalance, web3Address, refetchWagmiBalance]);
+  }, [fetchServerBalance, web3Address, isEmailSession, refetchWagmiBalance]);
 
-  const isConnected = isWeb3Connected || isEmailSession;
   const storedWallet = typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null;
 
+  const isConnected = isEmailSession ? Boolean(storedWallet || apiAddress) : isWeb3Connected;
+
   const address = isEmailSession
-    ? (apiAddress || storedWallet || web3Address)
-    : (web3Address || apiAddress || storedWallet);
+    ? (storedWallet || apiAddress || null)
+    : (isWeb3Connected ? (web3Address || null) : null);
 
   const refetchBalance = () => {
-    refetchWagmiBalance();
+    if (web3Address && !isEmailSession) {
+      refetchWagmiBalance();
+    }
     fetchServerBalance();
   };
 
   const finalUsdc = isEmailSession
     ? (apiUsdc ?? '0.00')
-    : (usdcBal ? parseFloat(usdcBal.formatted).toFixed(2) : (apiUsdc ?? '0.00'));
+    : (isWeb3Connected ? (apiUsdc ?? (usdcBal ? parseFloat(usdcBal.formatted).toFixed(2) : '0.00')) : '0.00');
 
   const finalEurc = isEmailSession
     ? (apiEurc ?? '0.00')
-    : (eurcBal ? parseFloat(eurcBal.formatted).toFixed(2) : (apiEurc ?? '0.00'));
+    : (isWeb3Connected ? (apiEurc ?? (eurcBal ? parseFloat(eurcBal.formatted).toFixed(2) : '0.00')) : '0.00');
 
   const isOnArc = chain?.id === arcTestnet.id || isEmailSession;
   const wrongChain = isWeb3Connected && !isOnArc;
