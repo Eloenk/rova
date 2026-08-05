@@ -67,6 +67,9 @@ export default function Topbar({
   const displayShort = userAddr
     ? `${userAddr.slice(0, 6)}…${userAddr.slice(-4)}`
     : 'Not Connected';
+  const displayShortMobile = userAddr
+    ? `${userAddr.slice(0, 6)}…`
+    : 'Not Connected';
 
   // Dynamic Token Amounts & Real USD Values
   const currentUsdc = isConnected ? (usdcBalance ?? '0.00') : '0.00';
@@ -209,7 +212,14 @@ export default function Topbar({
             background: isConnected ? '#25D366' : '#71717a',
             display: 'inline-block',
           }} />
-          <span style={{ fontFamily: 'Inter, sans-serif' }}>{isConnected ? displayShort : 'Sign In'}</span>
+          {isConnected ? (
+            <>
+              <span className="hidden sm:inline" style={{ fontFamily: 'Inter, sans-serif' }}>{displayShort}</span>
+              <span className="inline sm:hidden" style={{ fontFamily: 'Inter, sans-serif' }}>{displayShortMobile}</span>
+            </>
+          ) : (
+            <span style={{ fontFamily: 'Inter, sans-serif' }}>Sign In</span>
+          )}
         </button>
 
         {/* CUSTOM PHANTOM WALLET POPOVER DRAWER */}
