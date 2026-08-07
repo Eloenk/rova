@@ -10,7 +10,7 @@ let _anthropic: Anthropic | null = null;
 
 export interface RovaAIConfig {
   ai: {
-    provider: 'gemini' | 'anthropic' | 'agentrouter' | 'auto';
+    provider: 'gemini' | 'anthropic' | 'nvidia' | 'auto';
     model: string;
     temperature: number;
     max_tokens: number;
@@ -73,19 +73,20 @@ function getAnthropic() {
   return _anthropic;
 }
 
-export type AIProvider = 'anthropic' | 'gemini' | 'openai' | 'agentrouter';
+export type AIProvider = 'anthropic' | 'gemini' | 'openai' | 'nvidia';
 
 interface AIResult {
   text: string;
   provider: AIProvider;
 }
 
-async function callAgentRouter(intent: string, model: string, config: RovaAIConfig): Promise<AIResult> {
-  const key = process.env.AGENTROUTER_API_KEY;
-  const baseUrl = process.env.AGENTROUTER_BASE_URL || 'https://agentrouter.org/v1/chat/completions';
+async function callNvidia(intent: string, model: string, config: RovaAIConfig): Promise<AIResult> {
+  const key = process.env.NVIDIA_API_KEY;
+  const baseUrl = process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1/chat/completions';
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   };
   if (key) {
     headers['Authorization'] = `Bearer ${key}`;
@@ -95,47 +96,50 @@ async function callAgentRouter(intent: string, model: string, config: RovaAIConf
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model: model || 'agent-router',
+      model: model || 'z-ai/glm-5.2',
       messages: [
         { role: 'system', content: ROVA_SYSTEM_PROMPT },
         { role: 'user', content: `User Intent: ${intent}\n\nReturn EXACT minified JSON only.` },
       ],
       temperature: config.ai.temperature,
       max_tokens: config.ai.max_tokens,
+      stream: false,
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`AgentRouter API error (${response.status}): ${errorText}`);
+    throw new Error(`NVIDIA API error (${response.status}): ${errorText}`);
   }
 
   const data = await response.json();
   const text = data.choices?.[0]?.message?.content || '';
   if (!text) {
-    throw new Error('AgentRouter returned empty content');
+    throw new Error('NVIDIA API returned empty content');
   }
 
-  return { text, provider: 'agentrouter' };
+  return { text, provider: 'nvidia' };
 }
 
 export async function callAI(intent: string, forceProvider?: AIProvider): Promise<AIResult> {
   const config = getRovaConfig();
   const targetProvider = forceProvider || (config.ai.provider === 'auto' ? 'anthropic' : config.ai.provider);
-  const targetModel = config.ai.model || (targetProvider === 'anthropic' ? 'claude-3-5-sonnet-20240620' : ROVA_MODEL);
+  const cfgModel = config.ai.model || '';
 
-  // 1. Try AgentRouter if explicitly requested
-  if (targetProvider === 'agentrouter') {
-    return await callAgentRouter(intent, targetModel, config);
+  // 1. Try NVIDIA if explicitly requested
+  if (targetProvider === 'nvidia') {
+    const nvidiaModel = cfgModel.includes('/') || cfgModel.includes('llama') ? cfgModel : 'z-ai/glm-5.2';
+    return await callNvidia(intent, nvidiaModel, config);
   }
 
   // 2. Try Anthropic if specified or selected
   if (targetProvider === 'anthropic' || (config.ai.provider === 'auto' && !forceProvider)) {
+    const anthropicModel = cfgModel.startsWith('claude') ? cfgModel : 'claude-3-5-sonnet-20240620';
     const anthropic = getAnthropic();
     if (anthropic) {
       try {
         const msg = await anthropic.messages.create({
-          model: targetModel,
+          model: anthropicModel,
           max_tokens: config.ai.max_tokens,
           temperature: config.ai.temperature,
           system: ROVA_SYSTEM_PROMPT,
@@ -152,12 +156,12 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
   // 3. Try Gemini (SDK first, then direct REST API with X-goog-api-key)
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (apiKey) {
-    const modelToUse = targetProvider === 'gemini' ? (targetModel || 'gemini-flash-latest') : 'gemini-flash-latest';
+    const geminiModel = cfgModel.startsWith('gemini') ? cfgModel : 'gemini-flash-latest';
     const gemini = getGemini();
     if (gemini) {
       try {
         const model = gemini.getGenerativeModel({
-          model: modelToUse,
+          model: geminiModel,
           generationConfig: {
             temperature: config.ai.temperature,
             maxOutputTokens: config.ai.max_tokens,
@@ -172,7 +176,7 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
     }
 
     try {
-      const restRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent`, {
+      const restRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,12 +196,12 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
     }
   }
 
-  // 4. Try AgentRouter in auto mode fallback
-  if (process.env.AGENTROUTER_API_KEY || config.ai.provider === 'auto') {
+  // 4. Try NVIDIA in auto mode fallback
+  if (process.env.NVIDIA_API_KEY || config.ai.provider === 'auto') {
     try {
-      return await callAgentRouter(intent, targetModel, config);
+      return await callNvidia(intent, targetModel, config);
     } catch (e: any) {
-      console.error('[AI Provider] AgentRouter fallback failed:', e.message);
+      console.error('[AI Provider] NVIDIA fallback failed:', e.message);
     }
   }
 

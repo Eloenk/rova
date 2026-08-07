@@ -2,17 +2,17 @@
 
 ai:
   # Provider options:
-  #   "gemini"      - Primary Google Generative AI (Requires GOOGLE_GENERATIVE_AI_API_KEY)
-  #   "anthropic"   - Primary Anthropic Claude (Requires ANTHROPIC_API_KEY)
-  #   "agentrouter" - AgentRouter endpoint (https://agentrouter.org/, Optional AGENTROUTER_API_KEY)
-  #   "auto"        - Failover: Anthropic -> Gemini -> AgentRouter
-  provider: "gemini"
+  #   "gemini"    - Primary Google Generative AI (Requires GOOGLE_GENERATIVE_AI_API_KEY)
+  #   "anthropic" - Primary Anthropic Claude (Requires ANTHROPIC_API_KEY)
+  #   "nvidia"    - NVIDIA NIM AI Router (https://integrate.api.nvidia.com/, Requires NVIDIA_API_KEY)
+  #   "auto"      - Failover: Anthropic -> Gemini -> NVIDIA
+  provider: "nvidia"
 
   # Model names (leave blank for automatic provider defaults):
-  #   Gemini options:      "gemini-2.0-flash", "gemini-1.5-pro"
-  #   Anthropic options:   "claude-3-5-sonnet-20240620"
-  #   AgentRouter options: "agent-router"
-  model: "gemini-flash-latest"
+  #   Gemini options:    "gemini-2.0-flash", "gemini-1.5-pro"
+  #   Anthropic options: "claude-3-5-sonnet-20240620"
+  #   NVIDIA options:    "z-ai/glm-5.2", "meta/llama-3.1-405b-instruct"
+  model: "z-ai/glm-5.2"
 
   # Fallback controls:
   #   Set allow_regex_fallback to true to enable local regex intent parsing when AI APIs are rate-limited.
@@ -40,8 +40,8 @@ arc:
     - "https://arc-testnet.drpc.org"
     - "https://rpc.testnet.arc.network"
   wss_urls:
-    - "wss://arc-testnet.drpc.org/ws"
-    - "wss://wss.testnet.arc.network"
+    - "wss://arc-testnet.drpc.org"
+    - "wss://rpc.testnet.arc.network"
   chain_id: 5042002
   execution_log_address: "0x58d1e3e11C7a93cb26C371B115f2710aF68d427a"
   usdc_address: "0x3600000000000000000000000000000000000000"
