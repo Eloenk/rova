@@ -199,7 +199,8 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
   // 4. Try NVIDIA in auto mode fallback
   if (process.env.NVIDIA_API_KEY || config.ai.provider === 'auto') {
     try {
-      return await callNvidia(intent, targetModel, config);
+      const nvidiaModel = cfgModel.includes('/') || cfgModel.includes('llama') ? cfgModel : 'z-ai/glm-5.2';
+      return await callNvidia(intent, nvidiaModel, config);
     } catch (e: any) {
       console.error('[AI Provider] NVIDIA fallback failed:', e.message);
     }
