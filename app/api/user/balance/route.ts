@@ -10,21 +10,31 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-function getRpcUrlFromConfig(): string {
-  if (process.env.ARC_RPC_URL) return process.env.ARC_RPC_URL;
+function getConfigValues(): { rpcUrl: string; usdcAddress: `0x${string}`; eurcAddress: `0x${string}` } {
+  let rpcUrl = process.env.ARC_RPC_URL || ARC_TESTNET.rpc;
+  let usdcAddress = TOKENS.USDC.address as `0x${string}`;
+  let eurcAddress = TOKENS.EURC.address as `0x${string}`;
+
   try {
     const configPath = path.join(process.cwd(), 'config.yaml');
     if (fs.existsSync(configPath)) {
       const fileContents = fs.readFileSync(configPath, 'utf8');
       const parsed = yaml.load(fileContents) as any;
-      if (parsed?.arc?.rpc_url) {
-        return parsed.arc.rpc_url;
+      if (parsed?.arc?.rpc_url && !process.env.ARC_RPC_URL) {
+        rpcUrl = parsed.arc.rpc_url;
+      }
+      if (parsed?.arc?.usdc_address) {
+        usdcAddress = parsed.arc.usdc_address as `0x${string}`;
+      }
+      if (parsed?.arc?.eurc_address) {
+        eurcAddress = parsed.arc.eurc_address as `0x${string}`;
       }
     }
   } catch (err) {
     console.warn('[Balance API] Could not read config.yaml:', err);
   }
-  return ARC_TESTNET.rpc;
+
+  return { rpcUrl, usdcAddress, eurcAddress };
 }
 
 export async function GET(req: NextRequest) {
@@ -56,17 +66,18 @@ export async function GET(req: NextRequest) {
       targetAddress = searchParams.get('address');
     }
 
+    const { rpcUrl, usdcAddress, eurcAddress } = getConfigValues();
+
     if (!targetAddress) {
       return NextResponse.json({
         ok: true,
         address: null,
-        rpcUrlUsed: getRpcUrlFromConfig(),
+        rpcUrlUsed: rpcUrl,
         usdcBalance: '0.00',
         eurcBalance: '0.00',
       });
     }
 
-    const rpcUrl = getRpcUrlFromConfig();
     const abi = parseAbi(['function balanceOf(address) view returns (uint256)']);
 
     const client = createPublicClient({
@@ -78,7 +89,7 @@ export async function GET(req: NextRequest) {
 
     try {
       const usdcRaw = await client.readContract({
-        address: TOKENS.USDC.address as `0x${string}`,
+        address: usdcAddress,
         abi,
         functionName: 'balanceOf',
         args: [targetAddress as `0x${string}`],
@@ -90,7 +101,7 @@ export async function GET(req: NextRequest) {
 
     try {
       const eurcRaw = await client.readContract({
-        address: TOKENS.EURC.address as `0x${string}`,
+        address: eurcAddress,
         abi,
         functionName: 'balanceOf',
         args: [targetAddress as `0x${string}`],

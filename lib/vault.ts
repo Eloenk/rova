@@ -1,7 +1,7 @@
-import { executeAndConfirm, sendUsdcOnArc } from './circle';
-import { ARC_TESTNET, TOKENS, arcScan } from './config';
+import { executeAndConfirm } from './circle';
+import { TOKENS, arcScan } from './config';
 
-export type VaultStrategy = 'circle_wallet' | 'smart_contract';
+export type VaultStrategy = 'smart_contract';
 
 export interface DepositSavingsOpts {
   userWalletAddress: string;
@@ -15,62 +15,124 @@ export interface DepositSavingsOpts {
  * Reads vault strategy from environment / config.yaml
  */
 export function getVaultStrategy(): VaultStrategy {
-  const envStrategy = process.env.ROVA_VAULT_STRATEGY?.toLowerCase();
-  if (envStrategy === 'smart_contract') return 'smart_contract';
-  return 'circle_wallet';
+  return 'smart_contract';
 }
 
 /**
- * Deposits savings according to configured Vault Strategy
+ * Deposits savings according to configured Vault Strategy (RovaSavingsVault smart contract)
  */
 export async function depositSavingsVault(opts: DepositSavingsOpts) {
-  const strategy = getVaultStrategy();
   const tokenKey = opts.token || 'USDC';
   const tokenAddress = TOKENS[tokenKey].address;
   const lockDuration = opts.lockDurationSeconds || 30 * 86400; // Default 30 days timelock limit
 
-  console.log(`[Savings Vault] Depositing ${opts.amountUsdc} ${tokenKey} via strategy: ${strategy}`);
+  const vaultContractAddress =
+    process.env.NEXT_PUBLIC_ROVA_SAVINGS_VAULT_ADDRESS ||
+    process.env.ROVA_SAVINGS_VAULT_ADDRESS ||
+    '0x9330DA5152Cc676a029cfaCCcA3948e11EDE9BfB';
 
-  if (strategy === 'smart_contract') {
-    const vaultContractAddress = process.env.NEXT_PUBLIC_ROVA_SAVINGS_VAULT_ADDRESS || process.env.ROVA_SAVINGS_VAULT_ADDRESS;
-    if (!vaultContractAddress) {
-      console.warn('[Savings Vault] ROVA_SAVINGS_VAULT_ADDRESS not set in .env — defaulting to Circle Sub-Wallet');
-    } else {
-      const amountInt = Math.round(opts.amountUsdc * 10 ** TOKENS[tokenKey].decimals);
+  const amountInt = Math.round(opts.amountUsdc * 10 ** TOKENS[tokenKey].decimals);
 
-      // Step 1: Approve vault contract
-      await executeAndConfirm({
-        walletAddress:        opts.userWalletAddress,
-        contractAddress:      tokenAddress,
-        abiFunctionSignature: 'approve(address,uint256)',
-        abiParameters:        [vaultContractAddress, String(amountInt)],
-      });
+  console.log(`[Savings Vault] Depositing ${opts.amountUsdc} ${tokenKey} into smart contract vault: ${vaultContractAddress}`);
 
-      // Step 2: Deposit into RovaSavingsVault contract
-      const txHash = await executeAndConfirm({
-        walletAddress:        opts.userWalletAddress,
-        contractAddress:      vaultContractAddress,
-        abiFunctionSignature: 'depositSavings(address,uint256,uint256)',
-        abiParameters:        [tokenAddress, String(amountInt), String(lockDuration)],
-      });
+  // Step 1: Approve vault contract
+  await executeAndConfirm({
+    walletAddress:        opts.userWalletAddress,
+    contractAddress:      tokenAddress,
+    abiFunctionSignature: 'approve(address,uint256)',
+    abiParameters:        [vaultContractAddress, String(amountInt)],
+  });
 
-      return {
-        strategy: 'smart_contract' as const,
-        txHash,
-        arcScanUrl: arcScan.tx(txHash),
-        destination: vaultContractAddress,
-      };
-    }
-  }
-
-  // Strategy: Circle Sub-Wallet Vault
-  const destinationWallet = opts.savingsSubWalletAddress || opts.userWalletAddress;
-  const { txHash, arcScanUrl } = await sendUsdcOnArc(opts.userWalletAddress, destinationWallet, opts.amountUsdc);
+  // Step 2: Deposit into RovaSavingsVault contract
+  const txHash = await executeAndConfirm({
+    walletAddress:        opts.userWalletAddress,
+    contractAddress:      vaultContractAddress,
+    abiFunctionSignature: 'depositSavings(address,uint256,uint256)',
+    abiParameters:        [tokenAddress, String(amountInt), String(lockDuration)],
+  });
 
   return {
-    strategy: 'circle_wallet' as const,
+    strategy: 'smart_contract' as const,
     txHash,
-    arcScanUrl,
-    destination: destinationWallet,
+    arcScanUrl: arcScan.tx(txHash),
+    destination: vaultContractAddress,
+  };
+}
+
+/**
+ * Fetches all user savings deposits from RovaSavingsVault smart contract
+ */
+export async function getUserVaultDeposits(userWalletAddress: string) {
+  const { createPublicClient, http, parseAbi } = await import('viem');
+  const { arcTestnet } = await import('./arcChain');
+
+  const vaultContractAddress =
+    process.env.NEXT_PUBLIC_ROVA_SAVINGS_VAULT_ADDRESS ||
+    process.env.ROVA_SAVINGS_VAULT_ADDRESS ||
+    '0x9330DA5152Cc676a029cfaCCcA3948e11EDE9BfB';
+
+  const publicClient = createPublicClient({ chain: arcTestnet, transport: http() });
+  const vaultAbi = parseAbi([
+    'function getUserDepositIds(address) view returns (uint256[])',
+    'function getDeposit(uint256) view returns ((uint256 depositId, address user, address tokenAddress, uint256 amount, uint256 depositedAt, uint256 lockUntil, bool redeemed))',
+  ]);
+
+  const depositIds = (await publicClient.readContract({
+    address: vaultContractAddress as `0x${string}`,
+    abi: vaultAbi,
+    functionName: 'getUserDepositIds',
+    args: [userWalletAddress as `0x${string}`],
+  })) as bigint[];
+
+  if (!depositIds || depositIds.length === 0) {
+    return [];
+  }
+
+  const deposits = await Promise.all(
+    depositIds.map(async (id) => {
+      const dep = await publicClient.readContract({
+        address: vaultContractAddress as `0x${string}`,
+        abi: vaultAbi,
+        functionName: 'getDeposit',
+        args: [id],
+      });
+      const nowSec = Math.floor(Date.now() / 1000);
+      return {
+        depositId: Number(dep.depositId),
+        user: dep.user,
+        tokenAddress: dep.tokenAddress,
+        amountUsdc: Number(dep.amount) / 1e6,
+        depositedAt: Number(dep.depositedAt),
+        lockUntil: Number(dep.lockUntil),
+        redeemed: dep.redeemed,
+        isUnlocked: nowSec >= Number(dep.lockUntil),
+      };
+    })
+  );
+
+  return deposits;
+}
+
+/**
+ * Redeems an unlocked deposit from RovaSavingsVault smart contract
+ */
+export async function redeemSavingsVault(userWalletAddress: string, depositId: number) {
+  const vaultContractAddress =
+    process.env.NEXT_PUBLIC_ROVA_SAVINGS_VAULT_ADDRESS ||
+    process.env.ROVA_SAVINGS_VAULT_ADDRESS ||
+    '0x9330DA5152Cc676a029cfaCCcA3948e11EDE9BfB';
+
+  console.log(`[Savings Vault] Executing redeem for depositId #${depositId} for ${userWalletAddress}`);
+
+  const txHash = await executeAndConfirm({
+    walletAddress: userWalletAddress,
+    contractAddress: vaultContractAddress,
+    abiFunctionSignature: 'redeemSavings(uint256)',
+    abiParameters: [String(depositId)],
+  });
+
+  return {
+    txHash,
+    arcScanUrl: arcScan.tx(txHash),
   };
 }
