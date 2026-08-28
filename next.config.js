@@ -7,14 +7,13 @@ const nextConfig = {
     '@circle-fin/app-kit',
     '@circle-fin/bridge-kit'
   ],
-  serverExternalPackages: [
-    '@anthropic-ai/sdk',
-  ],
   experimental: {
     workerThreads: false,
     cpus: 1,
+    serverComponentsExternalPackages: [
+      '@anthropic-ai/sdk',
+    ],
   },
-  turbopack: {},
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
