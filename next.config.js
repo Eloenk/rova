@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  swcMinify: true,
   transpilePackages: [
     '@circle-fin/developer-controlled-wallets',
     '@circle-fin/adapter-circle-wallets',
@@ -8,16 +7,14 @@ const nextConfig = {
     '@circle-fin/app-kit',
     '@circle-fin/bridge-kit'
   ],
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  serverExternalPackages: [
+    '@anthropic-ai/sdk',
+  ],
   experimental: {
     workerThreads: false,
     cpus: 1,
-    serverComponentsExternalPackages: [
-      '@anthropic-ai/sdk',
-    ],
   },
+  turbopack: {},
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

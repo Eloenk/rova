@@ -32,6 +32,8 @@ export default function Topbar({
   const [showBanner, setShowBanner] = useState(true);
   const [copied, setCopied] = useState(false);
   const [linkToken, setLinkToken] = useState('LINK-8492');
+  const [isWhatsAppLinked, setIsWhatsAppLinked] = useState(false);
+  const [linkedPhone, setLinkedPhone] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
 
   const triggerRefresh = () => {
@@ -45,8 +47,14 @@ export default function Topbar({
       fetch('/api/user/generate-link-token', { method: 'POST' })
         .then((res) => res.json())
         .then((data) => {
-          if (data?.ok && data?.token) {
-            setLinkToken(data.token);
+          if (data?.ok) {
+            if (data.isLinked) {
+              setIsWhatsAppLinked(true);
+              setLinkedPhone(data.whatsappNumber || '');
+            } else if (data.token) {
+              setIsWhatsAppLinked(false);
+              setLinkToken(data.token);
+            }
           }
         })
         .catch((err) => console.error('Failed to generate WhatsApp link token:', err));
@@ -54,11 +62,12 @@ export default function Topbar({
   }, [showWhatsAppModal]);
 
   const rawWaConfig = process.env.NEXT_PUBLIC_WHATSAPP_LINK || 'https://wa.me/+447446132243';
+  const prefilledText = isWhatsAppLinked ? 'status' : linkToken;
   const waDeepLink = rawWaConfig.includes('?')
-    ? `${rawWaConfig}&text=${linkToken}`
+    ? `${rawWaConfig}&text=${prefilledText}`
     : rawWaConfig.startsWith('http')
-      ? `${rawWaConfig}?text=${linkToken}`
-      : `https://wa.me/${rawWaConfig.replace(/[^0-9+]/g, '')}?text=${linkToken}`;
+      ? `${rawWaConfig}?text=${prefilledText}`
+      : `https://wa.me/${rawWaConfig.replace(/[^0-9+]/g, '')}?text=${prefilledText}`;
 
   const drawerRef = useRef<HTMLDivElement>(null);
   const walletBtnRef = useRef<HTMLButtonElement>(null);
@@ -609,28 +618,38 @@ export default function Topbar({
                 <MessageCircle size={22} color="#25D366" />
               </div>
               <div>
-                <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#ffffff', margin: 0 }}>Link WhatsApp AI Agent</h3>
-                <p style={{ fontSize: '12px', color: '#8b9ba8', margin: 0 }}>Deep-link verification (No 6-digit codes)</p>
+                <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#ffffff', margin: 0 }}>
+                  {isWhatsAppLinked ? 'WhatsApp Agent Linked' : 'Link WhatsApp AI Agent'}
+                </h3>
+                <p style={{ fontSize: '12px', color: '#8b9ba8', margin: 0 }}>
+                  {isWhatsAppLinked ? 'Active & verified line' : 'Deep-link verification (No 6-digit codes)'}
+                </p>
               </div>
             </div>
 
             <p style={{ fontSize: '13.5px', color: '#c2d1e0', lineHeight: 1.5, marginBottom: '20px' }}>
-              Click the button below to open WhatsApp with your pre-filled verification token. Sending the message automatically links your phone number to your active Rova wallet.
+              {isWhatsAppLinked
+                ? `Your WhatsApp line ${linkedPhone ? `(${linkedPhone}) ` : ''}is already linked to your active Rova wallet. You can open WhatsApp directly to check balance, send funds, or create automated rules.`
+                : 'Click the button below to open WhatsApp with your pre-filled verification token. Sending the message automatically links your phone number to your active Rova wallet.'}
             </p>
 
             <div style={{
               background: '#070c12',
               padding: '12px 16px',
               borderRadius: '10px',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              border: isWhatsAppLinked ? '1px solid rgba(37, 211, 102, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
               marginBottom: '20px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}>
               <div>
-                <span style={{ fontSize: '11px', color: '#8b9ba8', display: 'block', textAlign: 'center' }}>Verification Token</span>
-                <span style={{ fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', fontWeight: 500 }}>{linkToken}</span>
+                <span style={{ fontSize: '11px', color: '#8b9ba8', display: 'block', textAlign: 'center' }}>
+                  {isWhatsAppLinked ? 'Line Status' : 'Verification Token'}
+                </span>
+                <span style={{ fontFamily: 'monospace', fontSize: '14px', color: isWhatsAppLinked ? '#25D366' : '#ffffff', fontWeight: 600 }}>
+                  {isWhatsAppLinked ? `✅ LINKED ${linkedPhone}` : linkToken}
+                </span>
               </div>
             </div>
 
@@ -655,7 +674,7 @@ export default function Topbar({
                 boxSizing: 'border-box',
               }}
             >
-              <MessageCircle size={18} color="#0d1520" /> Open WhatsApp to Link
+              <MessageCircle size={18} color="#0d1520" /> {isWhatsAppLinked ? 'Open WhatsApp Chat' : 'Open WhatsApp to Link'}
             </a>
           </div>
         </div>
