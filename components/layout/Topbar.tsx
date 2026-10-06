@@ -13,7 +13,7 @@ const META: Record<string, { title: string; sub: string }> = {
   '/dashboard': { title: 'Command Hub',  sub: 'Your stablecoin activity on Arc' },
   '/send':      { title: 'Send & Swap',  sub: 'Transfer, bridge, or swap stablecoins' },
   '/agent':     { title: 'Agent',        sub: 'Autonomous agent triggers and watchers' },
-  '/history':   { title: 'Recent Activity', sub: 'Transaction history with Arc Memos' },
+  '/history':   { title: 'Recent Activity', sub: 'Browser-local activity with ArcScan links' },
 };
 
 export default function Topbar({

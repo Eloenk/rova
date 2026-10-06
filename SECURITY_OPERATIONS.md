@@ -39,3 +39,5 @@ The previously embedded fallback deployment key is considered exposed. Do not us
 ## Hackathon-safe demo
 
 Use a testnet-only environment with `ROVA_EXECUTION_ENABLED=false`. Demonstrate login, policy validation, quote retrieval, WhatsApp linking, rule history, and disabled automation messages. If a testnet transaction is approved for a demo, enable only the minimum required flag for one bounded rehearsal, then disable it again and preserve the receipt.
+
+The existing History page is browser-local convenience state, not a receipt system. Treat ArcScan transaction records and server-side execution records as evidence; do not market local browser history as monitoring or an auditable job receipt.
