@@ -7,6 +7,7 @@ import { getIndicativeRate } from '@/lib/rates';
 import { fireRule } from '@/lib/agentExecutor';
 import { executeFlowPlan } from '@/lib/flowExecutor';
 import type { AgentRule, StandingIntent } from '@/lib/agentStore';
+import { requireServiceToken } from '@/lib/auth';
 
 const RECURRING_MS: Record<string, number> = {
   daily: 24 * 60 * 60 * 1000,
@@ -42,6 +43,8 @@ async function getWalletBalance(walletAddress: string): Promise<number | null> {
 }
 
 export async function POST(req: NextRequest) {
+  const authorizationError = requireServiceToken(req);
+  if (authorizationError) return authorizationError;
   const baseUrl = req.nextUrl.origin;
   const fired: any[] = [];
   const skipped: any[] = [];
@@ -74,6 +77,7 @@ export async function POST(req: NextRequest) {
       const result = await fireRule(rule, baseUrl, memo);
       updateRuleStatus(rule.id, 'fired');
       const exec = recordExecution({
+        ownerEmail: rule.ownerEmail,
         ruleId: rule.id,
         firedAt: new Date().toISOString(),
         rateAtExecution: result.quoteShop.bestRate,
@@ -126,6 +130,7 @@ export async function POST(req: NextRequest) {
         ? `auto-exec: recurring (${intent.trigger.interval}) — "${intent.intentText}"`
         : `auto-exec: incoming payment detected — "${intent.intentText}"`;
       const exec = recordExecution({
+        ownerEmail: intent.ownerEmail,
         standingIntentId: intent.id,
         firedAt: new Date().toISOString(),
         mode: result.mode,
@@ -143,6 +148,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, fired, skipped, readyForApproval });
 }
 
-export async function GET(req: NextRequest) {
-  return POST(req);
+export async function GET() {
+  return NextResponse.json({ ok: false, error: 'Use an authenticated POST scheduler request' }, { status: 405 });
 }

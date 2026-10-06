@@ -1,8 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
-import { Bot, Zap, Clock, TrendingUp, TrendingDown, Trash2, PauseCircle, ExternalLink, Mail, Wallet, ShoppingCart, Bell, CheckCircle2 } from 'lucide-react';
-import { useWallet } from '@/hooks/useWallet';
-import { sendUsdcSelfCustody, resolveRecipientAddress } from '@/lib/selfCustodySend';
+import { Bot, Zap, TrendingUp, TrendingDown, Trash2, PauseCircle, ExternalLink } from 'lucide-react';
 
 type FxPair = 'USDC/EURC' | 'EURC/USDC';
 type TriggerType = 'rate_gte' | 'rate_lte' | 'by_date';
@@ -36,10 +34,7 @@ interface AgentExecution {
   quoteShop?: QuoteShopResult;
 }
 
-const TICK_INTERVAL_MS = 5000;
-
 export default function AgentView() {
-  const { isConnected, address } = useWallet();
   const [rules, setRules] = useState<AgentRule[]>([]);
   const [intents, setIntents] = useState<StandingIntent[]>([]);
   const [executions, setExecutions] = useState<AgentExecution[]>([]);
@@ -47,58 +42,42 @@ export default function AgentView() {
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const [recipientLabel, setRecipientLabel] = useState('');
-  const [recipientMode, setRecipientMode] = useState<RecipientType>('wallet');
   const [recipientIdentifier, setRecipientIdentifier] = useState('');
   const [amount, setAmount] = useState('');
   const [pair, setPair] = useState<FxPair>('USDC/EURC');
   const [triggerType, setTriggerType] = useState<TriggerType>('rate_gte');
   const [triggerValue, setTriggerValue] = useState('');
   const [byDate, setByDate] = useState('');
-  const [useConnectedWallet, setUseConnectedWallet] = useState(false);
 
   const refreshAll = useCallback(async () => {
-    const [rRes, iRes, rateRes] = await Promise.all([
-      fetch('/api/agent/rules'), fetch('/api/agent/intents'), fetch('/api/agent/rate'),
+    const [rRes, iRes, rateRes, executionRes] = await Promise.all([
+      fetch('/api/agent/rules'), fetch('/api/agent/intents'), fetch('/api/agent/rate'), fetch('/api/agent/executions'),
     ]);
-    const [rData, iData, rateData] = await Promise.all([rRes.json(), iRes.json(), rateRes.json()]);
+    const [rData, iData, rateData, executionData] = await Promise.all([rRes.json(), iRes.json(), rateRes.json(), executionRes.json()]);
     if (rData.ok) setRules(rData.rules);
     if (iData.ok) setIntents(iData.intents);
     if (rateData.ok) setRates(rateData.rates);
+    if (executionData.ok) setExecutions(executionData.executions);
   }, []);
-
-  const tick = useCallback(async () => {
-    const res = await fetch('/api/agent/tick', { method: 'POST' });
-    const data = await res.json();
-    if (data.ok && data.fired?.length) setExecutions(prev => [...data.fired, ...prev]);
-    refreshAll();
-  }, [refreshAll]);
 
   useEffect(() => {
     refreshAll();
-    const interval = setInterval(tick, TICK_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [tick, refreshAll]);
+  }, [refreshAll]);
 
   async function handleCreateRule(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
 
     const id = recipientIdentifier.trim();
-    if (recipientMode === 'wallet' && !/^0x[a-fA-F0-9]{40}$/.test(id)) {
-      setFormError('Enter a valid recipient wallet address (0x...)'); return;
-    }
-    if (recipientMode === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(id)) {
-      setFormError('Enter a valid recipient email'); return;
+    if (!/^0x[a-fA-F0-9]{40}$/.test(id) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(id)) {
+      setFormError('Enter a valid recipient wallet address or email'); return;
     }
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) { setFormError('Enter an amount greater than 0'); return; }
     if (triggerType !== 'by_date' && (!triggerValue || parseFloat(triggerValue) <= 0)) { setFormError('Enter a target rate'); return; }
     if (triggerType === 'by_date' && !byDate) { setFormError('Pick a deadline date'); return; }
-    if (useConnectedWallet && !address) { setFormError('Connect your wallet first'); return; }
-
     setSubmitting(true);
     try {
       const res = await fetch('/api/agent/rules', {
@@ -113,8 +92,7 @@ export default function AgentView() {
           triggerValue: triggerValue ? parseFloat(triggerValue) : 0,
           byDate: byDate || undefined,
           toleranceBps: 10,
-          custodyMode: useConnectedWallet ? 'self_custody' : 'managed',
-          sourceWallet: useConnectedWallet ? address : undefined,
+          custodyMode: 'managed',
         }),
       });
       const data = await res.json();
@@ -137,39 +115,7 @@ export default function AgentView() {
     refreshAll();
   }
 
-  async function approveRule(rule: AgentRule) {
-    setApprovingId(rule.id);
-    try {
-      const recipientAddress = await resolveRecipientAddress(rule.recipientIdentifier);
-      const txHash = await sendUsdcSelfCustody(recipientAddress, rule.amount);
-      await fetch(`/api/agent/rules/${rule.id}/confirm`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ txHash }) });
-      refreshAll();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Approval failed');
-    } finally {
-      setApprovingId(null);
-    }
-  }
-
-  async function approveIntent(intent: StandingIntent) {
-    setApprovingId(intent.id);
-    try {
-      const firstSplit = intent.plan.splits[0];
-      if (!firstSplit?.address || !firstSplit.amount) throw new Error('This plan has no sendable split');
-      const txHash = await sendUsdcSelfCustody(firstSplit.address, firstSplit.amount);
-      await fetch(`/api/agent/intents/${intent.id}/confirm`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ txHash }) });
-      refreshAll();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Approval failed');
-    } finally {
-      setApprovingId(null);
-    }
-  }
-
   const activeRules = rules.filter(r => r.status === 'active');
-  const readyRules = rules.filter(r => r.status === 'ready_to_execute');
-  const activeIntents = intents.filter(i => i.status === 'active');
-  const readyIntents = intents.filter(i => i.status === 'ready_to_execute');
 
   return (
     <div className="py-8 px-4 sm:px-8 max-w-[980px] mx-auto animate-fade-up font-sans">
@@ -178,7 +124,7 @@ export default function AgentView() {
           <span className="text-[11px] font-mono font-bold tracking-widest text-accent-mint uppercase block mb-1">Autonomous Agent</span>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text-primary">Agent</h1>
           <p className="text-text-secondary text-sm sm:text-base mt-1">
-            Shops three rate providers before every move, then executes on its own, or waits for your one-tap approval if using your wallet.
+            Schedules managed-wallet actions within configured policy limits. The protected scheduler, not this browser, evaluates and executes active rules.
           </p>
         </div>
         <button
@@ -201,30 +147,6 @@ export default function AgentView() {
           </div>
         ))}
       </div>
-
-      {/* Waiting Approvals */}
-      {(readyRules.length > 0 || readyIntents.length > 0) && (
-        <div className="mb-7">
-          <SectionHeader icon={<Bell size={16} className="text-amber-400" />} title="Waiting for your approval" count={readyRules.length + readyIntents.length} />
-          <div className="flex flex-col gap-2.5">
-            {readyRules.map(r => (
-              <div key={r.id} className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4 text-xs">
-                <div>
-                  <p className="font-bold text-text-primary">{r.amount} USDC → {r.recipientLabel}</p>
-                  <p className="text-text-tertiary">Trigger condition met: your wallet needs to sign this one.</p>
-                </div>
-                <button
-                  onClick={() => approveRule(r)}
-                  disabled={approvingId === r.id}
-                  className="px-4 py-2 rounded-lg bg-amber-400 text-black font-semibold text-xs cursor-pointer hover:bg-amber-300 border-0 shrink-0"
-                >
-                  {approvingId === r.id ? 'Confirming...' : 'Approve & Send'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* New Rule Form */}
       {showForm && (

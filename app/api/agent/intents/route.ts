@@ -3,26 +3,30 @@ import { createStandingIntent, listStandingIntents } from '@/lib/agentStore';
 import { isAddress } from '@/lib/emailWallets';
 import type { StandingTrigger, CustodyMode } from '@/lib/agentStore';
 import type { FlowPlan } from '@/lib/types';
+import { requireMutationSession, requireSession } from '@/lib/auth';
+import { assertPermittedPlan } from '@/lib/policy';
 
-export async function GET() {
-  return NextResponse.json({ ok: true, intents: listStandingIntents() });
+export async function GET(req: NextRequest) {
+  const guard = requireSession(req);
+  if ('response' in guard) return guard.response;
+  return NextResponse.json({ ok: true, intents: listStandingIntents(guard.session.email) });
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const guard = requireMutationSession(req);
+    if ('response' in guard) return guard.response;
     const body = await req.json();
     const {
       intentText,
       plan,
       trigger,
       custodyMode,
-      sourceWallet,
     }: {
       intentText: string;
       plan: FlowPlan;
       trigger: StandingTrigger;
       custodyMode: CustodyMode;
-      sourceWallet: string;
     } = body;
 
     if (!intentText || !plan || !Array.isArray(plan.splits) || plan.splits.length === 0) {
@@ -37,12 +41,13 @@ export async function POST(req: NextRequest) {
     if (trigger.type === 'on_receive' && (!trigger.minAmountUsdc || trigger.minAmountUsdc <= 0)) {
       return NextResponse.json({ ok: false, error: 'minAmountUsdc must be greater than 0' }, { status: 400 });
     }
-    if (!['managed', 'self_custody'].includes(custodyMode)) {
-      return NextResponse.json({ ok: false, error: 'Invalid custody mode' }, { status: 400 });
+    assertPermittedPlan(plan, 'autonomous');
+    if (custodyMode !== 'managed') {
+      return NextResponse.json({ ok: false, error: 'Self-custody automation is unavailable until wallet-signature linking is enabled' }, { status: 400 });
     }
-    const activeWallet = sourceWallet || req.cookies.get('rova_user_wallet')?.value;
+    const activeWallet = guard.session.walletAddress;
     if (!activeWallet || !isAddress(activeWallet)) {
-      return NextResponse.json({ ok: false, error: 'A valid wallet address is required to automate intents' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'A managed wallet is required to automate intents' }, { status: 400 });
     }
 
     const intent = createStandingIntent({
@@ -51,6 +56,7 @@ export async function POST(req: NextRequest) {
       trigger,
       custodyMode,
       sourceWallet: activeWallet,
+      ownerEmail: guard.session.email,
     });
 
     return NextResponse.json({ ok: true, intent });

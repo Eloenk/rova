@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { requireAdminToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,12 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const authorizationError = requireAdminToken(req);
+    if (authorizationError) return authorizationError;
     const { active } = await req.json();
+    if (typeof active !== 'boolean') {
+      return NextResponse.json({ error: 'active must be a boolean' }, { status: 400 });
+    }
     
     if (active) {
       fs.writeFileSync(STATUS_FILE, 'ON');

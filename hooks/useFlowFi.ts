@@ -34,10 +34,6 @@ const INIT: State = {
   isValidated: true
 };
 
-function repScore(plan: FlowPlan) {
-  return Math.max(1, Math.min(100, plan.confidence + (plan.risk === 'low' ? 0 : plan.risk === 'medium' ? -5 : -15)));
-}
-
 export function useRova() {
   const [state, setState] = useState<State>(INIT);
   const ref = useRef<State>(INIT);
@@ -84,23 +80,18 @@ export function useRova() {
     }
   }, [addEntry]);
 
-  const executePlan = useCallback(async (walletAddress?: string) => {
+  const executePlan = useCallback(async () => {
     const { plan, intentHash } = ref.current;
     if (!plan || !intentHash) return;
     patch({ status:'executing', error:null });
     try {
-      const res = await fetch('/api/execute', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan, intentHash, walletAddress: walletAddress ?? null }) });
+      const res = await fetch('/api/execute', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan, intentHash }) });
       const data = await res.json();
       if (!data.ok) { updateEntry(intentHash, { status:'failed' }); patch({ status:'error', error: data.error?.message ?? 'Execution failed' }); return; }
       const exec: ExecutionResult = data.result;
       updateEntry(intentHash, { status:'executed', executionResult:exec, executedAt:new Date().toISOString() });
       patch({ status:'recording', executionResult:exec });
-      try {
-        const rr = await fetch('/api/agent/reputation', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ score:repScore(plan), tag:'successful_flow_execution', intentHash, totalAmount:plan.totalAmount }) });
-        const rd = await rr.json();
-        if (rd.ok) { updateEntry(intentHash, { reputation:{ score:repScore(plan), txHash:rd.txHash, arcScanUrl:rd.arcScanUrl } }); patch({ status:'confirmed', reputationTx:rd.txHash }); }
-        else patch({ status:'confirmed' });
-      } catch { patch({ status:'confirmed' }); }
+      patch({ status:'confirmed' });
     } catch (err) { patch({ status:'error', error: err instanceof Error ? err.message : 'Network error' }); }
   }, [updateEntry]);
 
@@ -124,10 +115,10 @@ export function useRova() {
 
   // Convenience wrapper for callers (e.g. SendView) that just want "plan it,
   // then execute it" as a single call, rather than orchestrating both steps.
-  const executeFlow = useCallback(async (intentInput: any, walletAddress?: string) => {
+  const executeFlow = useCallback(async (intentInput: any) => {
     const plan = await planIntent(intentInput);
     if (!plan) throw new Error(ref.current.error || 'Failed to plan intent');
-    await executePlan(walletAddress);
+    await executePlan();
     if (ref.current.status === 'error') throw new Error(ref.current.error || 'Execution failed');
   }, [planIntent, executePlan]);
 

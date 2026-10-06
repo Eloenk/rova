@@ -1,11 +1,21 @@
+import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { getMemoryOtp, deleteMemoryOtp } from '@/lib/otpStore';
+import { hasSessionSecret, setSessionCookie } from '@/lib/auth';
+import { getClientIp, checkRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    if (!hasSessionSecret()) {
+      return NextResponse.json({ ok: false, error: 'Authentication is not configured' }, { status: 503 });
+    }
+    const ipLimit = checkRateLimit(`otp-verify:${getClientIp(req)}`, 10, 15 * 60 * 1000);
+    if (!ipLimit.allowed) {
+      return NextResponse.json({ ok: false, error: 'Too many verification attempts. Try again later.' }, { status: 429 });
+    }
     const { email, code } = await req.json();
 
     if (!email || !code) {
@@ -14,6 +24,10 @@ export async function POST(req: NextRequest) {
 
     const cleanEmail = email.toLowerCase().trim();
     const cleanCode = code.toString().trim();
+    if (!/^\d{6}$/.test(cleanCode)) {
+      return NextResponse.json({ ok: false, error: 'Invalid or expired verification code' }, { status: 400 });
+    }
+    const codeHash = createHash('sha256').update(`${cleanEmail}:${cleanCode}`).digest('hex');
     const nowIso = new Date().toISOString();
     let isValid = false;
 
@@ -24,7 +38,7 @@ export async function POST(req: NextRequest) {
         .from('otp_codes')
         .select('*')
         .eq('email', cleanEmail)
-        .eq('code', cleanCode)
+        .eq('code_hash', codeHash)
         .gte('expires_at', nowIso)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -35,7 +49,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (!isValid) {
+    if (!isValid && process.env.NODE_ENV !== 'production' && process.env.ROVA_ALLOW_MEMORY_OTP === 'true') {
       const memOtp = getMemoryOtp(cleanEmail);
       if (memOtp && memOtp.code === cleanCode && memOtp.expiresAt > Date.now()) {
         isValid = true;
@@ -126,23 +140,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    response.cookies.set('rova_user_email', cleanEmail, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 30 * 24 * 60 * 60,
+    setSessionCookie(response, {
+      email: cleanEmail,
+      walletAddress: circleWalletAddress || undefined,
     });
-
-    if (circleWalletAddress) {
-      response.cookies.set('rova_user_wallet', circleWalletAddress, {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 30 * 24 * 60 * 60,
-      });
-    }
 
     return response;
   } catch (err: any) {

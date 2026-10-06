@@ -5,6 +5,7 @@ import { sha256 } from '@/lib/crypto';
 import type { ApiResponse } from '@/lib/types';
 import { callAI, AIProvider } from '@/lib/ai-provider';
 import { getFailsafePlan } from '@/lib/failsafe';
+import { requireMutationSession } from '@/lib/auth';
 
 function err(status: number, code: string, message: string, detail?: string): NextResponse<ApiResponse> {
   return NextResponse.json({ ok: false, error: { code, message, ...(detail ? { detail } : {}) } }, { status });
@@ -13,6 +14,8 @@ function err(status: number, code: string, message: string, detail?: string): Ne
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse>> {
+  const guard = requireMutationSession(req);
+  if ('response' in guard) return guard.response as NextResponse<ApiResponse>;
   const start = Date.now();
   const { allowed } = checkRateLimit(getClientIp(req));
   if (!allowed) return err(429, 'RATE_LIMITED', 'Too many requests. Wait a moment.');

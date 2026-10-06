@@ -1,6 +1,18 @@
 'use client';
 import { createWalletClient, custom, parseUnits } from 'viem';
 import { arcTestnet } from './arcChain';
+import { TOKENS } from './config';
+
+const ERC20_TRANSFER_ABI = [{
+  type: 'function',
+  name: 'transfer',
+  stateMutability: 'nonpayable',
+  inputs: [
+    { name: 'recipient', type: 'address' },
+    { name: 'amount', type: 'uint256' },
+  ],
+  outputs: [{ name: '', type: 'bool' }],
+}] as const;
 
 export async function sendUsdcSelfCustody(toAddress: string, amountUsdc: number): Promise<string> {
   if (typeof window === 'undefined' || !(window as any).ethereum) {
@@ -13,10 +25,12 @@ export async function sendUsdcSelfCustody(toAddress: string, amountUsdc: number)
   const [account] = await client.getAddresses();
   if (!account) throw new Error('Wallet not connected');
 
-  const hash = await client.sendTransaction({
+  const hash = await client.writeContract({
     account,
-    to: toAddress as `0x${string}`,
-    value: parseUnits(String(amountUsdc), 6),
+    address: TOKENS.USDC.address as `0x${string}`,
+    abi: ERC20_TRANSFER_ABI,
+    functionName: 'transfer',
+    args: [toAddress as `0x${string}`, parseUnits(String(amountUsdc), 6)],
   });
   return hash;
 }

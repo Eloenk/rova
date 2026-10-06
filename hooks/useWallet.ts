@@ -1,71 +1,63 @@
 'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import { ARC_TESTNET } from '@/lib/config';
 
+interface SessionUser {
+  email: string;
+  walletAddress?: string;
+}
+
 export function useWallet() {
-  const [apiUsdc, setApiUsdc] = useState<string | null>(null);
-  const [apiEurc, setApiEurc] = useState<string | null>(null);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const [apiUsdc, setApiUsdc] = useState('0.00');
+  const [apiEurc, setApiEurc] = useState('0.00');
   const [apiAddress, setApiAddress] = useState<string | null>(null);
 
-  const storedWallet = typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null;
-  const storedEmail = typeof window !== 'undefined'
-    ? localStorage.getItem('rova_user_email')
-    : null;
-
-  const isEmailSession = typeof window !== 'undefined' && Boolean(
-    storedEmail || (typeof document !== 'undefined' && document.cookie.includes('rova_user_email='))
-  );
-
-  const fetchServerBalance = useCallback(async () => {
+  const fetchServerState = useCallback(async () => {
     try {
-      const storedAddr = typeof window !== 'undefined' ? localStorage.getItem('rova_user_wallet') : null;
-      const url = storedAddr ? `/api/user/balance?address=${storedAddr}` : '/api/user/balance';
-
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.ok) {
-        setApiUsdc(data.usdcBalance);
-        setApiEurc(data.eurcBalance);
-        if (data.address) {
-          setApiAddress(data.address);
-          if (typeof window !== 'undefined' && data.address !== storedAddr) {
-            localStorage.setItem('rova_user_wallet', data.address);
-          }
-        }
+      const sessionResponse = await fetch('/api/auth/session', { cache: 'no-store' });
+      const sessionData = await sessionResponse.json();
+      if (!sessionResponse.ok || !sessionData.ok) {
+        setSessionUser(null);
+        setApiAddress(null);
+        setApiUsdc('0.00');
+        setApiEurc('0.00');
+        return;
       }
-    } catch (e) {
-      console.warn('[useWallet] Server balance fetch error:', e);
+
+      setSessionUser(sessionData.user);
+      const balanceResponse = await fetch('/api/user/balance', { cache: 'no-store' });
+      const balanceData = await balanceResponse.json();
+      if (balanceResponse.ok && balanceData.ok) {
+        setApiUsdc(balanceData.usdcBalance);
+        setApiEurc(balanceData.eurcBalance);
+        setApiAddress(balanceData.address || sessionData.user.walletAddress || null);
+      }
+    } catch {
+      setSessionUser(null);
     }
   }, []);
 
   useEffect(() => {
-    fetchServerBalance();
-    // Poll balance every 3 minutes (180,000 ms)
-    const interval = setInterval(() => {
-      fetchServerBalance();
-    }, 3 * 60 * 1000);
+    fetchServerState();
+    const interval = setInterval(fetchServerState, 3 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [fetchServerBalance]);
+  }, [fetchServerState]);
 
-  const isConnected = isEmailSession && Boolean(storedWallet || apiAddress);
-  const address = isConnected ? (storedWallet || apiAddress || null) : null;
-
-  const refetchBalance = () => {
-    fetchServerBalance();
-  };
-
-  const logout = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.clear();
-      sessionStorage.clear();
-      document.cookie = 'rova_user_email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'rova_user_wallet=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      setSessionUser(null);
+      setApiUsdc('0.00');
+      setApiEurc('0.00');
+      setApiAddress(null);
     }
-
-    setApiUsdc(null);
-    setApiEurc(null);
-    setApiAddress(null);
   }, []);
+
+  const isConnected = Boolean(sessionUser);
+  const address = apiAddress || sessionUser?.walletAddress || null;
 
   return {
     address,
@@ -74,15 +66,15 @@ export function useWallet() {
     isConnecting: false,
     isOnArc: true,
     wrongChain: false,
-    usdcBalance: isConnected ? (apiUsdc ?? '0.00') : '0.00',
-    eurcBalance: isConnected ? (apiEurc ?? '0.00') : '0.00',
+    usdcBalance: isConnected ? apiUsdc : '0.00',
+    eurcBalance: isConnected ? apiEurc : '0.00',
     connectInjected: () => {},
     connectWalletConnect: () => {},
     openConnectModal: () => {},
     disconnect: logout,
     logout,
     switchToArc: () => {},
-    refetchBalance,
+    refetchBalance: fetchServerState,
     arcChainId: ARC_TESTNET.chainId,
   };
 }

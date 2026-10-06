@@ -34,6 +34,7 @@ export interface AgentRule {
   id: string;
   createdAt: string;
   status: RuleStatus;
+  ownerEmail: string;
 
   recipientLabel: string;
   recipientIdentifier: string;   // raw input — email or 0x address
@@ -54,6 +55,7 @@ export interface AgentRule {
 
 export interface AgentExecution {
   id: string;
+  ownerEmail: string;
   ruleId?: string;
   standingIntentId?: string;
   firedAt: string;
@@ -88,6 +90,7 @@ export interface StandingIntent {
   id: string;
   createdAt: string;
   status: 'active' | 'ready_to_execute' | 'cancelled';
+  ownerEmail: string;
   intentText: string;
   plan: FlowPlan;
   trigger: StandingTrigger;
@@ -131,14 +134,17 @@ export function addRule(rule: AgentRule): AgentRule {
   return rule;
 }
 
-export function listRules(): AgentRule[] {
-  return Array.from(rules.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export function listRules(ownerEmail?: string): AgentRule[] {
+  return Array.from(rules.values())
+    .filter(rule => !ownerEmail || rule.ownerEmail === ownerEmail)
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 }
 
 export const getRules = listRules;
 
-export function getRule(id: string): AgentRule | undefined {
-  return rules.get(id);
+export function getRule(id: string, ownerEmail?: string): AgentRule | undefined {
+  const rule = rules.get(id);
+  return rule && (!ownerEmail || rule.ownerEmail === ownerEmail) ? rule : undefined;
 }
 
 export function updateRuleStatus(id: string, status: RuleStatus): AgentRule | undefined {
@@ -202,14 +208,17 @@ export function addStandingIntent(intent: StandingIntent): StandingIntent {
   return intent;
 }
 
-export function listStandingIntents(): StandingIntent[] {
-  return Array.from(standingIntents.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export function listStandingIntents(ownerEmail?: string): StandingIntent[] {
+  return Array.from(standingIntents.values())
+    .filter(intent => !ownerEmail || intent.ownerEmail === ownerEmail)
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 }
 
 export const getStandingIntents = listStandingIntents;
 
-export function getStandingIntent(id: string): StandingIntent | undefined {
-  return standingIntents.get(id);
+export function getStandingIntent(id: string, ownerEmail?: string): StandingIntent | undefined {
+  const intent = standingIntents.get(id);
+  return intent && (!ownerEmail || intent.ownerEmail === ownerEmail) ? intent : undefined;
 }
 
 export function updateStandingIntent(id: string, patch: Partial<StandingIntent>): StandingIntent | undefined {
@@ -262,6 +271,6 @@ export function recordExecution(exec: Omit<AgentExecution, 'id'>): AgentExecutio
   return full;
 }
 
-export function listExecutions(): AgentExecution[] {
-  return executions;
+export function listExecutions(ownerEmail?: string): AgentExecution[] {
+  return executions.filter(execution => !ownerEmail || execution.ownerEmail === ownerEmail);
 }

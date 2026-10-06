@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     whatsapp_number TEXT UNIQUE,
-    email TEXT,
+    email TEXT UNIQUE,
     circle_wallet_address TEXT,
     savings_wallet_address TEXT,
     custodian_wallet_address TEXT,
@@ -73,6 +73,16 @@ CREATE TABLE IF NOT EXISTS otp_codes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT NOT NULL,
     code TEXT NOT NULL,
+    code_hash TEXT,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE otp_codes ADD COLUMN IF NOT EXISTS code_hash TEXT;
+
+CREATE TABLE IF NOT EXISTS whatsapp_link_tokens (
+    email TEXT PRIMARY KEY,
+    token_hash TEXT NOT NULL UNIQUE,
     expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -82,4 +92,6 @@ CREATE INDEX IF NOT EXISTS idx_standing_intents_status ON standing_intents(statu
 CREATE INDEX IF NOT EXISTS idx_agent_executions_fired_at ON agent_executions(fired_at DESC);
 CREATE INDEX IF NOT EXISTS idx_users_whatsapp ON users(whatsapp_number);
 CREATE INDEX IF NOT EXISTS idx_otp_codes_email ON otp_codes(email);
+CREATE INDEX IF NOT EXISTS idx_otp_codes_email_hash ON otp_codes(email, code_hash);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_link_tokens_expires_at ON whatsapp_link_tokens(expires_at);
 

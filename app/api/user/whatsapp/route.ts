@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import { requireMutationSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const { whatsappNumber, email } = await req.json();
+    const guard = requireMutationSession(req);
+    if ('response' in guard) return guard.response;
+    const { whatsappNumber } = await req.json();
 
     if (!whatsappNumber) {
       return NextResponse.json({ ok: false, error: 'WhatsApp phone number is required' }, { status: 400 });
     }
 
     const cleanPhone = whatsappNumber.trim();
-    const cookieEmail = req.cookies.get('rova_user_email')?.value;
-    const cleanEmail = (email || cookieEmail || '').toLowerCase().trim();
-
-    if (!cleanEmail) {
-      return NextResponse.json({ ok: false, error: 'User email session not found' }, { status: 401 });
-    }
+    const cleanEmail = guard.session.email;
 
     const supabase = getSupabaseClient();
     if (supabase) {

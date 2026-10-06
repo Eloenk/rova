@@ -30,10 +30,10 @@ export default function LandingPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'fx' | 'agent'>('all');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const email = localStorage.getItem('rova_user_email') || document.cookie.includes('rova_user_email=');
-      setHasSession(!!email);
-    }
+    fetch('/api/auth/session', { cache: 'no-store' })
+      .then(response => response.json())
+      .then(data => setHasSession(Boolean(data?.ok)))
+      .catch(() => setHasSession(false));
   }, []);
 
   // Keyboard & auto scroll jump between sections

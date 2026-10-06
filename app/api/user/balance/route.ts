@@ -5,6 +5,7 @@ import { TOKENS, ARC_TESTNET } from '@/lib/config';
 import fs from 'fs';
 import path from 'path';
 import * as yaml from 'js-yaml';
+import { requireSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -39,31 +40,20 @@ function getConfigValues(): { rpcUrl: string; usdcAddress: `0x${string}`; eurcAd
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    let targetAddress: string | null = null;
+    const guard = requireSession(req);
+    if ('response' in guard) return guard.response;
 
-    const cookieWallet = req.cookies.get('rova_user_wallet')?.value;
-    const cookieEmail = req.cookies.get('rova_user_email')?.value;
-
-    if (cookieWallet) {
-      targetAddress = cookieWallet;
-    } else if (cookieEmail) {
+    let targetAddress = guard.session.walletAddress || null;
+    if (!targetAddress) {
       const supabase = getSupabaseClient();
       if (supabase) {
         const { data: user } = await supabase
           .from('users')
           .select('circle_wallet_address')
-          .eq('email', cookieEmail.toLowerCase().trim())
+          .eq('email', guard.session.email)
           .single();
-
-        if (user?.circle_wallet_address) {
-          targetAddress = user.circle_wallet_address;
-        }
+        targetAddress = user?.circle_wallet_address || null;
       }
-    }
-
-    if (!targetAddress) {
-      targetAddress = searchParams.get('address');
     }
 
     const { rpcUrl, usdcAddress, eurcAddress } = getConfigValues();

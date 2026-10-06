@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserVaultDeposits } from '@/lib/vault';
+import { requireSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const walletAddress = searchParams.get('walletAddress');
+    const guard = requireSession(req);
+    if ('response' in guard) return guard.response;
+    const walletAddress = guard.session.walletAddress;
 
     if (!walletAddress) {
-      return NextResponse.json({ ok: false, error: 'walletAddress query parameter is required' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'A managed wallet is required' }, { status: 400 });
     }
 
     const deposits = await getUserVaultDeposits(walletAddress);

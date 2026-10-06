@@ -17,13 +17,10 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   React.useEffect(() => {
-    const hasEmailSession = typeof window !== 'undefined' && (
-      localStorage.getItem('rova_user_email') || document.cookie.includes('rova_user_email=')
-    );
-    if (hasEmailSession) {
+    if (isConnected) {
       router.replace('/dashboard');
     }
-  }, [router]);
+  }, [isConnected, router]);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,12 +56,6 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Verification failed');
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('rova_user_email', email.toLowerCase().trim());
-        if (data.user?.circleWalletAddress) {
-          localStorage.setItem('rova_user_wallet', data.user.circleWalletAddress);
-        }
-      }
       router.replace('/dashboard');
     } catch (err: any) {
       setErrorMsg(err.message || 'Invalid verification code');

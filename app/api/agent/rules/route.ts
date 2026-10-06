@@ -3,13 +3,19 @@ import { createRule, listRules } from '@/lib/agentStore';
 import { isEmail, isAddress } from '@/lib/emailWallets';
 import type { FxPair } from '@/lib/rates';
 import type { TriggerType, CustodyMode, RecipientType } from '@/lib/agentStore';
+import { requireMutationSession, requireSession } from '@/lib/auth';
+import { assertPermittedAmount } from '@/lib/policy';
 
-export async function GET() {
-  return NextResponse.json({ ok: true, rules: listRules() });
+export async function GET(req: NextRequest) {
+  const guard = requireSession(req);
+  if ('response' in guard) return guard.response;
+  return NextResponse.json({ ok: true, rules: listRules(guard.session.email) });
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const guard = requireMutationSession(req);
+    if ('response' in guard) return guard.response;
     const body = await req.json();
     const {
       recipientLabel,
@@ -21,7 +27,6 @@ export async function POST(req: NextRequest) {
       byDate,
       toleranceBps,
       custodyMode,
-      sourceWallet,
     }: {
       recipientLabel: string;
       recipientIdentifier: string;
@@ -32,7 +37,6 @@ export async function POST(req: NextRequest) {
       byDate?: string;
       toleranceBps?: number;
       custodyMode: CustodyMode;
-      sourceWallet: string;
     } = body;
 
     const id = (recipientIdentifier || '').trim();
@@ -41,9 +45,7 @@ export async function POST(req: NextRequest) {
     else if (isEmail(id)) recipientType = 'email';
     else return NextResponse.json({ ok: false, error: 'Recipient must be a valid wallet address (0x...) or email' }, { status: 400 });
 
-    if (!amount || amount <= 0) {
-      return NextResponse.json({ ok: false, error: 'Amount must be greater than 0' }, { status: 400 });
-    }
+    assertPermittedAmount(Number(amount), 'autonomous');
     if (!['USDC/EURC', 'EURC/USDC'].includes(pair)) {
       return NextResponse.json({ ok: false, error: 'Invalid pair' }, { status: 400 });
     }
@@ -56,12 +58,12 @@ export async function POST(req: NextRequest) {
     if (triggerType === 'by_date' && !byDate) {
       return NextResponse.json({ ok: false, error: 'A date is required for by-date triggers' }, { status: 400 });
     }
-    if (!['managed', 'self_custody'].includes(custodyMode)) {
-      return NextResponse.json({ ok: false, error: 'Invalid custody mode' }, { status: 400 });
+    if (custodyMode !== 'managed') {
+      return NextResponse.json({ ok: false, error: 'Self-custody automation is unavailable until wallet-signature linking is enabled' }, { status: 400 });
     }
-    const activeWallet = sourceWallet || req.cookies.get('rova_user_wallet')?.value;
+    const activeWallet = guard.session.walletAddress;
     if (!activeWallet || !isAddress(activeWallet)) {
-      return NextResponse.json({ ok: false, error: 'A valid wallet address is required to create an automation rule' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'A managed wallet is required to create an automation rule' }, { status: 400 });
     }
 
     const rule = createRule({
@@ -76,6 +78,7 @@ export async function POST(req: NextRequest) {
       toleranceBps: toleranceBps ?? 10,
       custodyMode,
       sourceWallet: activeWallet,
+      ownerEmail: guard.session.email,
     });
 
     return NextResponse.json({ ok: true, rule });
