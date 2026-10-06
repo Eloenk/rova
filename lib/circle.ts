@@ -10,6 +10,8 @@
 //
 // Docs: https://developers.circle.com/wallets/dev-controlled.md
 
+import 'server-only';
+
 import { initiateDeveloperControlledWalletsClient } from '@circle-fin/developer-controlled-wallets';
 import { ARC_TESTNET, TOKENS, ERC8004, ERC8183, ROVA_EXECUTION_LOG, GAS, arcScan } from './config';
 
@@ -127,6 +129,9 @@ export async function executeAndConfirm(opts: {
   abiFunctionSignature: string;
   abiParameters:        any[];
 }): Promise<string> {
+	if (process.env.ROVA_EXECUTION_ENABLED?.toLowerCase() !== 'true') {
+		throw new Error('Custodial execution is disabled. Set ROVA_EXECUTION_ENABLED=true only after operational approval.');
+	}
   const client = getCircleClient();
 
   const txResp = await client.createContractExecutionTransaction({

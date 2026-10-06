@@ -8,5 +8,9 @@ export async function GET(request: NextRequest) {
   const guard = requireSession(request);
   if ('response' in guard) return guard.response;
 
-  return NextResponse.json({ ok: true, executions: listExecutions(guard.session.email) });
+  try {
+    return NextResponse.json({ ok: true, executions: await listExecutions(guard.session.email) });
+  } catch (error) {
+    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : 'Unable to load execution history' }, { status: 503 });
+  }
 }

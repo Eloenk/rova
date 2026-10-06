@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS agent_rules (
     id TEXT PRIMARY KEY,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     status TEXT NOT NULL CHECK (status IN ('active', 'ready_to_execute', 'fired', 'cancelled', 'expired')),
+    owner_email TEXT NOT NULL,
     recipient_label TEXT NOT NULL,
     recipient_identifier TEXT NOT NULL,
     recipient_type TEXT NOT NULL CHECK (recipient_type IN ('email', 'wallet')),
@@ -21,6 +22,7 @@ CREATE TABLE IF NOT EXISTS standing_intents (
     id TEXT PRIMARY KEY,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     status TEXT NOT NULL CHECK (status IN ('active', 'ready_to_execute', 'cancelled')),
+    owner_email TEXT NOT NULL,
     intent_text TEXT NOT NULL,
     plan JSONB NOT NULL,
     trigger JSONB NOT NULL,
@@ -35,6 +37,7 @@ CREATE TABLE IF NOT EXISTS standing_intents (
 
 CREATE TABLE IF NOT EXISTS agent_executions (
     id TEXT PRIMARY KEY,
+    owner_email TEXT NOT NULL,
     rule_id TEXT REFERENCES agent_rules(id) ON DELETE SET NULL,
     standing_intent_id TEXT REFERENCES standing_intents(id) ON DELETE SET NULL,
     fired_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -79,6 +82,17 @@ CREATE TABLE IF NOT EXISTS otp_codes (
 );
 
 ALTER TABLE otp_codes ADD COLUMN IF NOT EXISTS code_hash TEXT;
+ALTER TABLE agent_rules ADD COLUMN IF NOT EXISTS owner_email TEXT;
+ALTER TABLE standing_intents ADD COLUMN IF NOT EXISTS owner_email TEXT;
+ALTER TABLE agent_executions ADD COLUMN IF NOT EXISTS owner_email TEXT;
+
+UPDATE agent_rules SET owner_email = 'legacy-disabled@invalid', status = 'cancelled' WHERE owner_email IS NULL;
+UPDATE standing_intents SET owner_email = 'legacy-disabled@invalid', status = 'cancelled' WHERE owner_email IS NULL;
+UPDATE agent_executions SET owner_email = 'legacy-disabled@invalid' WHERE owner_email IS NULL;
+
+ALTER TABLE agent_rules ALTER COLUMN owner_email SET NOT NULL;
+ALTER TABLE standing_intents ALTER COLUMN owner_email SET NOT NULL;
+ALTER TABLE agent_executions ALTER COLUMN owner_email SET NOT NULL;
 
 CREATE TABLE IF NOT EXISTS whatsapp_link_tokens (
     email TEXT PRIMARY KEY,
@@ -88,10 +102,21 @@ CREATE TABLE IF NOT EXISTS whatsapp_link_tokens (
 );
 
 CREATE INDEX IF NOT EXISTS idx_agent_rules_status ON agent_rules(status);
+CREATE INDEX IF NOT EXISTS idx_agent_rules_owner_created ON agent_rules(owner_email, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_standing_intents_status ON standing_intents(status);
+CREATE INDEX IF NOT EXISTS idx_standing_intents_owner_created ON standing_intents(owner_email, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_agent_executions_fired_at ON agent_executions(fired_at DESC);
+CREATE INDEX IF NOT EXISTS idx_agent_executions_owner_fired ON agent_executions(owner_email, fired_at DESC);
 CREATE INDEX IF NOT EXISTS idx_users_whatsapp ON users(whatsapp_number);
 CREATE INDEX IF NOT EXISTS idx_otp_codes_email ON otp_codes(email);
 CREATE INDEX IF NOT EXISTS idx_otp_codes_email_hash ON otp_codes(email, code_hash);
 CREATE INDEX IF NOT EXISTS idx_whatsapp_link_tokens_expires_at ON whatsapp_link_tokens(expires_at);
+
+ALTER TABLE agent_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE standing_intents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE agent_executions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rova_intents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE otp_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE whatsapp_link_tokens ENABLE ROW LEVEL SECURITY;
 

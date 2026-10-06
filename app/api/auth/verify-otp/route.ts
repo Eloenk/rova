@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { getMemoryOtp, deleteMemoryOtp } from '@/lib/otpStore';
-import { hasSessionSecret, setSessionCookie } from '@/lib/auth';
+import { hasSessionSecret, hasTrustedOrigin, setSessionCookie } from '@/lib/auth';
 import { getClientIp, checkRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -11,6 +11,9 @@ export async function POST(req: NextRequest) {
   try {
     if (!hasSessionSecret()) {
       return NextResponse.json({ ok: false, error: 'Authentication is not configured' }, { status: 503 });
+    }
+    if (!hasTrustedOrigin(req)) {
+      return NextResponse.json({ ok: false, error: 'Invalid request origin' }, { status: 403 });
     }
     const ipLimit = checkRateLimit(`otp-verify:${getClientIp(req)}`, 10, 15 * 60 * 1000);
     if (!ipLimit.allowed) {
@@ -32,6 +35,10 @@ export async function POST(req: NextRequest) {
     let isValid = false;
 
     const supabase = getSupabaseClient();
+    const allowMemoryOtp = process.env.NODE_ENV !== 'production' && process.env.ROVA_ALLOW_MEMORY_OTP === 'true';
+    if (!supabase && !allowMemoryOtp) {
+      return NextResponse.json({ ok: false, error: 'Authentication storage is not configured' }, { status: 503 });
+    }
 
     if (supabase) {
       const { data, error } = await supabase
@@ -49,7 +56,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (!isValid && process.env.NODE_ENV !== 'production' && process.env.ROVA_ALLOW_MEMORY_OTP === 'true') {
+    if (!isValid && allowMemoryOtp) {
       const memOtp = getMemoryOtp(cleanEmail);
       if (memOtp && memOtp.code === cleanCode && memOtp.expiresAt > Date.now()) {
         isValid = true;

@@ -1,26 +1,6 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Rova — Agent Store
-//
-// Two kinds of automation live here:
-//   AgentRule       — a single-transfer rule with a rate or date trigger
-//                      (the original "Agent" tab feature)
-//   StandingIntent  — an arbitrary Command Hub plan ("send 100 split between
-//                      supplier and savings") saved to re-run on a recurring
-//                      schedule or whenever an incoming payment is detected
-//
-// Both share the same watcher tick and the same custody model:
-//   managed      — recipient/source is a Circle-managed wallet (email
-//                   onboarding). The Agent can sign and fire fully
-//                   autonomously, no human present.
-//   self_custody — source is the user's own connected wallet (MetaMask via
-//                   wagmi). Circle never holds that key, so the Agent can't
-//                   sign unattended — it detects the trigger, marks the rule
-//                   "ready_to_execute", and waits for the user to approve
-//                   with one tap in the UI. This is a real custody boundary,
-//                   not a simplification — the point is the rule engine
-//                   still does 100% of the watching either way.
-// ─────────────────────────────────────────────────────────────────────────────
+import 'server-only';
 
+import { randomUUID } from 'crypto';
 import type { FxPair } from './rates';
 import type { FlowPlan } from './types';
 import { getSupabaseClient } from './supabase';
@@ -35,22 +15,27 @@ export interface AgentRule {
   createdAt: string;
   status: RuleStatus;
   ownerEmail: string;
-
   recipientLabel: string;
-  recipientIdentifier: string;   // raw input — email or 0x address
+  recipientIdentifier: string;
   recipientType: RecipientType;
   amount: number;
   pair: FxPair;
-
   triggerType: TriggerType;
   triggerValue: number;
   byDate?: string;
   toleranceBps: number;
-
   custodyMode: CustodyMode;
-  sourceWallet: string;          // Circle-managed wallet OR the user's connected address
-  notifyPhone?: string;          // Optional WhatsApp phone number to send execution reports/alerts
+  sourceWallet: string;
+  notifyPhone?: string;
   sourceChannel?: 'web' | 'whatsapp';
+}
+
+export interface QuoteShopResult {
+  providersChecked: number;
+  bestProvider: string;
+  bestRate: number;
+  totalPaidUsdc: number;
+  quotes: { provider: string; rate: number; paidUsdc: number }[];
 }
 
 export interface AgentExecution {
@@ -70,16 +55,6 @@ export interface AgentExecution {
   quoteShop?: QuoteShopResult;
 }
 
-export interface QuoteShopResult {
-  providersChecked: number;
-  bestProvider: string;
-  bestRate: number;
-  totalPaidUsdc: number;
-  quotes: { provider: string; rate: number; paidUsdc: number }[];
-}
-
-// ── Standing Intents (Command Hub automation) ──────────────────────────────────
-
 export type RecurringInterval = 'daily' | 'weekly' | 'monthly';
 
 export type StandingTrigger =
@@ -97,180 +72,275 @@ export interface StandingIntent {
   custodyMode: CustodyMode;
   sourceWallet: string;
   lastRunAt?: string;
-  lastKnownBalance?: number; // for on_receive — balance as of the last check
+  lastKnownBalance?: number;
   runCount: number;
   notifyPhone?: string;
   sourceChannel?: 'web' | 'whatsapp';
 }
 
-const rules = new Map<string, AgentRule>();
-const standingIntents = new Map<string, StandingIntent>();
-const executions: AgentExecution[] = [];
+type RuleRow = {
+  id: string;
+  created_at: string;
+  status: RuleStatus;
+  owner_email: string;
+  recipient_label: string;
+  recipient_identifier: string;
+  recipient_type: RecipientType;
+  amount: number | string;
+  pair: FxPair;
+  trigger_type: TriggerType;
+  trigger_value: number | string;
+  by_date: string | null;
+  tolerance_bps: number;
+  custody_mode: CustodyMode;
+  source_wallet: string;
+  notify_phone: string | null;
+  source_channel: 'web' | 'whatsapp' | null;
+};
 
-let counter = 0;
-function nextId(prefix: string) {
-  counter += 1;
-  return `${prefix}_${Date.now().toString(36)}${counter}`;
-}
+type StandingIntentRow = {
+  id: string;
+  created_at: string;
+  status: StandingIntent['status'];
+  owner_email: string;
+  intent_text: string;
+  plan: FlowPlan;
+  trigger: StandingTrigger;
+  custody_mode: CustodyMode;
+  source_wallet: string;
+  last_run_at: string | null;
+  last_known_balance: number | string | null;
+  run_count: number;
+  notify_phone: string | null;
+  source_channel: 'web' | 'whatsapp' | null;
+};
 
-// ── AgentRule CRUD ──────────────────────────────────────────────────────────────
+type ExecutionRow = {
+  id: string;
+  owner_email: string;
+  rule_id: string | null;
+  standing_intent_id: string | null;
+  fired_at: string;
+  rate_at_execution: number | string | null;
+  mode: 'mock' | 'real';
+  tx_hash: string;
+  arc_scan_url: string;
+  fee_job_id: string | null;
+  fee_amount_usdc: number | string;
+  reputation_tx_hash: string | null;
+  memo: string;
+  quote_shop: QuoteShopResult | null;
+};
 
-export function createRule(input: Omit<AgentRule, 'id' | 'createdAt' | 'status'>): AgentRule {
-  const rule: AgentRule = { ...input, id: nextId('rule'), createdAt: new Date().toISOString(), status: 'active' };
-  rules.set(rule.id, rule);
-
-  const supabase = getSupabaseClient();
-  if (supabase) {
-    (supabase as any).from('agent_rules').insert([rule]).then(({ error }: any) => {
-      if (error) console.error('[AgentStore] Supabase rule insert error:', error.message);
-    });
+function database() {
+  const client = getSupabaseClient();
+  if (!client) {
+    throw new Error('Agent persistence requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
   }
-
-  return rule;
+  return client as any;
 }
 
-export function addRule(rule: AgentRule): AgentRule {
-  rules.set(rule.id, rule);
-  return rule;
+function requireData<T>(data: T | null, error: { message: string } | null): T {
+  if (error) throw new Error(`Agent persistence error: ${error.message}`);
+  if (data === null) throw new Error('Agent persistence returned no data');
+  return data;
 }
 
-export function listRules(ownerEmail?: string): AgentRule[] {
-  return Array.from(rules.values())
-    .filter(rule => !ownerEmail || rule.ownerEmail === ownerEmail)
-    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+function toRule(row: RuleRow): AgentRule {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    status: row.status,
+    ownerEmail: row.owner_email,
+    recipientLabel: row.recipient_label,
+    recipientIdentifier: row.recipient_identifier,
+    recipientType: row.recipient_type,
+    amount: Number(row.amount),
+    pair: row.pair,
+    triggerType: row.trigger_type,
+    triggerValue: Number(row.trigger_value),
+    byDate: row.by_date || undefined,
+    toleranceBps: row.tolerance_bps,
+    custodyMode: row.custody_mode,
+    sourceWallet: row.source_wallet,
+    notifyPhone: row.notify_phone || undefined,
+    sourceChannel: row.source_channel || undefined,
+  };
 }
 
-export const getRules = listRules;
-
-export function getRule(id: string, ownerEmail?: string): AgentRule | undefined {
-  const rule = rules.get(id);
-  return rule && (!ownerEmail || rule.ownerEmail === ownerEmail) ? rule : undefined;
+function ruleRow(rule: AgentRule): RuleRow {
+  return {
+    id: rule.id,
+    created_at: rule.createdAt,
+    status: rule.status,
+    owner_email: rule.ownerEmail,
+    recipient_label: rule.recipientLabel,
+    recipient_identifier: rule.recipientIdentifier,
+    recipient_type: rule.recipientType,
+    amount: rule.amount,
+    pair: rule.pair,
+    trigger_type: rule.triggerType,
+    trigger_value: rule.triggerValue,
+    by_date: rule.byDate || null,
+    tolerance_bps: rule.toleranceBps,
+    custody_mode: rule.custodyMode,
+    source_wallet: rule.sourceWallet,
+    notify_phone: rule.notifyPhone || null,
+    source_channel: rule.sourceChannel || null,
+  };
 }
 
-export function updateRuleStatus(id: string, status: RuleStatus): AgentRule | undefined {
-  const r = rules.get(id);
-  if (!r) return undefined;
-  r.status = status;
-  rules.set(id, r);
-
-  const supabase = getSupabaseClient();
-  if (supabase) {
-    (supabase as any).from('agent_rules').update({ status }).eq('id', id).then(({ error }: any) => {
-      if (error) console.error('[AgentStore] Supabase rule update error:', error.message);
-    });
-  }
-
-  return r;
+function toStandingIntent(row: StandingIntentRow): StandingIntent {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    status: row.status,
+    ownerEmail: row.owner_email,
+    intentText: row.intent_text,
+    plan: row.plan,
+    trigger: row.trigger,
+    custodyMode: row.custody_mode,
+    sourceWallet: row.source_wallet,
+    lastRunAt: row.last_run_at || undefined,
+    lastKnownBalance: row.last_known_balance === null ? undefined : Number(row.last_known_balance),
+    runCount: row.run_count,
+    notifyPhone: row.notify_phone || undefined,
+    sourceChannel: row.source_channel || undefined,
+  };
 }
 
-export function deleteRule(id: string): boolean {
-  const supabase = getSupabaseClient();
-  if (supabase) {
-    (supabase as any).from('agent_rules').delete().eq('id', id).then(({ error }: any) => {
-      if (error) console.error('[AgentStore] Supabase rule delete error:', error.message);
-    });
-  }
-  return rules.delete(id);
+function standingIntentRow(intent: StandingIntent): StandingIntentRow {
+  return {
+    id: intent.id,
+    created_at: intent.createdAt,
+    status: intent.status,
+    owner_email: intent.ownerEmail,
+    intent_text: intent.intentText,
+    plan: intent.plan,
+    trigger: intent.trigger,
+    custody_mode: intent.custodyMode,
+    source_wallet: intent.sourceWallet,
+    last_run_at: intent.lastRunAt || null,
+    last_known_balance: intent.lastKnownBalance ?? null,
+    run_count: intent.runCount,
+    notify_phone: intent.notifyPhone || null,
+    source_channel: intent.sourceChannel || null,
+  };
 }
 
-export function getActiveRules(): AgentRule[] {
-  return listRules().filter(r => r.status === 'active');
+function toExecution(row: ExecutionRow): AgentExecution {
+  return {
+    id: row.id,
+    ownerEmail: row.owner_email,
+    ruleId: row.rule_id || undefined,
+    standingIntentId: row.standing_intent_id || undefined,
+    firedAt: row.fired_at,
+    rateAtExecution: row.rate_at_execution === null ? undefined : Number(row.rate_at_execution),
+    mode: row.mode,
+    txHash: row.tx_hash,
+    arcScanUrl: row.arc_scan_url,
+    feeJobId: row.fee_job_id || undefined,
+    feeAmountUsdc: Number(row.fee_amount_usdc),
+    reputationTxHash: row.reputation_tx_hash || undefined,
+    memo: row.memo,
+    quoteShop: row.quote_shop || undefined,
+  };
 }
 
-export function getRulesReadyToExecute(): AgentRule[] {
-  return listRules().filter(r => r.status === 'ready_to_execute');
+export async function createRule(input: Omit<AgentRule, 'id' | 'createdAt' | 'status'>): Promise<AgentRule> {
+  const rule: AgentRule = {
+    ...input,
+    id: `rule_${randomUUID()}`,
+    createdAt: new Date().toISOString(),
+    status: 'active',
+  };
+  const { data, error } = await database().from('agent_rules').insert(ruleRow(rule)).select().single();
+  return toRule(requireData<RuleRow>(data, error));
 }
 
-// ── StandingIntent CRUD ─────────────────────────────────────────────────────────
+export async function listRules(ownerEmail: string): Promise<AgentRule[]> {
+  const { data, error } = await database().from('agent_rules').select('*').eq('owner_email', ownerEmail).order('created_at', { ascending: false });
+  if (error) throw new Error(`Agent persistence error: ${error.message}`);
+  return ((data || []) as RuleRow[]).map(toRule);
+}
 
-export function createStandingIntent(input: Omit<StandingIntent, 'id' | 'createdAt' | 'status' | 'runCount'>): StandingIntent {
+export async function getRule(id: string, ownerEmail: string): Promise<AgentRule | undefined> {
+  const { data, error } = await database().from('agent_rules').select('*').eq('id', id).eq('owner_email', ownerEmail).maybeSingle();
+  if (error) throw new Error(`Agent persistence error: ${error.message}`);
+  return data ? toRule(data as RuleRow) : undefined;
+}
+
+export async function updateRuleStatus(id: string, ownerEmail: string, status: RuleStatus): Promise<AgentRule | undefined> {
+  const { data, error } = await database().from('agent_rules').update({ status }).eq('id', id).eq('owner_email', ownerEmail).select().maybeSingle();
+  if (error) throw new Error(`Agent persistence error: ${error.message}`);
+  return data ? toRule(data as RuleRow) : undefined;
+}
+
+export async function deleteRule(id: string, ownerEmail: string): Promise<boolean> {
+  const { data, error } = await database().from('agent_rules').delete().eq('id', id).eq('owner_email', ownerEmail).select('id');
+  if (error) throw new Error(`Agent persistence error: ${error.message}`);
+  return Array.isArray(data) && data.length === 1;
+}
+
+export async function createStandingIntent(input: Omit<StandingIntent, 'id' | 'createdAt' | 'status' | 'runCount'>): Promise<StandingIntent> {
   const intent: StandingIntent = {
     ...input,
-    id: nextId('intent'),
+    id: `intent_${randomUUID()}`,
     createdAt: new Date().toISOString(),
     status: 'active',
     runCount: 0,
   };
-  standingIntents.set(intent.id, intent);
-
-  const supabase = getSupabaseClient();
-  if (supabase) {
-    (supabase as any).from('standing_intents').insert([intent]).then(({ error }: any) => {
-      if (error) console.error('[AgentStore] Supabase standing intent insert error:', error.message);
-    });
-  }
-
-  return intent;
+  const { data, error } = await database().from('standing_intents').insert(standingIntentRow(intent)).select().single();
+  return toStandingIntent(requireData<StandingIntentRow>(data, error));
 }
 
-export function addStandingIntent(intent: StandingIntent): StandingIntent {
-  standingIntents.set(intent.id, intent);
-  return intent;
+export async function listStandingIntents(ownerEmail: string): Promise<StandingIntent[]> {
+  const { data, error } = await database().from('standing_intents').select('*').eq('owner_email', ownerEmail).order('created_at', { ascending: false });
+  if (error) throw new Error(`Agent persistence error: ${error.message}`);
+  return ((data || []) as StandingIntentRow[]).map(toStandingIntent);
 }
 
-export function listStandingIntents(ownerEmail?: string): StandingIntent[] {
-  return Array.from(standingIntents.values())
-    .filter(intent => !ownerEmail || intent.ownerEmail === ownerEmail)
-    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+export async function getStandingIntent(id: string, ownerEmail: string): Promise<StandingIntent | undefined> {
+  const { data, error } = await database().from('standing_intents').select('*').eq('id', id).eq('owner_email', ownerEmail).maybeSingle();
+  if (error) throw new Error(`Agent persistence error: ${error.message}`);
+  return data ? toStandingIntent(data as StandingIntentRow) : undefined;
 }
 
-export const getStandingIntents = listStandingIntents;
-
-export function getStandingIntent(id: string, ownerEmail?: string): StandingIntent | undefined {
-  const intent = standingIntents.get(id);
-  return intent && (!ownerEmail || intent.ownerEmail === ownerEmail) ? intent : undefined;
+export async function updateStandingIntent(id: string, ownerEmail: string, patch: Pick<StandingIntent, 'status'>): Promise<StandingIntent | undefined> {
+  const { data, error } = await database().from('standing_intents').update({ status: patch.status }).eq('id', id).eq('owner_email', ownerEmail).select().maybeSingle();
+  if (error) throw new Error(`Agent persistence error: ${error.message}`);
+  return data ? toStandingIntent(data as StandingIntentRow) : undefined;
 }
 
-export function updateStandingIntent(id: string, patch: Partial<StandingIntent>): StandingIntent | undefined {
-  const i = standingIntents.get(id);
-  if (!i) return undefined;
-  const updated = { ...i, ...patch };
-  standingIntents.set(id, updated);
-
-  const supabase = getSupabaseClient();
-  if (supabase) {
-    (supabase as any).from('standing_intents').update(patch).eq('id', id).then(({ error }: any) => {
-      if (error) console.error('[AgentStore] Supabase standing intent update error:', error.message);
-    });
-  }
-
-  return updated;
+export async function deleteStandingIntent(id: string, ownerEmail: string): Promise<boolean> {
+  const { data, error } = await database().from('standing_intents').delete().eq('id', id).eq('owner_email', ownerEmail).select('id');
+  if (error) throw new Error(`Agent persistence error: ${error.message}`);
+  return Array.isArray(data) && data.length === 1;
 }
 
-export function deleteStandingIntent(id: string): boolean {
-  const supabase = getSupabaseClient();
-  if (supabase) {
-    (supabase as any).from('standing_intents').delete().eq('id', id).then(({ error }: any) => {
-      if (error) console.error('[AgentStore] Supabase standing intent delete error:', error.message);
-    });
-  }
-  return standingIntents.delete(id);
+export async function recordExecution(input: Omit<AgentExecution, 'id'>): Promise<AgentExecution> {
+  const row = {
+    id: `exec_${randomUUID()}`,
+    owner_email: input.ownerEmail,
+    rule_id: input.ruleId || null,
+    standing_intent_id: input.standingIntentId || null,
+    fired_at: input.firedAt,
+    rate_at_execution: input.rateAtExecution ?? null,
+    mode: input.mode,
+    tx_hash: input.txHash,
+    arc_scan_url: input.arcScanUrl,
+    fee_job_id: input.feeJobId || null,
+    fee_amount_usdc: input.feeAmountUsdc,
+    reputation_tx_hash: input.reputationTxHash || null,
+    memo: input.memo,
+    quote_shop: input.quoteShop || null,
+  };
+  const { data, error } = await database().from('agent_executions').insert(row).select().single();
+  return toExecution(requireData<ExecutionRow>(data, error));
 }
 
-export function getActiveStandingIntents(): StandingIntent[] {
-  return listStandingIntents().filter(i => i.status === 'active');
-}
-
-export function getStandingIntentsReadyToExecute(): StandingIntent[] {
-  return listStandingIntents().filter(i => i.status === 'ready_to_execute');
-}
-
-// ── Executions log ──────────────────────────────────────────────────────────────
-
-export function recordExecution(exec: Omit<AgentExecution, 'id'>): AgentExecution {
-  const full: AgentExecution = { ...exec, id: nextId('exec') };
-  executions.unshift(full);
-
-  const supabase = getSupabaseClient();
-  if (supabase) {
-    (supabase as any).from('agent_executions').insert([full]).then(({ error }: any) => {
-      if (error) console.error('[AgentStore] Supabase execution insert error:', error.message);
-    });
-  }
-
-  return full;
-}
-
-export function listExecutions(ownerEmail?: string): AgentExecution[] {
-  return executions.filter(execution => !ownerEmail || execution.ownerEmail === ownerEmail);
+export async function listExecutions(ownerEmail: string): Promise<AgentExecution[]> {
+  const { data, error } = await database().from('agent_executions').select('*').eq('owner_email', ownerEmail).order('fired_at', { ascending: false });
+  if (error) throw new Error(`Agent persistence error: ${error.message}`);
+  return ((data || []) as ExecutionRow[]).map(toExecution);
 }

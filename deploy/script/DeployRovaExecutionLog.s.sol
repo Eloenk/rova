@@ -6,7 +6,7 @@ import "../contracts/RovaExecutionLog.sol";
 
 contract DeployRovaExecutionLog is Script {
     function run() external returns (RovaExecutionLog executionLog) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = vm.envUint("ROVA_DEPLOYER_PRIVATE_KEY");
 
         vm.startBroadcast(deployerPrivateKey);
 

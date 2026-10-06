@@ -33,9 +33,17 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     const supabase = getSupabaseClient();
+    const allowMemoryOtp = process.env.NODE_ENV !== 'production' && process.env.ROVA_ALLOW_MEMORY_OTP === 'true';
+    if (!supabase && !allowMemoryOtp) {
+      return NextResponse.json({ ok: false, error: 'Authentication storage is not configured' }, { status: 503 });
+    }
 
     if (supabase) {
-      await supabase.from('otp_codes').delete().eq('email', cleanEmail);
+      const { error: deleteError } = await supabase.from('otp_codes').delete().eq('email', cleanEmail);
+      if (deleteError) {
+        console.error('[OTP SEND ERROR] Supabase cleanup failed:', deleteError);
+        return NextResponse.json({ ok: false, error: 'Unable to prepare verification code' }, { status: 503 });
+      }
       const { error } = await supabase.from('otp_codes').insert({
         email: cleanEmail,
         code: '',
@@ -45,10 +53,11 @@ export async function POST(req: NextRequest) {
 
       if (error) {
         console.error('[OTP SEND ERROR] Supabase insert failed:', error);
+        return NextResponse.json({ ok: false, error: 'Unable to store verification code' }, { status: 503 });
       }
     }
 
-    if (!supabase && process.env.NODE_ENV !== 'production' && process.env.ROVA_ALLOW_MEMORY_OTP === 'true') {
+    if (!supabase && allowMemoryOtp) {
       setMemoryOtp(cleanEmail, code, expiresAt.getTime());
     }
 

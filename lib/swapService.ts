@@ -115,6 +115,9 @@ export async function getSwapQuote(
 export async function executeSwap(
   opts: SwapOptions
 ): Promise<{ txHash: string; success: boolean; arcScanUrl: string; quote: SwapQuote }> {
+	if (process.env.ROVA_EXECUTION_ENABLED?.toLowerCase() !== 'true') {
+		throw new Error('Custodial execution is disabled. Set ROVA_EXECUTION_ENABLED=true only after operational approval.');
+	}
   if (opts.sellCurrency === opts.buyCurrency) {
     throw new Error("sellCurrency and buyCurrency must differ");
   }
