@@ -109,20 +109,19 @@ The web app should create and review policies. One engine scheduler should claim
 
 Each pull request should be independently reviewable, keep execution disabled unless its acceptance gate explicitly requires a bounded test, and include rollback notes for data or infrastructure changes.
 
-## Owner decisions and access needed
+## Owner confirmations
 
-Before implementation moves beyond the foundation, the project owner needs to provide or confirm:
+The repositories already define the current Arc testnet network, known contract addresses, Circle developer-controlled wallet model, email OTP flow, supported AI providers, Vercel-oriented web deployment, PM2-oriented engine runtime, and owner-side WhatsApp QR pairing. Engineering should preserve those choices while validating them rather than asking the owner to rediscover technical configuration.
 
-- the current hosting projects and which repository/revision each service deploys;
-- the Supabase project and a safe non-production migration target;
-- the Circle environment, custody model, wallet set, and intended OAuth provider;
-- the WhatsApp account/runtime and expected linking flow;
-- every historical contract address and whether it still holds funds or approvals;
-- the intended Arc mainnet yield venue and any partner commitments;
-- the current hackathon or grant rules, deadline, and required public artifacts;
-- who can authorize testnet rehearsals and eventual mainnet broadcasts.
+Engineering will reuse an existing Supabase project when one is already configured in the deployment environment. If none exists, engineering will create a separate non-production project, apply `schema.sql`, and provide the owner with a staging acceptance checklist. The owner does not need to share a WhatsApp account; the owner or their designated tester will run the final WhatsApp checklist using their existing linked account.
 
-Secrets must be transferred through the hosting provider or a secret manager, never through issues, pull requests, chat transcripts, or repository files.
+The owner only needs to confirm information that cannot be established from the repositories:
+
+- the active hackathon or grant page, deadline, and required submission artifacts;
+- whether any deployed contracts, funds, token approvals, commercial partnerships, or yield commitments exist outside the repositories;
+- who may approve a bounded testnet rehearsal and, much later, the final mainnet broadcast.
+
+If no external deployments or commitments exist, the repository remains the source of truth. Secrets stay in the relevant hosting dashboard or secret manager and must never be sent through issues, pull requests, chat transcripts, or repository files.
 
 ## Definition of ready for mainnet
 
@@ -135,4 +134,3 @@ Rova is ready to request final mainnet authorization only when all of the follow
 - all configured addresses and deployed bytecode are independently verified;
 - the UI and documentation make no claims beyond observed behavior;
 - the owner reviews the final deployment manifest and explicitly authorizes broadcast.
-
