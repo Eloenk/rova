@@ -4,6 +4,9 @@
 
 Rova enables users and autonomous AI agents to send, bridge, swap, and execute recurring flow rules for stablecoins on Arc using natural language. Featuring zero-friction email onboarding via Circle Programmable Wallets, native Web3 wallet connections, a deterministic conversational agent fast-path, and deep-linked WhatsApp bot integration.
 
+> [!IMPORTANT]
+> Rova is currently a testnet prototype. Custody actions and autonomous execution are disabled by default, and this repository state does not authorize a mainnet deployment. Review [`SECURITY_OPERATIONS.md`](SECURITY_OPERATIONS.md) and the [`hackathon implementation roadmap`](docs/HACKATHON_IMPLEMENTATION_ROADMAP.md) before operating or extending the system.
+
 ---
 
 ## 🌟 Key Features
@@ -126,4 +129,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - **Live App**: [rovaagent.vercel.app](https://rovaagent.vercel.app)
 - **Arc Testnet Explorer**: [testnet.arcscan.app](https://testnet.arcscan.app)
 - **Arc Documentation**: [docs.arc.network](https://docs.arc.network)
+- **Rova Project Docs**: [`/docs`](https://rovaagent.vercel.app/docs)
+- **Hackathon Implementation Roadmap**: [`docs/HACKATHON_IMPLEMENTATION_ROADMAP.md`](docs/HACKATHON_IMPLEMENTATION_ROADMAP.md)
 - **Security and operational gates**: [`SECURITY_OPERATIONS.md`](SECURITY_OPERATIONS.md)

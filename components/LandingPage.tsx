@@ -430,9 +430,9 @@ export default function LandingPage() {
               <a href="mailto:support@rova.network" className="hover:text-text-primary transition-colors flex items-center gap-1.5">
                 <Mail size={14} /> Support
               </a>
-              <a href="https://docs.arc.network" target="_blank" rel="noreferrer" className="hover:text-text-primary transition-colors flex items-center gap-1.5">
-                <ExternalLink size={14} /> Arc Docs
-              </a>
+              <Link href="/docs" className="hover:text-text-primary transition-colors flex items-center gap-1.5">
+                <ExternalLink size={14} /> Rova Docs
+              </Link>
             </div>
           </div>
         </footer>
