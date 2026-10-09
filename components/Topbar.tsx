@@ -7,7 +7,7 @@ const META: Record<string, { title: string; sub: string }> = {
   '/':          { title:'Dashboard',      sub:'Overview of your Arc capital flows' },
   '/dashboard': { title:'Dashboard',      sub:'Overview of your Arc capital flows' },
   '/builder':   { title:'Flow Builder',   sub:'Describe any intent — the AI builds and executes the plan' },
-  '/history':   { title:'History',        sub:'Full log of every executed flow' },
+  '/history':   { title:'History',        sub:'Browser-local activity and ArcScan links' },
   '/agent':     { title:'Agent Identity', sub:'ERC-8004 onchain identity and Arc contracts' },
 };
 

@@ -28,7 +28,7 @@ export default function Dashboard() {
   const rova = useRova();
   const { syncAgentStatus, plan, status, executionResult, isProcessing, planIntent, executePlan, reset } = rova;
 
-  const { isConnected, address, usdcBalance, eurcBalance } = useWallet();
+  const { isConnected, usdcBalance, eurcBalance } = useWallet();
   const [hasMounted, setHasMounted] = useState(false);
   const [intentText, setIntentText] = useState('');
   const [showTriggerPicker, setShowTriggerPicker] = useState(false);
@@ -82,7 +82,7 @@ export default function Dashboard() {
     setAutomating(true);
     setAutomateMsg(null);
     try {
-      const custodyMode = isConnected ? 'self_custody' : 'managed';
+      const custodyMode = 'managed';
       const trigger = triggerChoice === 'recurring'
         ? { type: 'recurring' as const, interval }
         : { type: 'on_receive' as const, minAmountUsdc: parseFloat(minAmount) || 50 };
@@ -95,7 +95,6 @@ export default function Dashboard() {
           plan,
           trigger,
           custodyMode,
-          sourceWallet: isConnected ? address : undefined,
         }),
       });
       const data = await res.json();
@@ -216,7 +215,7 @@ export default function Dashboard() {
                 {!isConversationalPlan(plan) && (!showTriggerPicker ? (
                   <div className="flex flex-wrap gap-2.5 mt-1">
                     <button
-                      onClick={() => executePlan(isConnected && address ? address : undefined)}
+                      onClick={() => executePlan()}
                       className="px-4 py-2.5 rounded-full bg-[#BFFF00] text-black font-semibold text-xs border-0 cursor-pointer flex items-center gap-1.5 hover:brightness-110 transition-all"
                     >
                       <Sparkles size={14} /> Confirm & Execute

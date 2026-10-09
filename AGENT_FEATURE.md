@@ -24,7 +24,7 @@ user's own wallet.
 | Judging criterion | How this hits it |
 |---|---|
 | Agents with clear decision logic tied to real signals | Rate/date triggers, plus quote comparison logic before every spend |
-| Autonomous spending, payments, or settlement flows | Agent rules + standing intents, both fire without a human clicking |
+| Autonomous spending, payments, or settlement flows | Paused pending a shared Circle-custody engine policy and independent security review |
 | **Use of Nanopayments for micro-transactions between agents or services** | `lib/nanopay.ts` — real x402 protocol negotiation (402 → pay → 200) against three quote-provider endpoints, using `@circle-fin/x402-batching` in real mode |
 | USDC-denominated operations with demonstrable autonomy | Every transfer, fee, and quote payment is USDC on Arc |
 
@@ -32,15 +32,13 @@ user's own wallet.
 
 - **Rate-shopping via Nanopayments** (`lib/nanopay.ts`, `app/api/quotes/provider-{a,b,c}`) — three independently-drifting mock FX desks, each paywalled with a real x402-shaped 402 response. The agent pays all three (parallel), picks the best rate, and only then executes. Real mode uses Circle's actual `@circle-fin/x402-batching` SDK (`GatewayClient` buyer-side); mock mode fakes the same negotiation shape so it's demoable without live Gateway credentials. Note: the x402 buyer role needs a raw EOA private key to sign payment authorizations locally — Circle DCW's HSM-managed wallets can't do this themselves, so nanopayments use a small dedicated buyer key (`ROVA_X402_BUYER_PRIVATE_KEY`), separate from the Circle-managed wallets that hold the user's actual funds. This mirrors Circle's own reference implementation (`github.com/circlefin/arc-nanopayments`).
 
-- **Standing intents** (`lib/agentStore.ts`, `app/api/agent/intents/*`) — Command Hub can now save a parsed plan to run on its own. Two trigger types:
-  - `recurring` — daily/weekly/monthly, evaluated against `lastRunAt` on each tick
-  - `on_receive` — watches the source wallet's USDC balance; fires when it jumps by at least a configured amount, matching against `lastKnownBalance` each tick. (Balance-based, since Rova doesn't currently have Circle webhook/notification infra wired up — a real webhook would be a stronger v2 than polling.)
+- **Standing intents** (`lib/agentStore.ts`, `app/api/agent/intents/*`) — persisted records are available for review and cancellation. Creating or executing an unattended intent is paused until the web plan schema and the engine's Circle custody model use one reviewed policy contract.
 
 - **Command Hub finally has an intent box.** It didn't before — `DashboardView.tsx` was stats-only; the only place an intent got typed was inside Send & Swap's structured form. Added a "Tell Rova what you want to do" box that plans via the existing (previously unused) `FlowPlanCard`, then offers "Run now" or "Make this automatic."
 
 - **Email or wallet, threaded everywhere.** `lib/emailWallets.ts` resolves either to a spendable address — a raw `0x...` passes through, an email gets a Circle-managed wallet created on first use and reused after. Agent rules, standing intents, and the confirm flow all go through this, not just the manual Send & Swap page.
 
-- **Self-custody vs managed, as a real distinction, not a label.** `CustodyMode` on both `AgentRule` and `StandingIntent`. Managed → Circle DCW signs server-side, fully unattended. Self-custody → `lib/selfCustodySend.ts` does a client-side native-value transfer via the user's own connected wallet (wagmi), only after they tap Approve on a `ready_to_execute` item. The agent still does its part either way — fee job, reputation entry, onchain log — attested by Rova's own managed wallet.
+- **Self-custody vs managed, as a real distinction, not a label.** `CustodyMode` remains part of the persisted model. New unattended flows are paused until managed-wallet ownership, amount policy, and user confirmation semantics have a shared implementation across the web app and engine.
 
 ## Circle tools used
 
@@ -55,14 +53,10 @@ user's own wallet.
 
 ## Known simplifications (worth saying out loud, not hiding)
 
-- Standing-intent on-receive detection is balance-polling, not a real webhook — fine for a hackathon tick cadence, a real webhook is the honest v2.
-- Self-custody approval for standing intents currently signs only the plan's first split — multi-split self-custody in one tap needs either a batched call or per-split approval, noted as a next step rather than silently only doing part of the job.
-- Rule/intent storage is in-memory (resets on redeploy) — same known tradeoff as the rest of the Agent feature, not new to this pass.
+- Unattended rules and standing intents are intentionally paused. Do not re-enable them until the engine executes from the authenticated user's Circle wallet, the persisted plan schema is shared, and the full lifecycle has an independent review.
+- Self-custody approval is unavailable until wallet-signature linking is implemented end to end.
+- Rule, intent, and execution history use server-only Supabase access with row-level security enabled. Apply `schema.sql` before enabling the app.
 
 ## Demo script addition
 
-After the original rate-rule demo: show a Command Hub intent ("send 50 USDC
-split between two addresses") planned, then "Make automatic" with a
-recurring weekly trigger — cut to the Agent tab, point at "Standing
-instructions." Then point at an execution's "Shopped 3 providers" line in
-the log — that's the Nanopayments criterion, made visible, not just claimed.
+Show a manual plan and its policy preview, then explain that unattended execution remains deliberately paused pending the shared-custody review. Do not present simulated or disabled automation as a live execution capability.

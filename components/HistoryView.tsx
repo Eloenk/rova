@@ -31,13 +31,13 @@ export default function HistoryView() {
       <header className="flex justify-between items-end mb-8">
         <div>
           <span className="text-[11px] font-mono font-bold tracking-widest text-accent-mint uppercase block mb-1">
-            Operational Log
+            Local Activity
           </span>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text-primary">
             Recent Activity
           </h1>
           <p className="text-text-secondary text-sm sm:text-base mt-1">
-            Every transaction, with Arc Transaction Memos attached.
+            Browser-local activity. Verify settled transactions on ArcScan.
           </p>
         </div>
         {entries.length > 0 && (
@@ -45,7 +45,7 @@ export default function HistoryView() {
             onClick={clearHistory}
             className="text-xs text-text-tertiary bg-transparent border border-border rounded-lg px-3.5 py-2 cursor-pointer font-semibold hover:text-text-primary hover:bg-surface-raised transition-all"
           >
-            Clear Log
+            Clear local history
           </button>
         )}
       </header>
@@ -70,8 +70,8 @@ export default function HistoryView() {
       {entries.length === 0 ? (
         <div className="p-16 rounded-xl bg-surface border border-border text-center space-y-2">
           <Moon size={32} className="text-text-tertiary mx-auto mb-2" />
-          <p className="text-base text-text-primary font-semibold">No transactions yet.</p>
-          <p className="text-xs text-text-secondary">Transactions you make will appear here with Arc Transaction Memos.</p>
+          <p className="text-base text-text-primary font-semibold">No local activity yet.</p>
+          <p className="text-xs text-text-secondary">Confirmed flows from this browser can appear here with ArcScan links.</p>
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -143,7 +143,7 @@ export default function HistoryView() {
 
       {/* Footer note */}
       <p className="text-xs text-text-tertiary text-center mt-8 leading-relaxed">
-        All transactions are recorded on Arc with <span className="text-accent-mint font-semibold">Transaction Memos</span> for full traceability.
+        This browser history is not an execution receipt. Verify each transaction independently on <span className="text-accent-mint font-semibold">ArcScan</span>.
       </p>
     </div>
   );

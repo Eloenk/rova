@@ -4,6 +4,9 @@
 
 Rova enables users and autonomous AI agents to send, bridge, swap, and execute recurring flow rules for stablecoins on Arc using natural language. Featuring zero-friction email onboarding via Circle Programmable Wallets, native Web3 wallet connections, a deterministic conversational agent fast-path, and deep-linked WhatsApp bot integration.
 
+> [!IMPORTANT]
+> Rova is currently a testnet prototype. Custody actions and autonomous execution are disabled by default, and this repository state does not authorize a mainnet deployment. Review [`SECURITY_OPERATIONS.md`](SECURITY_OPERATIONS.md) and the [`hackathon implementation roadmap`](docs/HACKATHON_IMPLEMENTATION_ROADMAP.md) before operating or extending the system.
+
 ---
 
 ## 🌟 Key Features
@@ -93,11 +96,16 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 RESEND_API_KEY=your_resend_api_key
 RESEND_FROM_EMAIL="Rova Security <auth@yourdomain.com>"
 
-# Circle SDK & Supabase
+# Circle SDK, Supabase, and execution gates
 NEXT_PUBLIC_CIRCLE_APP_ID=your_circle_app_id
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=server_only_service_role_key
+ROVA_SESSION_SECRET=at_least_32_random_characters
+ROVA_EXECUTION_ENABLED=false
+ROVA_AUTONOMOUS_EXECUTION_ENABLED=false
 ```
+
+Apply `schema.sql` using the Supabase SQL editor before starting the web app. The service-role key is server-only and must never be prefixed with `NEXT_PUBLIC_`.
 
 ### 3. Installation & Local Development
 
@@ -121,3 +129,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - **Live App**: [rovaagent.vercel.app](https://rovaagent.vercel.app)
 - **Arc Testnet Explorer**: [testnet.arcscan.app](https://testnet.arcscan.app)
 - **Arc Documentation**: [docs.arc.network](https://docs.arc.network)
+- **Rova Project Docs**: [`/docs`](https://rovaagent.vercel.app/docs)
+- **Hackathon Implementation Roadmap**: [`docs/HACKATHON_IMPLEMENTATION_ROADMAP.md`](docs/HACKATHON_IMPLEMENTATION_ROADMAP.md)
+- **Security and operational gates**: [`SECURITY_OPERATIONS.md`](SECURITY_OPERATIONS.md)

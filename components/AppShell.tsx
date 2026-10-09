@@ -6,7 +6,7 @@ import Topbar from '@/components/layout/Topbar';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isStandalonePage = pathname === '/' || pathname === '/login';
+  const isStandalonePage = pathname === '/' || pathname === '/login' || pathname === '/docs';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (isStandalonePage) {

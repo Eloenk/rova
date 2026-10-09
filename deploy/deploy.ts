@@ -33,6 +33,11 @@ const RPC_ENDPOINTS = [
   "https://testnet.arc.network/rpc"
 ].filter(Boolean) as string[];
 
+const DEPLOYABLE_CONTRACTS: Record<string, string> = {
+  'RovaSavingsVault.sol': 'RovaSavingsVault',
+  'RovaExecutionLog.sol': 'RovaExecutionLog',
+};
+
 function compileContract(contractFileName: string, contractName: string) {
   console.log(`🔨 Compiling ${contractFileName} using solc...`);
   
@@ -101,17 +106,41 @@ async function getProviderWithFallback() {
 
 async function main() {
   const targetFile = process.argv[2] || 'RovaSavingsVault.sol';
-  const targetContract = process.argv[3] || (targetFile.includes('ExecutionLog') ? 'RovaExecutionLog' : 'RovaSavingsVault');
+  const expectedContract = DEPLOYABLE_CONTRACTS[targetFile];
+  const targetContract = process.argv[3] || expectedContract;
+
+  if (!expectedContract || targetContract !== expectedContract) {
+    throw new Error('Only RovaSavingsVault.sol and RovaExecutionLog.sol may be deployed by this script');
+  }
+  if (process.env.ROVA_ALLOW_CONTRACT_DEPLOY !== 'true') {
+    throw new Error('Contract deployment is disabled. Set ROVA_ALLOW_CONTRACT_DEPLOY=true only after approval.');
+  }
+
+  const expectedChainId = BigInt(process.env.ARC_CHAIN_ID || '5042002');
+  const expectedConfirmation = `DEPLOY:${targetContract}:${expectedChainId}`;
+  if (process.env.ROVA_DEPLOY_CONFIRMATION !== expectedConfirmation) {
+    throw new Error(`Set ROVA_DEPLOY_CONFIRMATION=${expectedConfirmation} to authorize this exact deployment`);
+  }
+
+  const rawKey = process.env.ROVA_DEPLOYER_PRIVATE_KEY;
+  if (!rawKey) {
+    throw new Error('ROVA_DEPLOYER_PRIVATE_KEY is required for deployment');
+  }
+  const cleanKey = rawKey.startsWith('0x') ? rawKey : `0x${rawKey}`;
+  if (!/^0x[0-9a-fA-F]{64}$/.test(cleanKey)) {
+    throw new Error('ROVA_DEPLOYER_PRIVATE_KEY must be a 32-byte hexadecimal private key');
+  }
 
   console.log(`\n====================================================`);
   console.log(`🚀 Preparing Deployment for: ${targetContract} (${targetFile})`);
   console.log(`====================================================\n`);
 
-  const rawKey = process.env.PRIVATE_KEY || process.env.ROVA_AGENT_PRIVATE_KEY || "0x8c19a26e23643800dc538dc6343c28a79be73fb07536184a9b48f542a07febb6";
-  const cleanKey = rawKey.startsWith('0x') ? rawKey : `0x${rawKey}`;
-
   const { abi, bytecode } = compileContract(targetFile, targetContract);
   const { provider, url } = await getProviderWithFallback();
+  const network = await provider.getNetwork();
+  if (network.chainId !== expectedChainId) {
+    throw new Error(`RPC ${url} is chain ${network.chainId}; expected chain ${expectedChainId}`);
+  }
   const wallet = new ethers.Wallet(cleanKey, provider);
 
   console.log(`🔑 Deployer Wallet Address: ${wallet.address}`);
@@ -140,7 +169,7 @@ async function main() {
   }
 
   console.log(`⏳ Tx Hash: ${contract.deploymentTransaction()?.hash}`);
-  console.log("⏳ Waiting for block confirmation on Arc Testnet...");
+  console.log(`⏳ Waiting for confirmation on Arc chain ${expectedChainId}...`);
 
   await contract.waitForDeployment();
   const deployedAddress = await contract.getAddress();

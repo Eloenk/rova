@@ -24,7 +24,7 @@ ai:
   max_tokens: 8192
 
 database:
-  # Set enabled to true if SUPABASE_URL & SUPABASE_ANON_KEY are configured in .env.local
+  # Set enabled to true only when SUPABASE_URL and the server-only SUPABASE_SERVICE_ROLE_KEY are configured.
   supabase_enabled: true
 
 balance:

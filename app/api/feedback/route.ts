@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireMutationSession } from '@/lib/auth';
 
 interface FeedbackPayload {
   category: string;
@@ -50,6 +51,8 @@ function buildDiscordEmbed(f: FeedbackPayload) {
 
 // ── Main handler ─────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
+  const guard = requireMutationSession(req);
+  if ('response' in guard) return guard.response;
   let body: FeedbackPayload;
   try {
     body = await req.json();
@@ -66,6 +69,11 @@ export async function POST(req: NextRequest) {
   if (!category) {
     return NextResponse.json({ ok: false, error: 'Category is required' }, { status: 400 });
   }
+  if (!['bug', 'feature', 'ux', 'praise', 'other'].includes(category) || message.length > 2_000) {
+    return NextResponse.json({ ok: false, error: 'Invalid feedback payload' }, { status: 400 });
+  }
+  body.email = guard.session.email;
+  body.walletAddress = guard.session.walletAddress || null;
 
   // Always log to Vercel function logs (visible in Vercel dashboard → Functions)
   console.log('[Rova Feedback]', JSON.stringify({
