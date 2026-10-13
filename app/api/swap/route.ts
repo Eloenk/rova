@@ -5,7 +5,7 @@ import { assertPermittedAmount } from '@/lib/policy';
 
 export async function POST(req: NextRequest) {
   try {
-    const guard = requireMutationSession(req);
+    const guard = await requireMutationSession(req);
     if ('response' in guard) return guard.response;
     const body = await req.json();
     const { sellCurrency, buyCurrency, amount, maxSlippageBps } = body;
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const guard = requireSession(req);
+    const guard = await requireSession(req);
     if ('response' in guard) return guard.response;
     const { searchParams } = new URL(req.url);
     const sellCurrency = (searchParams.get('sellCurrency') as 'USDC' | 'EURC') || 'USDC';

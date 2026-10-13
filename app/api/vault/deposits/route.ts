@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const guard = requireSession(req);
+    const guard = await requireSession(req);
     if ('response' in guard) return guard.response;
     const walletAddress = guard.session.walletAddress;
 

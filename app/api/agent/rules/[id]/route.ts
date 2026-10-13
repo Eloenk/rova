@@ -6,7 +6,7 @@ import type { RuleStatus } from '@/lib/agentStore';
 import { requireMutationSession } from '@/lib/auth';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = requireMutationSession(req);
+  const guard = await requireMutationSession(req);
   if ('response' in guard) return guard.response;
   const rule = await getRule(params.id, guard.session.email);
   if (!rule) return NextResponse.json({ ok: false, error: 'Rule not found' }, { status: 404 });
@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = requireMutationSession(req);
+  const guard = await requireMutationSession(req);
   if ('response' in guard) return guard.response;
   const existed = await deleteRule(params.id, guard.session.email);
   if (!existed) return NextResponse.json({ ok: false, error: 'Rule not found' }, { status: 404 });

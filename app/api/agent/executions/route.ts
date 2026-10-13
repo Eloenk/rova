@@ -5,7 +5,7 @@ import { requireSession } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  const guard = requireSession(request);
+  const guard = await requireSession(request);
   if ('response' in guard) return guard.response;
 
   try {

@@ -5,7 +5,7 @@ import { deleteStandingIntent, getStandingIntent, updateStandingIntent } from '@
 import { requireMutationSession } from '@/lib/auth';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = requireMutationSession(req);
+  const guard = await requireMutationSession(req);
   if ('response' in guard) return guard.response;
   const intent = await getStandingIntent(params.id, guard.session.email);
   if (!intent) return NextResponse.json({ ok: false, error: 'Standing intent not found' }, { status: 404 });
@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = requireMutationSession(req);
+  const guard = await requireMutationSession(req);
   if ('response' in guard) return guard.response;
   const existed = await deleteStandingIntent(params.id, guard.session.email);
   if (!existed) return NextResponse.json({ ok: false, error: 'Standing intent not found' }, { status: 404 });

@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const guard = requireMutationSession(req);
+    const guard = await requireMutationSession(req);
     if ('response' in guard) return guard.response;
     const { email, code, depositId } = await req.json();
     const walletAddress = guard.session.walletAddress;

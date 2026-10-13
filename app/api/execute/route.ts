@@ -6,7 +6,7 @@ import { assertPermittedPlan } from '@/lib/policy';
 
 export async function POST(req: NextRequest) {
   try {
-    const guard = requireMutationSession(req);
+    const guard = await requireMutationSession(req);
     if ('response' in guard) return guard.response;
     const { plan, intentHash } = await req.json();
 

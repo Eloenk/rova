@@ -40,7 +40,7 @@ function getConfigValues(): { rpcUrl: string; usdcAddress: `0x${string}`; eurcAd
 
 export async function GET(req: NextRequest) {
   try {
-    const guard = requireSession(req);
+    const guard = await requireSession(req);
     if ('response' in guard) return guard.response;
 
     let targetAddress = guard.session.walletAddress || null;

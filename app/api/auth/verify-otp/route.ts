@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { getMemoryOtp, deleteMemoryOtp } from '@/lib/otpStore';
-import { hasSessionSecret, hasTrustedOrigin, setSessionCookie } from '@/lib/auth';
+import { hasSessionSecret, hasTrustedOrigin, setSessionCookies } from '@/lib/auth';
 import { getClientIp, checkRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    setSessionCookie(response, {
+    await setSessionCookies(response, {
       email: cleanEmail,
       walletAddress: circleWalletAddress || undefined,
     });

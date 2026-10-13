@@ -5,7 +5,7 @@ import { arcTestnet } from '@/lib/arcChain';
 import { requireSession } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
-  const guard = requireSession(request);
+  const guard = await requireSession(request);
   if ('response' in guard) return guard.response;
   const agentId = process.env.NEXT_PUBLIC_ROVA_AGENT_ID;
 

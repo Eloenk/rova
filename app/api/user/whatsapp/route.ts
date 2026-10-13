@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const guard = requireMutationSession(req);
+    const guard = await requireMutationSession(req);
     if ('response' in guard) return guard.response;
     const { whatsappNumber } = await req.json();
 

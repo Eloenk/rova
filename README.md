@@ -99,6 +99,7 @@ RESEND_FROM_EMAIL="Rova Security <auth@yourdomain.com>"
 # Circle SDK, Supabase, and execution gates
 NEXT_PUBLIC_CIRCLE_APP_ID=your_circle_app_id
 SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SECRET_KEY=your_supabase_secret_key
 SUPABASE_SERVICE_ROLE_KEY=server_only_service_role_key
 ROVA_SESSION_SECRET=at_least_32_random_characters
 ROVA_EXECUTION_ENABLED=false

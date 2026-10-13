@@ -51,7 +51,7 @@ function buildDiscordEmbed(f: FeedbackPayload) {
 
 // ── Main handler ─────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const guard = requireMutationSession(req);
+  const guard = await requireMutationSession(req);
   if ('response' in guard) return guard.response;
   let body: FeedbackPayload;
   try {

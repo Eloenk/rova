@@ -3,7 +3,7 @@ import { resolveRecipient } from '@/lib/emailWallets';
 import { requireSession } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
-  const guard = requireSession(req);
+  const guard = await requireSession(req);
   if ('response' in guard) return guard.response;
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ ok: false, error: 'id is required' }, { status: 400 });

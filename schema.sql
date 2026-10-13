@@ -120,3 +120,17 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE otp_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE whatsapp_link_tokens ENABLE ROW LEVEL SECURITY;
 
+-- ── Refresh tokens (JWT rotation) ─────────────────────────────────────────────
+-- One row per user. Upserted on login, deleted on logout or on rotation.
+-- Only the SHA-256 hash of the opaque token is stored — never the raw value.
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    email       TEXT PRIMARY KEY REFERENCES users(email) ON DELETE CASCADE,
+    token_hash  TEXT NOT NULL UNIQUE,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_hash       ON refresh_tokens(token_hash);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
+
+ALTER TABLE refresh_tokens ENABLE ROW LEVEL SECURITY;
