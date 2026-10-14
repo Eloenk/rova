@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http, parseAbi } from 'viem';
 import { getSupabaseClient } from '@/lib/supabase';
-import { TOKENS, ARC_TESTNET } from '@/lib/config';
+import { TOKENS, ARC_NETWORK } from '@/lib/config';
 import fs from 'fs';
 import path from 'path';
 import * as yaml from 'js-yaml';
@@ -13,7 +13,7 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 function getConfigValues(): { rpcUrl: string; usdcAddress: `0x${string}`; eurcAddress: `0x${string}` } {
-  let rpcUrl = serverEnv.arcRpcUrl || ARC_TESTNET.rpc;
+  let rpcUrl = serverEnv.arcRpcUrl || ARC_NETWORK.rpc;
   let usdcAddress = TOKENS.USDC.address as `0x${string}`;
   let eurcAddress = TOKENS.EURC.address as `0x${string}`;
 

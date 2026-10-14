@@ -3,8 +3,6 @@ const nextConfig = {
   outputFileTracingRoot: __dirname,
   transpilePackages: [
     '@circle-fin/developer-controlled-wallets',
-    '@circle-fin/adapter-circle-wallets',
-    '@circle-fin/app-kit',
   ],
   experimental: {
     workerThreads: false,

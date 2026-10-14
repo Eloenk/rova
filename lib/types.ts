@@ -4,13 +4,13 @@
 
 // What Circle's Bridge Kit expects for chain identifiers
 export type CircleChain =
-  | 'Arc_Testnet'
-  | 'Ethereum_Sepolia'
-  | 'Avalanche_Fuji'
-  | 'Base_Sepolia'
-  | 'Arbitrum_Sepolia'
-  | 'Optimism_Sepolia'
-  | 'Polygon_Amoy';
+  | 'Arc'
+  | 'Ethereum'
+  | 'Avalanche'
+  | 'Base'
+  | 'Arbitrum'
+  | 'Optimism'
+  | 'Polygon';
 
 // Circle's CCTP bridge type
 export type BridgeType = 'cctp' | 'gateway' | 'native' | 'stablefx';

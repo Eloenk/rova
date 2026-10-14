@@ -96,7 +96,7 @@ export default function SendView() {
           Send & Swap
         </h1>
         <p className="text-text-secondary text-sm sm:text-base mt-1">
-          Review bounded Arc testnet transfers, swaps, and bridge routes.
+          Review bounded Arc mainnet plans. Fund-moving execution remains disabled for this release.
         </p>
       </header>
 

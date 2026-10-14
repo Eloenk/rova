@@ -118,7 +118,7 @@ export default function LoginPage() {
           fontWeight: 600,
         }}>
           <div>Circle SCA Wallets</div>
-          <div>Arc Testnet</div>
+          <div>Arc Mainnet</div>
           <div>StableFX Engine</div>
         </div>
       </div>

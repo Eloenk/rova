@@ -13,7 +13,7 @@
 import 'server-only';
 
 import { initiateDeveloperControlledWalletsClient } from '@circle-fin/developer-controlled-wallets';
-import { ARC_TESTNET, TOKENS, ERC8004, ROVA_EXECUTION_LOG, GAS, arcScan } from './config';
+import { ARC_NETWORK, TOKENS, CCTP, ERC8004, ROVA_EXECUTION_LOG, arcScan } from './config';
 import { serverEnv } from './env/server';
 
 // ── Lazy singleton ─────────────────────────────────────────────────────────────
@@ -54,10 +54,10 @@ export async function createAgentWallets(name: string) {
   if (!walletSetId) throw new Error('Failed to create Circle wallet set');
 
   const walletsResp = await client.createWallets({
-    blockchains: [ARC_TESTNET.circleBlockchain],
+    blockchains: [ARC_NETWORK.circleWalletBlockchain],
     count:        2,
     walletSetId,
-    accountType: 'SCA', // Smart Contract Account — recommended for agent use
+    accountType: 'EOA',
   });
 
   const wallets = walletsResp.data?.wallets;
@@ -86,10 +86,10 @@ export async function createSingleWallet(label: string) {
   if (!walletSetId) throw new Error('Failed to create Circle wallet set');
 
   const walletsResp = await client.createWallets({
-    blockchains: [ARC_TESTNET.circleBlockchain],
+    blockchains: [ARC_NETWORK.circleWalletBlockchain],
     count: 1,
     walletSetId,
-    accountType: 'SCA',
+    accountType: 'EOA',
   });
 
   const wallet = walletsResp.data?.wallets?.[0];
@@ -109,10 +109,10 @@ export async function createSavingsSubWallet(label: string, existingWalletSetId?
   }
 
   const walletsResp = await client.createWallets({
-    blockchains: [ARC_TESTNET.circleBlockchain],
+    blockchains: [ARC_NETWORK.circleWalletBlockchain],
     count: 1,
     walletSetId,
-    accountType: 'SCA',
+    accountType: 'EOA',
   });
 
   const wallet = walletsResp.data?.wallets?.[0];
@@ -133,30 +133,8 @@ export async function executeAndConfirm(opts: {
 	if (!serverEnv.executionEnabled) {
 		throw new Error('Custodial execution is disabled. Set ROVA_EXECUTION_ENABLED=true only after operational approval.');
 	}
-  const client = getCircleClient();
-
-  const txResp = await client.createContractExecutionTransaction({
-    walletAddress:        opts.walletAddress,
-    blockchain:           ARC_TESTNET.circleBlockchain,
-    contractAddress:      opts.contractAddress,
-    abiFunctionSignature: opts.abiFunctionSignature,
-    abiParameters:        opts.abiParameters,
-    fee: { type: 'level', config: { feeLevel: GAS.feeLevel } },
-  });
-
-  const txId = txResp.data?.id;
-  if (!txId) throw new Error('No transaction ID returned from Circle');
-
-  // Poll up to 30s; provider processing and chain confirmation are asynchronous.
-  for (let i = 0; i < 30; i++) {
-    await new Promise(r => setTimeout(r, 1000));
-    const { data } = await client.getTransaction({ id: txId });
-    const state = data?.transaction?.state;
-    if (state === 'COMPLETE') return data!.transaction!.txHash!;
-    if (state === 'FAILED')   throw new Error(`Transaction failed on Arc: ${data?.transaction?.errorReason || 'Execution reverted'}`);
-  }
-
-  throw new Error('Transaction timed out after 30s');
+  void opts;
+  throw new Error('Managed-wallet contract execution is not enabled for the Arc mainnet release. Use the separately approved owner deployment workflow.');
 }
 
 // ── ERC-8004 agent registration ────────────────────────────────────────────────
@@ -228,8 +206,8 @@ export async function respondValidation(
 // ── Rova Execution Log ─────────────────────────────────────────────────────────
 // Writes to Rova's own contract (contracts/RovaExecutionLog.sol) — the one
 // piece of onchain state that's actually Rova-authored rather than shared
-// Circle/Arc infra. Called by the Agent on every autonomous fire so the
-// "Arc Transaction Memo" claim is a real onchain record, not just a log line.
+// Circle/Arc infra. Runtime writes remain disabled in the mainnet release;
+// the contract can still be deployed and inspected as public infrastructure.
 
 export async function logExecutionOnchain(opts: {
   executorAddress: string;
@@ -260,9 +238,9 @@ export async function logExecutionOnchain(opts: {
 
 export async function getAgentBalance(walletAddress: string, token: keyof typeof TOKENS) {
   const { createPublicClient, http, parseAbi } = await import('viem');
-  const { arcTestnet } = await import('./arcChain');
+  const { arcChain } = await import('./arcChain');
   
-  const client = createPublicClient({ chain: arcTestnet, transport: http(ARC_TESTNET.rpc) });
+  const client = createPublicClient({ chain: arcChain, transport: http(ARC_NETWORK.rpc) });
   const abi = parseAbi(['function balanceOf(address) view returns (uint256)']);
   
   const balance = await client.readContract({
@@ -289,7 +267,7 @@ export async function appKitBridge(opts: {
 
   const txHash = await executeAndConfirm({
     walletAddress:        opts.walletAddress,
-    contractAddress:      '0x9f3b8679c73c2Fef8b59B4f3444d4e156fb70AA5',
+    contractAddress:      CCTP.TokenMessengerV2,
     abiFunctionSignature: 'depositForBurn(uint64,bytes32,uint256,address)',
     abiParameters:        [String(destinationDomain), recipientBytes32, String(amountInt), TOKENS.USDC.address],
   });
@@ -314,32 +292,8 @@ export async function sendUsdcOnArc(
   toAddress:         string,
   amountUsdc:        number,
 ): Promise<{ txHash: string; arcScanUrl: string }> {
-  const client = getCircleClient();
-
-  // Convert to 6-decimal integer (ERC-20 interface on Arc)
-  const amountInt = Math.round(amountUsdc * 10 ** TOKENS.USDC.decimals);
-
-  const txResp = await client.createContractExecutionTransaction({
-    walletAddress:        fromWalletAddress,
-    blockchain:           ARC_TESTNET.circleBlockchain,
-    contractAddress:      TOKENS.USDC.address,
-    abiFunctionSignature: 'transfer(address,uint256)',
-    abiParameters:        [toAddress, String(amountInt)],
-    fee: { type: 'level', config: { feeLevel: GAS.feeLevel } },
-  });
-
-  const txId = txResp.data?.id;
-  if (!txId) throw new Error('No transaction ID');
-
-  for (let i = 0; i < 30; i++) {
-    await new Promise(r => setTimeout(r, 1000));
-    const { data } = await client.getTransaction({ id: txId });
-    if (data?.transaction?.state === 'COMPLETE') {
-      const txHash = data.transaction.txHash!;
-      return { txHash, arcScanUrl: arcScan.tx(txHash) };
-    }
-    if (data?.transaction?.state === 'FAILED') throw new Error('Transfer failed on Arc');
-  }
-
-  throw new Error('Transfer timed out');
+  void fromWalletAddress;
+  void toAddress;
+  void amountUsdc;
+  throw new Error('Managed-wallet USDC transfers are not enabled for the Arc mainnet release.');
 }

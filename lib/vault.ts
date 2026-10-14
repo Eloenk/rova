@@ -2,10 +2,12 @@ import { executeAndConfirm } from './circle';
 import { TOKENS, arcScan } from './config';
 import { serverEnv } from './env/server';
 
-const DEFAULT_VAULT_ADDRESS = '0x9330DA5152Cc676a029cfaCCcA3948e11EDE9BfB';
-
 function getVaultAddress(): string {
-  return serverEnv.savingsVaultAddress || DEFAULT_VAULT_ADDRESS;
+  const address = serverEnv.savingsVaultAddress;
+  if (!address) {
+    throw new Error('Savings vault is disabled in the Arc mainnet release.');
+  }
+  return address;
 }
 
 export type VaultStrategy = 'smart_contract';
@@ -66,11 +68,11 @@ export async function depositSavingsVault(opts: DepositSavingsOpts) {
  */
 export async function getUserVaultDeposits(userWalletAddress: string) {
   const { createPublicClient, http, parseAbi } = await import('viem');
-  const { arcTestnet } = await import('./arcChain');
+  const { arcChain } = await import('./arcChain');
 
   const vaultContractAddress = getVaultAddress();
 
-  const publicClient = createPublicClient({ chain: arcTestnet, transport: http() });
+  const publicClient = createPublicClient({ chain: arcChain, transport: http() });
   const vaultAbi = parseAbi([
     'function getUserDepositIds(address) view returns (uint256[])',
     'function getDeposit(uint256) view returns ((uint256 depositId, address user, address tokenAddress, uint256 amount, uint256 depositedAt, uint256 lockUntil, bool redeemed))',

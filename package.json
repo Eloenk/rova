@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build --no-lint",
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint app components deploy hooks lib scripts tests tools --max-warnings=0",
     "typecheck": "tsc --noEmit --incremental false",
@@ -14,8 +14,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
-    "@circle-fin/adapter-circle-wallets": "^1.8.1",
-    "@circle-fin/app-kit": "^1.16.0",
     "@circle-fin/developer-controlled-wallets": "^10.1.0",
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.110.8",
@@ -24,7 +22,7 @@
     "js-yaml": "^5.4.3",
     "jose": "^6.2.12",
     "lucide-react": "^0.487.0",
-    "next": "^15.5.28",
+    "next": "16.4.1",
     "nodemailer": "^10.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

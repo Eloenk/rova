@@ -31,10 +31,10 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
         bridgeType: "native"
       }],
       gasEstimate: { totalTxCount: 0, totalGasUsdc: 0 },
-      reasoning: "Hello! I am Rova, a policy-gated financial planning agent on Arc Testnet. I can prepare bounded USDC transfers, StableFX swaps, and supported bridge plans for review. Yield, staking, and new autonomous policies are not enabled in this release.",
+      reasoning: "Hello! I am Rova, a policy-gated financial planning agent on Arc Mainnet. I can prepare bounded USDC transfer, StableFX, and bridge plans for review. Fund-moving execution, yield, staking, and new autonomous policies are not enabled in this release.",
       confidence: 100,
       risk: "low",
-      strategy: "Hello! I am Rova, a policy-gated financial planning agent on Arc Testnet.",
+      strategy: "Hello! I am Rova, a policy-gated financial planning agent on Arc Mainnet.",
       reserveAmount: 0
     };
   }
@@ -63,7 +63,7 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
         bridgeType: "native"
       }],
       gasEstimate: { totalTxCount: 0, totalGasUsdc: 0 },
-      reasoning: "Your wallet balances on Arc Testnet (USDC / EURC) are displayed in real-time in the top balance bar and portfolio drawer.",
+      reasoning: "Your Arc Mainnet wallet balances (USDC / EURC) are displayed in real time in the top balance bar and portfolio drawer.",
       confidence: 100,
       risk: "low",
       strategy: "Balance Query (Arc RPC)",
@@ -95,7 +95,7 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
         bridgeType: "native"
       }],
       gasEstimate: { totalTxCount: 0, totalGasUsdc: 0 },
-      reasoning: "The Rova engine is configured fail-closed on Arc Testnet. New autonomous policies are paused; any existing managed-wallet policy requires owner-wallet verification, an atomic database claim, and both server-side execution gates.",
+      reasoning: "The Rova engine is configured fail-closed on Arc Mainnet. Managed-wallet and autonomous execution remain disabled for this release.",
       confidence: 100,
       risk: "low",
       strategy: "Daemon System Status",
@@ -150,10 +150,10 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
         bridgeType: "native"
       }],
       gasEstimate: { totalTxCount: 0, totalGasUsdc: 0 },
-      reasoning: "I am Rova, a policy-gated financial planning agent for supported Arc Testnet USDC transfers, USDC/EURC swaps, and reviewed bridge plans. Unsupported or unrelated requests are not converted into transactions.",
+      reasoning: "I am Rova, a policy-gated financial planning agent for Arc Mainnet USDC transfers, USDC/EURC swaps, and reviewed bridge plans. Unsupported or unrelated requests are not converted into transactions.",
       confidence: 100,
       risk: "low",
-      strategy: "I am Rova, a policy-gated financial planning agent on Arc Testnet.",
+      strategy: "I am Rova, a policy-gated financial planning agent on Arc Mainnet.",
       reserveAmount: 0
     };
   }
@@ -252,7 +252,7 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
         bridgeType: "native"
       }],
       gasEstimate: { totalTxCount: 1, totalGasUsdc: 0.006 },
-      reasoning: `A bounded ${currency} transfer plan was prepared for deterministic validation and explicit approval before any Arc Testnet transaction is submitted.`,
+      reasoning: `A bounded ${currency} transfer plan was prepared for deterministic validation. This release does not submit managed-wallet Arc Mainnet transactions.`,
       confidence: 100,
       risk: "low",
       strategy: "Arc Native Fast-Path",

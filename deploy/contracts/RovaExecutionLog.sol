@@ -2,15 +2,16 @@
 pragma solidity ^0.8.24;
 
 /// @title RovaExecutionLog
+/// @notice Public, non-custodial audit metadata. This contract never moves funds.
 
 contract RovaExecutionLog {
     struct Execution {
         bytes32 ruleId;         // off-chain rule id (hash), links back to the Agent's rule store
-        address executor;       // wallet that carried out the transfer (the agent's operating wallet)
-        address recipient;      // who received funds
-        uint256 amountUsdc6;    // amount in USDC's 6-decimal base units
-        uint256 rateAtExecution1e6; // FX rate at execution time, scaled by 1e6 for precision without floats
-        string  memo;           // human-readable reason, e.g. "auto-exec: rate 0.930000 >= target 0.930000"
+        address executor;       // caller that submitted the audit entry
+        address recipient;      // related recipient, or zero address for a non-financial entry
+        uint256 amountUsdc6;    // declared USDC amount in 6-decimal units; zero is allowed
+        uint256 rateAtExecution1e6; // declared FX rate scaled by 1e6; zero is allowed
+        string  memo;           // human-readable audit metadata
         uint256 timestamp;
     }
 
@@ -27,11 +28,9 @@ contract RovaExecutionLog {
 
     Execution[] private executions;
 
-    /// @notice Records one autonomous execution. Callable by anyone by design —
-    ///         this is a public log, not a gated escrow. The trust anchor is
-    ///         that the `executor` field and the actual onchain transfer tx
-    ///         can be cross-checked against each other; this contract doesn't
-    ///         move funds itself, it only attests to why a transfer happened.
+    /// @notice Records one public audit entry. Callable by anyone by design.
+    ///         Entries are caller-submitted metadata, not verified proof of a
+    ///         transfer. Consumers must independently verify any related action.
     function logExecution(
         bytes32 ruleId,
         address recipient,

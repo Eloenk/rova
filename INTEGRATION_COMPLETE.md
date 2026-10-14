@@ -108,7 +108,7 @@ Your dapp is fully integrated and ready! Here's what you can do:
 
 1. **Customize Content**: Update copy, add your real wallet addresses
 2. **Add Real Web3**: Integrate actual smart contract calls
-3. **Connect to Arc Testnet**: Replace mock data with real blockchain data
+3. **Connect to Arc Mainnet**: Replace mock data with verified chain `5042` reads
 4. **Add Features**: Build on top of the existing structure
 
 ---

@@ -23,7 +23,7 @@ export function operationalFlag(name: OperationalVariable): boolean {
 }
 
 export function operationalChainId(): bigint {
-  const raw = readOperationalVariable('ARC_CHAIN_ID') || '5042002';
+  const raw = readOperationalVariable('ARC_CHAIN_ID') || '5042';
   if (!/^\d+$/.test(raw) || raw === '0') throw new Error('ARC_CHAIN_ID must be a positive integer');
   return BigInt(raw);
 }

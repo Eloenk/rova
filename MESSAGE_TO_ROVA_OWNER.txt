@@ -1,6 +1,13 @@
-Hey bro, the first Rova security and hackathon-submission round is ready for review.
+Hey bro, urgent correction after checking the official Arc Microgrants page directly.
 
-Please review these two PRs together because the web database migration and Go engine claim logic depend on each other:
+This program requires a live working deployment on Arc Mainnet. Testnet-only builds are explicitly ineligible.
+
+Submission deadline:
+October 14, 2026 at 23:59 ET
+October 15, 2026 at 03:59 UTC
+October 15, 2026 at 05:59 SAST
+
+Please review these two PRs together because the web database changes and Go engine security logic depend on each other:
 
 Web app:
 https://github.com/Eloenk/rova/pull/2
@@ -8,29 +15,34 @@ https://github.com/Eloenk/rova/pull/2
 Go engine and WhatsApp service:
 https://github.com/Eloenk/rova-agent-go/pull/2
 
-What is included:
-- execution is disabled by default and all sensitive actions fail closed
-- one-time web execution plans are bound to the authenticated owner and managed source wallet
-- the engine atomically claims the exact owner-bound database row before acting
-- unsupported yield, staking, ERC-8183, new automation, and executable bridge paths are paused instead of being presented as working
-- the old embedded deployment key path is removed and the historical key is treated as exposed
-- current tracked files pass a redacted credential-pattern scan
-- web lint, TypeScript checks, 10 tests, and the production build pass
-- Go test, vet, and build pass with Go 1.25
-- the submission runbook, acceptance matrix, secret-handling guide, and guarded deployment instructions are included
+The release has been narrowed for a defensible mainnet submission:
+- the app uses official Arc Mainnet chain ID 5042, RPC, explorer, token, CCTP, Gateway, StableFX, and ERC-8004 addresses
+- managed-wallet transfers, swaps, bridges, yield, staking, savings custody, WhatsApp money movement, and autonomous execution remain disabled
+- only the non-custodial RovaExecutionLog contract is allowed by the deployment tool
+- RovaSavingsVault and RovaSwapRouter must not be deployed for this submission
+- the app can demonstrate mainnet wallet and balance reads, deterministic policy planning, fail-closed execution, and a verified public log contract
 
-Important before the hackathon submission:
-1. Merge both PRs together.
-2. Apply the complete web schema.sql to the non-production Supabase project.
-3. Rotate the historical deployer account and any real credential that was ever pasted into source control, chat, logs, screenshots, or an untrusted machine. Please do not send us the replacement values.
-4. Configure unique testnet secrets in the hosting dashboards. Do not reuse or upload anyone else's .env file.
-5. Keep web, WhatsApp, and autonomous execution flags disabled during baseline testing.
-6. Deploy a fresh preview. The previously advertised rovaagent.vercel.app URL currently returns 404, so it cannot be submitted as the live app yet.
-7. Run docs/TESTNET_ACCEPTANCE_MATRIX.md with two fresh users.
-8. Test WhatsApp linking and confirmation yourself on your own account; you do not need to share the account, QR code, phone number, or OTP with us.
-9. If you approve one bounded Arc testnet transfer for the demo, enable only the manual execution flag for that test, save the public transaction hash and matching receipt, then disable it immediately.
-10. Recheck the app, docs, repositories, demo, and explorer receipt while signed out before submitting.
+As project owner, please do the final deployment from accounts controlled by you or your team:
 
-Please send back only pass/fail results, the final public app URL, and any public testnet transaction hash. Do not send passwords, private keys, API keys, entity secrets, session secrets, scheduler tokens, OTPs, cookies, or QR data.
+1. Review and merge both PRs together.
+2. Deploy the merged web app and Go engine from your owner repositories and hosting projects.
+3. Configure fresh secrets directly in Vercel, Supabase, Circle, and the engine host. Do not send the secret values to me.
+4. Apply the complete schema.sql and run the two-user isolation checks.
+5. Keep ROVA_EXECUTION_ENABLED, ROVA_WHATSAPP_EXECUTION_ENABLED, and ROVA_AUTONOMOUS_EXECUTION_ENABLED set to false.
+6. Use DEPLOY_CONTRACT.md to deploy only RovaExecutionLog on Arc Mainnet from a new dedicated deployer funded only for gas.
+7. Verify the contract transaction, address, source, and bytecode on https://explorer.arc.io.
+8. Add the public contract address to the hosting configuration and redeploy the web app.
+9. Run docs/MAINNET_ACCEPTANCE_MATRIX.md, including WhatsApp linking on your own account.
+10. Record the demo only after acceptance passes. Show the live public app, Arc Mainnet chain 5042, the verified contract, planning flow, disabled money movement, and the public explorer evidence.
+11. Submit the public app, repositories, short description, public builder profile, demo, and mainnet explorer links on DoraHacks before the deadline.
 
-This round is suitable for a clearly disclosed Arc testnet hackathon submission after the acceptance checklist passes. It is not approval for mainnet, production custody, autonomous execution, or yield.
+If you approve a smoke transaction, use only a clearly labelled zero-value/non-financial RovaExecutionLog entry. Do not approve tokens or move/custody user funds for this rushed release.
+
+Please send back only:
+- merge approval or requested PR changes
+- the final public app URL
+- the public mainnet contract address and transaction hash
+- acceptance checklist pass/fail results
+- the demo and DoraHacks submission links
+
+Do not send passwords, private keys, API keys, entity secrets, session secrets, scheduler tokens, OTPs, cookies, phone numbers, or QR data.

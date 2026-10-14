@@ -2,7 +2,7 @@
 
 ## Configuration model
 
-Rova does not ship one shared environment file for all users. Every development, testnet, and future production deployment supplies its own values through its local process environment or hosting secret manager.
+Rova does not ship one shared environment file for all users. Every development or hosted deployment supplies its own values through its local process environment or hosting secret manager.
 
 The TypeScript files are validation boundaries, not secret stores:
 
@@ -20,7 +20,7 @@ Do not put secrets into a `.ts`, `.js`, YAML, JSON, contract, or committed envir
 | `ROVA_SESSION_SECRET` | Yes | Generate a unique high-entropy value per deployment; rotate after suspected disclosure and invalidate existing sessions |
 | `ROVA_ADMIN_TOKEN` | Yes | Store server-side only; rotate after suspected disclosure |
 | `ROVA_SCHEDULER_TOKEN` | Yes | Engine/server secret; rotate after suspected disclosure and restart both services |
-| `ROVA_DEPLOYER_PRIVATE_KEY` | Yes | Use a dedicated funded-only-when-needed testnet deployer; never place it in the web runtime |
+| `ROVA_DEPLOYER_PRIVATE_KEY` | Yes | Use a dedicated funded-only-for-the-operation mainnet deployer; never place it in the web runtime |
 | `ROVA_DEPLOY_CONFIRMATION` | No | Exact one-operation authorization phrase; clear it after the deployment window |
 | `ROVA_ALLOW_CONTRACT_DEPLOY` | No | Safety gate; default `false` and enable only during an approved deployment window |
 | `ROVA_EXECUTION_ENABLED` | No | Custody gate; default `false` |
@@ -32,7 +32,7 @@ Do not put secrets into a `.ts`, `.js`, YAML, JSON, contract, or committed envir
 
 The historical fallback deployer private key embedded in repository code is treated as exposed and must never be reused. Move any remaining funds and revoke relevant approvals from the derived account.
 
-The current tracked web tree passed a redacted credential-pattern scan on October 14, 2026. Repository history containing a variable name such as `ROVA_SESSION_SECRET`, `ROVA_DEPLOY_CONFIRMATION`, or `ROVA_SCHEDULER_TOKEN` does not by itself prove that a secret value was committed. Rotation is still required whenever a real value was pasted into source control, chat, logs, screenshots, build output, or an untrusted machine.
+The current tracked web and Go trees passed a redacted credential-pattern scan on October 15, 2026. Repository history containing a variable name such as `ROVA_SESSION_SECRET`, `ROVA_DEPLOY_CONFIRMATION`, or `ROVA_SCHEDULER_TOKEN` does not by itself prove that a secret value was committed. Rotation is still required whenever a real value was pasted into source control, chat, logs, screenshots, build output, or an untrusted machine.
 
 ## Rotation checklist
 

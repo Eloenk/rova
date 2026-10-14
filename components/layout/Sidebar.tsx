@@ -88,7 +88,7 @@ export default function Sidebar({
         {/* Bottom inscription */}
         <div className="mt-auto pl-2 pb-1">
           <span className="text-xs text-text-secondary font-mono tracking-wider">
-            Arc Testnet • 5042002
+            Arc Mainnet • 5042
           </span>
         </div>
       </aside>

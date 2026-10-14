@@ -320,7 +320,7 @@ export default function Topbar({
                     background: '#ffffff',
                     display: 'inline-block',
                   }} />
-                  <span style={{ fontSize: '13px', fontWeight: 400, color: '#ffffff' }}>Arc Testnet</span>
+                  <span style={{ fontSize: '13px', fontWeight: 400, color: '#ffffff' }}>Arc Mainnet</span>
                 </div>
               </div>
 

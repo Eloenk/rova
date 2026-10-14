@@ -35,29 +35,25 @@ balance:
   poll_interval_sec: 5
 
 arc:
-  rpc_url: "https://arc-testnet.drpc.org"
+  rpc_url: "https://rpc.mainnet.arc.io"
   rpc_urls:
-    - "https://arc-testnet.drpc.org"
-    - "https://rpc.testnet.arc.network"
+    - "https://rpc.mainnet.arc.io"
+    - "https://rpc.drpc.mainnet.arc.io"
   wss_urls:
-    - "wss://arc-testnet.drpc.org"
-    - "wss://rpc.testnet.arc.network"
-  chain_id: 5042002
-  execution_log_address: "0x58d1e3e11C7a93cb26C371B115f2710aF68d427a"
+    - "wss://rpc.mainnet.arc.io"
+    - "wss://rpc.drpc.mainnet.arc.io"
+  chain_id: 5042
+  execution_log_address: ""
   usdc_address: "0x3600000000000000000000000000000000000000"
-  eurc_address: "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a"
+  eurc_address: "0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1"
 
 vault:
-  # Vault strategy options:
-  #   "circle_wallet"  - Dedicated secondary Circle SCA Savings Sub-Wallet per user
-  #   "smart_contract" - On-chain Timelocked Storage Vault contract (RovaSavingsVault.sol)
-  strategy: "circle_wallet"
+  # Fund-moving vault execution is outside this mainnet release.
+  strategy: "disabled"
 
 swap:
-  # Swap strategy options:
-  #   "circle_agent_stack" - Circle Agent Stack Native Swap Engine
-  #   "smart_contract"     - Uniswap-style Swap Router smart contract (RovaSwapRouter.sol)
-  strategy: "circle_agent_stack"
-  router_address: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA"
+  # Fund-moving swap execution is outside this mainnet release.
+  strategy: "disabled"
+  router_address: ""
   slippage_bps: 50
   enable_fallback: false

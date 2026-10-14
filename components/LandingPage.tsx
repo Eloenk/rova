@@ -86,7 +86,7 @@ export default function LandingPage() {
             </div>
             <span className="text-xl font-extrabold tracking-tight text-text-primary">ROVA</span>
             <span className="text-[9px] uppercase font-mono font-normal tracking-widest text-white/70 hidden sm:inline-block">
-              ARC TESTNET
+              ARC MAINNET
             </span>
           </Link>
 
@@ -196,7 +196,7 @@ export default function LandingPage() {
                 <span className="text-sm font-mono font-bold text-accent-primary">[2]</span>
                 <h3 className="text-xl font-bold text-text-primary">Policy-Gated Watcher</h3>
                 <p className="text-text-secondary text-sm leading-relaxed">
-                  The native `rova-agent-go` engine monitors testnet state, atomically claims owner-bound policies, and remains disabled unless both execution gates are approved.
+                  The native `rova-agent-go` engine can monitor Arc mainnet state, atomically claim owner-bound policies, and remains disabled for this release.
                 </p>
               </div>
               <div className="mt-8 p-4 rounded-xl bg-surface-raised border border-border text-xs space-y-2 font-mono">
@@ -214,13 +214,13 @@ export default function LandingPage() {
                 <span className="text-sm font-mono font-bold text-accent-primary">[3]</span>
                 <h3 className="text-xl font-bold text-text-primary">CCTP V2 Cross-Chain</h3>
                 <p className="text-text-secondary text-sm leading-relaxed">
-                  Prepares supported USDC testnet routes for review; execution remains paused until destination binding and acceptance tests pass.
+                  Prepares supported Arc mainnet USDC routes for review; managed-wallet execution remains paused.
                 </p>
               </div>
               <div className="mt-8 p-4 rounded-xl bg-surface-raised border border-border text-xs space-y-2 font-mono">
                 <div className="flex justify-between text-text-secondary">
                   <span>Source: Polygon</span>
-                  <span>Dest: Arc Testnet</span>
+                  <span>Dest: Arc Mainnet</span>
                 </div>
                 <div className="text-accent-mint font-bold">Circle Gateway Verified</div>
               </div>
@@ -272,7 +272,7 @@ export default function LandingPage() {
                 <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 3 • ROUTER</div>
                 <h4 className="text-base font-extrabold text-white">CCTP V2 Bridge</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Prepares supported testnet bridge routes for deterministic review and explicit approval before submission.
+                  Prepares supported mainnet bridge routes for deterministic review without submitting them.
                 </p>
               </div>
 
@@ -349,14 +349,14 @@ export default function LandingPage() {
                 legacy: false,
               },
               {
-                cap: 'Gated Testnet Routing',
-                desc: 'Supported transfers, swaps, and bridge plans require deterministic validation and approval',
+                cap: 'Mainnet Planning Mode',
+                desc: 'Builds deterministic transfer, swap, and bridge plans without moving user funds',
                 rova: true,
                 legacy: false,
               },
               {
                 cap: 'Circle Programmable Wallet Security',
-                desc: 'Enterprise MPC key management with optional user self-custody fallback',
+                desc: 'Enterprise MPC wallet integration with fund movement disabled for this release',
                 rova: true,
                 legacy: true,
               },
@@ -402,10 +402,10 @@ export default function LandingPage() {
         <div className="flex-1 flex flex-col justify-center">
           <ScrollReveal className="max-w-5xl mx-auto px-6 text-center space-y-8">
             <h2 className="text-4xl md:text-6xl font-extrabold text-text-primary tracking-tight">
-              Ready to review your Arc testnet flow?
+              Ready to review your Arc mainnet flow?
             </h2>
             <p className="text-text-secondary text-lg max-w-xl mx-auto">
-              Build a bounded plan, inspect the policy, and execute only through the approved testnet gates.
+              Build a bounded plan, inspect the policy, and verify the public Arc mainnet deployment.
             </p>
 
             <div className="pt-4">

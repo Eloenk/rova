@@ -88,11 +88,11 @@ test('accepts a transfer address copied exactly from the user intent', () => {
   );
 });
 
-test('allows only bounded native transfers and StableFX swaps for manual execution', () => {
-  assert.equal(isManualExecutionSupported(validPlan()), true);
+test('keeps all managed-wallet execution disabled for the mainnet release', () => {
+  assert.equal(isManualExecutionSupported(validPlan()), false);
   assert.equal(isManualExecutionSupported(validPlan({
     splits: [{ ...validPlan().splits[0], arcProtocol: 'Arc StableFX' }],
-  })), true);
+  })), false);
 });
 
 test('keeps bridge plans informational until destination binding is implemented', () => {

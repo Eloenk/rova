@@ -6,13 +6,12 @@ import { operationalChainId, operationalFlag, readOperationalVariable, requireOp
 
 const RPC_ENDPOINTS = [
   readOperationalVariable('ARC_RPC_URL'),
-  "https://arc-testnet.drpc.org",
-  "https://5042002.rpc.thirdweb.com",
-  "https://rpc.testnet.arc.network"
+  "https://rpc.mainnet.arc.io",
+  "https://rpc.drpc.mainnet.arc.io",
+  "https://rpc.blockdaemon.mainnet.arc.io"
 ].filter(Boolean) as string[];
 
 const DEPLOYABLE_CONTRACTS: Record<string, string> = {
-  'RovaSavingsVault.sol': 'RovaSavingsVault',
   'RovaExecutionLog.sol': 'RovaExecutionLog',
 };
 
@@ -83,18 +82,21 @@ async function getProviderWithFallback() {
 }
 
 async function main() {
-  const targetFile = process.argv[2] || 'RovaSavingsVault.sol';
+  const targetFile = process.argv[2] || 'RovaExecutionLog.sol';
   const expectedContract = DEPLOYABLE_CONTRACTS[targetFile];
   const targetContract = process.argv[3] || expectedContract;
 
   if (!expectedContract || targetContract !== expectedContract) {
-    throw new Error('Only RovaSavingsVault.sol and RovaExecutionLog.sol may be deployed by this script');
+    throw new Error('Only the non-custodial RovaExecutionLog.sol may be deployed by this release script');
   }
   if (!operationalFlag('ROVA_ALLOW_CONTRACT_DEPLOY')) {
     throw new Error('Contract deployment is disabled. Set ROVA_ALLOW_CONTRACT_DEPLOY=true only after approval.');
   }
 
   const expectedChainId = operationalChainId();
+  if (expectedChainId !== 5042n) {
+    throw new Error('This release deploys only to Arc mainnet chain 5042');
+  }
   const expectedConfirmation = `DEPLOY:${targetContract}:${expectedChainId}`;
   if (readOperationalVariable('ROVA_DEPLOY_CONFIRMATION') !== expectedConfirmation) {
     throw new Error(`Set ROVA_DEPLOY_CONFIRMATION=${expectedConfirmation} to authorize this exact deployment`);
@@ -120,7 +122,7 @@ async function main() {
 
   console.log(`🔑 Deployer Wallet Address: ${wallet.address}`);
   const balance = await provider.getBalance(wallet.address);
-  console.log(`💰 Wallet Balance: ${ethers.formatEther(balance)} USDC/ARC`);
+  console.log(`💰 Wallet Balance: ${ethers.formatEther(balance)} native USDC`);
 
   console.log(`🚀 Deploying ${targetContract} contract to Arc...`);
 
@@ -138,12 +140,7 @@ async function main() {
   console.log(`🎉 SUCCESS! ${targetContract} deployed to: ${deployedAddress}`);
   console.log("====================================================\n");
   console.log("Add this public address to the deployment configuration:");
-  if (targetContract === 'RovaSavingsVault') {
-    console.log(`NEXT_PUBLIC_ROVA_SAVINGS_VAULT_ADDRESS=${deployedAddress}`);
-    console.log(`ROVA_SAVINGS_VAULT_ADDRESS=${deployedAddress}`);
-  } else {
-    console.log(`NEXT_PUBLIC_ROVA_EXECUTION_LOG_ADDRESS=${deployedAddress}`);
-  }
+  console.log(`NEXT_PUBLIC_ROVA_EXECUTION_LOG_ADDRESS=${deployedAddress}`);
 }
 
 main().catch((err) => {

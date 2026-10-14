@@ -1,12 +1,12 @@
 import { defineChain } from 'viem';
 import { publicEnv } from './env/public';
 
-const arcRpcUrl = publicEnv.arcRpcUrl || 'https://rpc.testnet.arc.network';
+const arcRpcUrl = publicEnv.arcRpcUrl || 'https://rpc.mainnet.arc.io';
 
-export const arcTestnet = defineChain({
-  id: 5042002,
-  name: 'Arc Testnet',
+export const arcChain = defineChain({
+  id: 5042,
+  name: 'Arc Mainnet',
   nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
   rpcUrls: { default: { http: [arcRpcUrl] } },
-  blockExplorers: { default: { name: 'Arc Testnet Explorer', url: 'https://explorer.testnet.arc.io' } },
+  blockExplorers: { default: { name: 'Arc Explorer', url: 'https://explorer.arc.io' } },
 });

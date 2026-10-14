@@ -9,6 +9,7 @@ import { AuthenticatedSession, requireMutationSession } from '@/lib/auth';
 import { createExecutionPlan } from '@/lib/executionPlans';
 import { isManualExecutionSupported } from '@/lib/executionCapabilities';
 import type { FlowPlan } from '@/lib/types';
+import { ARC_NETWORK } from '@/lib/config';
 
 function err(status: number, code: string, message: string, detail?: string): NextResponse<ApiResponse> {
   return NextResponse.json({ ok: false, error: { code, message, ...(detail ? { detail } : {}) } }, { status });
@@ -44,7 +45,7 @@ async function planResponse(
       model,
       processingMs,
       intentHash,
-      arcChainId: 5042002,
+      arcChainId: ARC_NETWORK.chainId,
       executable: Boolean(executionPlan),
       ...(executionPlan ? { executionPlanId: executionPlan.id, expiresAt: executionPlan.expiresAt } : {}),
     },

@@ -2,32 +2,32 @@
 
 ## Purpose
 
-This document converts the project planning conversation into an implementation sequence that can be reviewed, tested, and shipped safely. The conversation is useful product context, but it is not an executable specification and does not authorize a mainnet deployment.
+This document converts the project planning conversation and verified Arc Microgrants requirements into an implementation sequence that can be reviewed, tested, and shipped safely.
 
-The current pull requests establish the security foundation. Rova remains a testnet prototype with all custody and autonomous execution disabled by default. A disclosed testnet hackathon submission may proceed after the submission gates in this roadmap; mainnet and production-custody claims may not.
+The program requires a working Arc Mainnet deployment and explicitly rejects testnet-only builds. The current release therefore permits a narrow mainnet application and non-custodial log contract while all custody, managed-wallet money movement, and autonomous execution remain disabled.
 
 ## Concern-to-workstream map
 
 | Concern | Current position | Required outcome |
 |---|---|---|
 | Security findings | Execution is fail-closed, sensitive APIs are authenticated, durable ownership is introduced, unsafe deployment paths are retired, and local web/Go validation passes | Apply the database migration, rotate actual exposed credentials, pass external acceptance, and obtain independent review |
-| Arc mainnet migration | Testnet-only; no mainnet deployment is authorized | Maintain a reviewed network manifest, rehearse on a fresh testnet environment, deploy with a dedicated multisig/deployer, verify bytecode, and publish addresses |
+| Arc mainnet deployment | App configuration uses official chain `5042` values and the guarded CLI allows only `RovaExecutionLog` | Owner deploys, verifies source/bytecode, publishes addresses, and completes mainnet acceptance with all money-moving flags disabled |
 | Agent policy controls | New web automation is paused; engine execution requires separate manual and autonomous gates | Introduce one versioned policy and execution-plan schema shared by the web app and Go engine |
 | Yield allocation | No reviewed production yield venue is integrated | Select a supported venue, model custody and withdrawal risk, build an adapter, and test deposits and redemptions end to end |
 | OAuth and Circle Wallets | Email/session and wallet flows exist but are not yet a complete production identity lifecycle | Select the identity model, bind one verified user to permitted wallets, and document recovery and account-collision behavior |
 | Shareable jobs and receipts | Browser-local history is convenience state, not evidence | Store immutable server-side job states and receipts, anchor finalized transactions to ArcScan, and issue revocable privacy-safe share links |
 | Monitoring and auditability | Some logs and execution records exist, but there is no complete operational view | Add structured events, correlation IDs, metrics, alerts, retries, reconciliation, and an operator runbook |
 | Web and WhatsApp reliability | Known flows are incomplete and execution is intentionally gated | Define and pass an acceptance matrix for login, linking, quoting, confirmation, execution, failure, retry, and receipt delivery |
-| Docs, UI, demo, submission | README claims outpace the currently enabled release posture | Keep capability labels truthful, publish project docs, record a reproducible testnet demo, and assemble the submission only after acceptance |
+| Docs, UI, demo, submission | Mainnet deployment and public evidence remain owner-controlled external tasks | Publish truthful project docs, record the accepted mainnet slice, and submit only after signed-out acceptance |
 
 ## Delivery sequence
 
 ### Phase 0: Merge and operate the security foundation
 
 1. Review and merge the web and Go security pull requests together.
-2. Apply `schema.sql` to a non-production Supabase project and verify row-level security with separate users.
+2. Apply `schema.sql` to the owner-selected Supabase project and verify row-level security with separate users.
 3. Rotate the exposed historical deployer account and any copied API, session, webhook, or database credentials.
-4. Configure separate development and testnet environments with every execution flag set to `false` by default.
+4. Configure the owner-controlled Arc Mainnet environment with every money-moving execution flag set to `false`.
 5. Re-run the declared Go 1.25 toolchain checks from a clean checkout before deploying the engine; local `go test ./...` and `go vet ./...` currently pass.
 
 **Exit gate:** Both repositories build from clean checkouts, the migration is verified, secrets are rotated, and no execution path can run without an explicit server-side gate.
@@ -72,31 +72,31 @@ The web app should create and review policies. One engine scheduler should claim
 2. Record independent review status and define per-user and global exposure limits.
 3. Implement quote, deposit, position, redeem, and emergency-disable operations behind a venue adapter.
 4. Distinguish quoted APY from realized return and display principal risk, lockups, fees, and failed-redemption states.
-5. Rehearse deposit and full withdrawal on testnet or the venue's supported staging environment.
+5. Rehearse deposit and full withdrawal only in the venue's supported non-production staging environment.
 
 **Exit gate:** Principal can be reconciled and withdrawn under normal and failure scenarios; no owner-set exchange rate or unrestricted owner withdrawal is involved.
 
-### Phase 5: Prepare an Arc mainnet release candidate
+### Phase 5: Ship the narrow Arc mainnet release
 
 1. Obtain canonical Arc chain, RPC, explorer, token, and protocol addresses from primary sources and place them in a reviewed network manifest.
-2. Complete an independent application and smart-contract security review.
-3. Deploy from a dedicated multisig or controlled deployer during an approved change window.
-4. Verify source and bytecode, publish addresses, seed monitoring, and execute a bounded smoke transaction.
-5. Keep autonomous execution disabled until manual production acceptance and reconciliation pass.
+2. Deploy only the non-custodial `RovaExecutionLog` from a dedicated controlled deployer during an approved change window.
+3. Verify source and bytecode, publish addresses, and optionally write one clearly labelled non-financial smoke record.
+4. Deploy the web and Go services from owner-controlled hosting with all money-moving flags disabled.
+5. Keep managed-wallet, WhatsApp money movement, and autonomous execution disabled until a later independently reviewed release.
 
-**Exit gate:** The owner gives explicit broadcast authorization after reviewing the exact artifacts, addresses, limits, and rollback plan.
+**Exit gate:** The owner verifies chain `5042`, the exact artifact, deployer, contract address, public links, disabled execution posture, and rollback plan before submission.
 
 ### Phase 6: Finish the hackathon package
 
 1. Run the web and WhatsApp acceptance matrix against the release candidate.
 2. Update UI copy, README, project docs, and diagrams to match only verified behavior.
-3. Record a short reproducible demo covering login, wallet binding, policy review, disabled states, and an optional owner-approved bounded receipt.
+3. Record a short reproducible mainnet demo covering login, wallet binding, policy review, disabled money movement, and the verified log-contract receipt.
 4. Publish the repositories, verified contract addresses, live application, project documentation, and demo link.
 5. Complete the submission early enough for an independent link and fresh-account check.
 
 **Exit gate:** A new reviewer can follow the public instructions and verify the demonstrated transaction without private assistance.
 
-For the current release sequence, use `docs/HACKATHON_SUBMISSION_RUNBOOK.md` and record results in `docs/TESTNET_ACCEPTANCE_MATRIX.md`.
+For the current release sequence, use `docs/HACKATHON_SUBMISSION_RUNBOOK.md` and record results in `docs/MAINNET_ACCEPTANCE_MATRIX.md`.
 
 ## Recommended pull-request sequence
 
@@ -113,21 +113,20 @@ Each pull request should be independently reviewable, keep execution disabled un
 
 ## Owner confirmations
 
-The repositories already define the current Arc testnet network, known contract addresses, Circle developer-controlled wallet model, email OTP flow, supported AI providers, Vercel-oriented web deployment, PM2-oriented engine runtime, and owner-side WhatsApp QR pairing. Engineering should preserve those choices while validating them rather than asking the owner to rediscover technical configuration.
+The repositories define Arc Mainnet chain `5042`, official infrastructure addresses, an EVM wallet model, email OTP flow, supported AI providers, Vercel-oriented web deployment, PM2-oriented engine runtime, and owner-side WhatsApp QR pairing. Engineering should validate those choices rather than asking the owner to rediscover technical configuration.
 
-Engineering will reuse an existing Supabase project when one is already configured in the deployment environment. If none exists, engineering will create a separate non-production project, apply `schema.sql`, and provide the owner with a staging acceptance checklist. The owner does not need to share a WhatsApp account; the owner or their designated tester will run the final WhatsApp checklist using their existing linked account.
+Engineering will reuse an existing owner-selected Supabase project when configured or prepare a fresh isolated project and apply `schema.sql`. The owner does not share a WhatsApp account; the owner or designated tester runs the final checklist using their existing linked account.
 
 The owner only needs to confirm information that cannot be established from the repositories:
 
-- the active hackathon or grant page, deadline, and required submission artifacts;
 - whether any deployed contracts, funds, token approvals, commercial partnerships, or yield commitments exist outside the repositories;
-- who may approve a bounded testnet rehearsal and, much later, the final mainnet broadcast.
+- who may approve the guarded mainnet log-contract broadcast and final submission.
 
 If no external deployments or commitments exist, the repository remains the source of truth. Secrets stay in the relevant hosting dashboard or secret manager and must never be sent through issues, pull requests, chat transcripts, or repository files.
 
-## Definition of ready for mainnet
+## Definition of ready for fund-moving mainnet features
 
-Rova is ready to request final mainnet authorization only when all of the following are true:
+Rova is ready to request authorization for custody or transaction execution only when all of the following are true:
 
 - clean-checkout builds and tests pass for both repositories;
 - identity, wallet ownership, policy authorization, and idempotency are covered by integration tests;

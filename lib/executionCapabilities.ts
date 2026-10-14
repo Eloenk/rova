@@ -1,6 +1,6 @@
 import type { FlowPlan } from './types';
 
-const MANUAL_EXECUTION_PROTOCOLS = new Set(['Arc Native', 'Arc StableFX']);
+const MANUAL_EXECUTION_PROTOCOLS = new Set<string>();
 
 export function unsupportedManualProtocols(plan: Pick<FlowPlan, 'splits'>): string[] {
   return [...new Set(
