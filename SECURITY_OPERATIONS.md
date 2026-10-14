@@ -40,6 +40,6 @@ The previously embedded fallback deployment key is considered exposed. Do not us
 
 ## Hackathon-safe demo
 
-Use a testnet-only environment with `ROVA_EXECUTION_ENABLED=false`. Demonstrate login, policy validation, quote retrieval, WhatsApp linking, rule history, and disabled automation messages. If a testnet transaction is approved for a demo, enable only the minimum required flag for one bounded rehearsal, then disable it again and preserve the receipt.
+Use a testnet-only environment with `ROVA_EXECUTION_ENABLED=false`. Demonstrate login, policy validation, plan review, WhatsApp linking, rule history, and disabled automation messages. If a testnet transaction is approved for a demo, enable only the minimum required flag for one bounded rehearsal, then disable it again and preserve the receipt.
 
 Treat ArcScan transaction records and server-side execution records as evidence. Any policy left in `ready_to_execute` after an error is paused for reconciliation and must not be blindly re-armed or retried.

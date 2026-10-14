@@ -4,7 +4,6 @@ const nextConfig = {
   transpilePackages: [
     '@circle-fin/developer-controlled-wallets',
     '@circle-fin/adapter-circle-wallets',
-    '@circle-fin/adapter-viem-v2',
     '@circle-fin/app-kit',
   ],
   experimental: {

@@ -58,7 +58,7 @@ export default function DocsPage() {
               Security and operating gates
             </a>
             <a
-              href="https://docs.arc.network"
+              href="https://docs.arc.io"
               target="_blank"
               rel="noreferrer"
               className="text-accent-primary hover:underline"

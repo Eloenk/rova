@@ -4,13 +4,13 @@
 
 This document converts the project planning conversation into an implementation sequence that can be reviewed, tested, and shipped safely. The conversation is useful product context, but it is not an executable specification and does not authorize a mainnet deployment.
 
-The current pull requests establish the security foundation. Rova remains a testnet prototype with all custody and autonomous execution disabled by default. Mainnet, production custody, and hackathon submission claims must wait for the acceptance gates in this roadmap.
+The current pull requests establish the security foundation. Rova remains a testnet prototype with all custody and autonomous execution disabled by default. A disclosed testnet hackathon submission may proceed after the submission gates in this roadmap; mainnet and production-custody claims may not.
 
 ## Concern-to-workstream map
 
 | Concern | Current position | Required outcome |
 |---|---|---|
-| Security findings | Execution is fail-closed, sensitive APIs are authenticated, durable ownership is introduced, and unsafe deployment paths are retired | Apply the database migration, rotate exposed credentials, run the missing Go test suite, and obtain independent review |
+| Security findings | Execution is fail-closed, sensitive APIs are authenticated, durable ownership is introduced, unsafe deployment paths are retired, and local web/Go validation passes | Apply the database migration, rotate actual exposed credentials, pass external acceptance, and obtain independent review |
 | Arc mainnet migration | Testnet-only; no mainnet deployment is authorized | Maintain a reviewed network manifest, rehearse on a fresh testnet environment, deploy with a dedicated multisig/deployer, verify bytecode, and publish addresses |
 | Agent policy controls | New web automation is paused; engine execution requires separate manual and autonomous gates | Introduce one versioned policy and execution-plan schema shared by the web app and Go engine |
 | Yield allocation | No reviewed production yield venue is integrated | Select a supported venue, model custody and withdrawal risk, build an adapter, and test deposits and redemptions end to end |
@@ -28,7 +28,7 @@ The current pull requests establish the security foundation. Rova remains a test
 2. Apply `schema.sql` to a non-production Supabase project and verify row-level security with separate users.
 3. Rotate the exposed historical deployer account and any copied API, session, webhook, or database credentials.
 4. Configure separate development and testnet environments with every execution flag set to `false` by default.
-5. Install the declared Go toolchain and run formatting, static analysis, unit tests, and a build before deploying the engine.
+5. Re-run the declared Go 1.25 toolchain checks from a clean checkout before deploying the engine; local `go test ./...` and `go vet ./...` currently pass.
 
 **Exit gate:** Both repositories build from clean checkouts, the migration is verified, secrets are rotated, and no execution path can run without an explicit server-side gate.
 
@@ -90,11 +90,13 @@ The web app should create and review policies. One engine scheduler should claim
 
 1. Run the web and WhatsApp acceptance matrix against the release candidate.
 2. Update UI copy, README, project docs, and diagrams to match only verified behavior.
-3. Record a short reproducible demo covering login, wallet binding, policy review, bounded execution, receipt sharing, and monitoring.
+3. Record a short reproducible demo covering login, wallet binding, policy review, disabled states, and an optional owner-approved bounded receipt.
 4. Publish the repositories, verified contract addresses, live application, project documentation, and demo link.
 5. Complete the submission early enough for an independent link and fresh-account check.
 
 **Exit gate:** A new reviewer can follow the public instructions and verify the demonstrated transaction without private assistance.
+
+For the current release sequence, use `docs/HACKATHON_SUBMISSION_RUNBOOK.md` and record results in `docs/TESTNET_ACCEPTANCE_MATRIX.md`.
 
 ## Recommended pull-request sequence
 

@@ -8,8 +8,7 @@ const RPC_ENDPOINTS = [
   readOperationalVariable('ARC_RPC_URL'),
   "https://arc-testnet.drpc.org",
   "https://5042002.rpc.thirdweb.com",
-  "https://rpc.testnet.arc.network",
-  "https://testnet.arc.network/rpc"
+  "https://rpc.testnet.arc.network"
 ].filter(Boolean) as string[];
 
 const DEPLOYABLE_CONTRACTS: Record<string, string> = {

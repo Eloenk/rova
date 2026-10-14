@@ -1,8 +1,8 @@
 // Rova — Arc & Circle Configuration
 //
 // Sources:
-//   https://docs.arc.network/arc/references/connect-to-arc
-//   https://docs.arc.network/arc/references/contract-addresses
+//   https://docs.arc.io/arc/references/connect-to-arc
+//   https://docs.arc.io/arc/references/contract-addresses
 //   https://developers.circle.com/cctp/references/contract-addresses.md
 //   https://developers.circle.com/stablefx.md
 //   https://developers.circle.com/gateway.md
@@ -20,7 +20,7 @@ export const ARC_TESTNET = {
     'https://rpc.quicknode.testnet.arc.network',
   ],
   ws:        'wss://rpc.testnet.arc.network',
-  explorer:  'https://testnet.arcscan.app',
+  explorer:  'https://explorer.testnet.arc.io',
   faucet:    'https://faucet.circle.com',
   currency:  'USDC',
   // Circle SDK blockchain identifier
@@ -68,7 +68,7 @@ export const GATEWAY = {
 
 // ── ERC-8004 AI Agent Registry ─────────────────────────────────────────────────
 // Arc's native standard for AI agent onchain identity, reputation, and credentials.
-// Docs: https://docs.arc.network/arc/tutorials/register-your-first-ai-agent
+// Docs: https://docs.arc.io/arc/tutorials/register-your-first-ai-agent
 export const ERC8004 = {
   IdentityRegistry:   '0x8004A818BFB912233c491871b3d84c89A494BD9e' as `0x${string}`,
   ReputationRegistry: '0x8004B663056A597Dffe9eCcC1965A193B7388713' as `0x${string}`,
