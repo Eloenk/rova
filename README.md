@@ -79,34 +79,13 @@ Token access and security on `RovaSavingsVault.sol` are enforced through 4 disti
 - **Node.js**: `v18.x` or higher
 - **npm**: `v9.x` or higher
 
-### 2. Environment Setup
+### 2. Runtime Configuration
 
-Create `.env.local` in the project root:
+Application code reads configuration only through `lib/env/server.ts` and `lib/env/public.ts`. End users do not create or share an `.env` file. Each deployment injects its own server secrets through the hosting platform's secret manager; `.env.local` is only an ignored local-development convenience.
 
-```env
-# Network RPC & Chain
-NEXT_PUBLIC_ARC_RPC_URL=https://rpc.testnet.arc.network
-NEXT_PUBLIC_ARC_CHAIN_ID=5042002
+Copy `.env.example` to `.env.local` for local development and fill only the services being exercised. Never place real credentials in `.env.example`, source files, pull requests, logs, screenshots, or chat. Only non-secret browser values may use the `NEXT_PUBLIC_*` prefix.
 
-# Smart Contract
-NEXT_PUBLIC_ROVA_EXECUTION_LOG_ADDRESS=0x58d1e3e11C7a93cb26C371B115f2710aF68d427a
-
-# AI & Email Services
-ANTHROPIC_API_KEY=your_anthropic_api_key
-RESEND_API_KEY=your_resend_api_key
-RESEND_FROM_EMAIL="Rova Security <auth@yourdomain.com>"
-
-# Circle SDK, Supabase, and execution gates
-NEXT_PUBLIC_CIRCLE_APP_ID=your_circle_app_id
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SECRET_KEY=your_supabase_secret_key
-SUPABASE_SERVICE_ROLE_KEY=server_only_service_role_key
-ROVA_SESSION_SECRET=at_least_32_random_characters
-ROVA_EXECUTION_ENABLED=false
-ROVA_AUTONOMOUS_EXECUTION_ENABLED=false
-```
-
-Apply `schema.sql` using the Supabase SQL editor before starting the web app. The service-role key is server-only and must never be prefixed with `NEXT_PUBLIC_`.
+Apply `schema.sql` using the Supabase SQL editor before starting the web app. `SUPABASE_SECRET_KEY` is server-only and must never be prefixed with `NEXT_PUBLIC_`.
 
 ### 3. Installation & Local Development
 

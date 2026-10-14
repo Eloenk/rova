@@ -1,9 +1,10 @@
 import 'server-only';
 
 import { SignJWT, jwtVerify } from 'jose';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import { requireSecret, serverEnv } from '@/lib/env/server';
 
 // ── Cookie names ────────────────────────────────────────────────────────────
 const ACCESS_COOKIE  = 'rova_access';
@@ -25,18 +26,12 @@ type GuardResult =
 
 // ── Secret key ───────────────────────────────────────────────────────────────
 function getSigningKey(): Uint8Array {
-  const secret = process.env.ROVA_SESSION_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error('ROVA_SESSION_SECRET must be set with at least 32 characters');
-  }
+  const secret = requireSecret(serverEnv.sessionSecret, 'ROVA_SESSION_SECRET', 32);
   return new TextEncoder().encode(secret);
 }
 
 export function hasSessionSecret(): boolean {
-  return Boolean(
-    process.env.ROVA_SESSION_SECRET &&
-    process.env.ROVA_SESSION_SECRET.length >= 32
-  );
+  return serverEnv.sessionSecret.length >= 32;
 }
 
 // ── Access token (JWT, stateless) ────────────────────────────────────────────
@@ -124,7 +119,7 @@ async function revokeRefreshToken(email: string): Promise<void> {
 
 // ── Cookie helpers ───────────────────────────────────────────────────────────
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = serverEnv.isProduction;
 
 export async function setSessionCookies(
   response: NextResponse,
@@ -283,28 +278,15 @@ export async function handleLogout(request: NextRequest): Promise<NextResponse> 
 
 // ── Service / admin token guards ─────────────────────────────────────────────
 
-export function requireServiceToken(request: NextRequest): NextResponse | null {
-  const expected = process.env.ROVA_SCHEDULER_TOKEN;
-  const supplied  = request.headers.get('authorization');
-  if (!expected || expected.length < 32) {
-    console.error('[Auth] ROVA_SCHEDULER_TOKEN is not configured');
-    return NextResponse.json(
-      { ok: false, error: 'Scheduler is not configured' },
-      { status: 503 }
-    );
-  }
-  if (supplied !== `Bearer ${expected}`) {
-    return NextResponse.json(
-      { ok: false, error: 'Scheduler authorization required' },
-      { status: 401 }
-    );
-  }
-  return null;
+function hasValidBearer(request: NextRequest, expected: string): boolean {
+  const supplied = request.headers.get('authorization') || '';
+  const expectedHeader = `Bearer ${expected}`;
+  if (supplied.length !== expectedHeader.length) return false;
+  return timingSafeEqual(Buffer.from(supplied), Buffer.from(expectedHeader));
 }
 
 export function requireAdminToken(request: NextRequest): NextResponse | null {
-  const expected = process.env.ROVA_ADMIN_TOKEN;
-  const supplied  = request.headers.get('authorization');
+  const expected = serverEnv.adminToken;
   if (!expected || expected.length < 32) {
     console.error('[Auth] ROVA_ADMIN_TOKEN is not configured');
     return NextResponse.json(
@@ -312,7 +294,7 @@ export function requireAdminToken(request: NextRequest): NextResponse | null {
       { status: 503 }
     );
   }
-  if (supplied !== `Bearer ${expected}`) {
+  if (!hasValidBearer(request, expected)) {
     return NextResponse.json(
       { ok: false, error: 'Admin authorization required' },
       { status: 401 }

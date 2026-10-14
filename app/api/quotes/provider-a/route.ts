@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getIndicativeRate } from '@/lib/rates';
 import { quoteFor, build402Response, hasPaymentProof } from '@/lib/nanopay';
 import type { FxPair } from '@/lib/rates';
+import { serverEnv } from '@/lib/env/server';
 
 const PROVIDER = 'provider-a' as const;
-const SELLER_ADDRESS = process.env.ROVA_X402_SELLER_ADDRESS || '0x000000000000000000000000000000000000A11A';
+const SELLER_ADDRESS = serverEnv.x402SellerAddress || '0x000000000000000000000000000000000000A11A';
 
 export async function GET(req: NextRequest) {
   const pair = (req.nextUrl.searchParams.get('pair') || 'USDC/EURC') as FxPair;

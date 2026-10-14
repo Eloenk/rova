@@ -18,6 +18,8 @@ import { arcScan } from './config';
 import type { AgentRule, QuoteShopResult } from './agentStore';
 import { resolveRecipient } from './emailWallets';
 import { shopRates, pickBest } from './nanopay';
+import { publicEnv } from './env/public';
+import { serverEnv } from './env/server';
 
 const AGENT_FEE_USDC = 0.05;
 
@@ -71,7 +73,7 @@ export async function confirmSelfCustodyExecution(opts: {
     recordReputation, logExecutionOnchain,
   } = await import('./circle');
 
-  const attestor = process.env.ROVA_VALIDATOR_WALLET || process.env.FLOWFI_VALIDATOR_WALLET || '0xd70e45e52b7fbee59f4d014b5a6a1c5532f49556';
+  const attestor = serverEnv.validatorWallet || '0xd70e45e52b7fbee59f4d014b5a6a1c5532f49556';
 
   let feeJobId: string | undefined;
   try {
@@ -88,7 +90,7 @@ export async function confirmSelfCustodyExecution(opts: {
 
   let reputationTxHash: string | undefined;
   try {
-    const agentId = process.env.NEXT_PUBLIC_ROVA_AGENT_ID || '1683';
+    const agentId = publicEnv.rovaAgentId || '1683';
     reputationTxHash = await recordReputation(attestor, agentId, 100, `autonomous-self-custody:${opts.ruleOrIntentId}`);
   } catch (e) {
     console.warn('[Agent] Self-custody reputation recording failed (non-fatal):', e);
@@ -156,7 +158,7 @@ export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: str
 
   let feeJobId: string | undefined;
   try {
-    const validatorWallet = process.env.ROVA_VALIDATOR_WALLET || sourceWallet;
+    const validatorWallet = serverEnv.validatorWallet || sourceWallet;
     const now = Math.floor(Date.now() / 1000);
     const jobTxHash = await createErc8183Job(sourceWallet, sourceWallet, validatorWallet, `Autonomous execution fee — ${memo}`, now + 3600);
     await approveErc8183USDC(sourceWallet, AGENT_FEE_USDC);
@@ -170,8 +172,8 @@ export async function fireRule(rule: AgentRule, baseUrl: string, memoPrefix: str
 
   let reputationTxHash: string | undefined;
   try {
-    const validatorWallet = process.env.ROVA_VALIDATOR_WALLET || sourceWallet;
-    const agentId = process.env.NEXT_PUBLIC_ROVA_AGENT_ID || '1683';
+    const validatorWallet = serverEnv.validatorWallet || sourceWallet;
+    const agentId = publicEnv.rovaAgentId || '1683';
     reputationTxHash = await recordReputation(validatorWallet, agentId, 100, `autonomous:${rule.id}`);
   } catch (e) {
     console.warn('[Agent] Reputation recording failed (non-fatal):', e);

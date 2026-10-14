@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireMutationSession } from '@/lib/auth';
+import { serverEnv } from '@/lib/env/server';
 
 interface FeedbackPayload {
   category: string;
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
   }, null, 2));
 
   // Optionally forward to Discord
-  const webhookUrl = process.env.DISCORD_FEEDBACK_WEBHOOK_URL;
+  const webhookUrl = serverEnv.discordFeedbackWebhookUrl;
   let discordSent = false;
 
   if (webhookUrl) {

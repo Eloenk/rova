@@ -3,6 +3,8 @@ import "server-only";
 import { AppKit, SwapChain } from "@circle-fin/app-kit";
 import { createCircleWalletsAdapter } from "@circle-fin/adapter-circle-wallets";
 import { arcScan } from "./config";
+import { publicEnv } from './env/public';
+import { serverEnv } from './env/server';
 
 /**
  * ── Single-File Swap Method Abstraction (lib/swapService.ts) ────────────────
@@ -44,8 +46,8 @@ function getKit(): AppKit {
 
 function getAdapter(): ReturnType<typeof createCircleWalletsAdapter> {
   if (cachedAdapter) return cachedAdapter;
-  const apiKey = process.env.CIRCLE_API_KEY;
-  const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
+  const apiKey = serverEnv.circleApiKey;
+  const entitySecret = serverEnv.circleEntitySecret;
   if (!apiKey || !entitySecret) {
     throw new Error("CIRCLE_API_KEY / CIRCLE_ENTITY_SECRET not configured");
   }
@@ -58,7 +60,7 @@ function getAdapter(): ReturnType<typeof createCircleWalletsAdapter> {
  * Circle's official pattern: SwapChain[NEXT_PUBLIC_ARC_CHAIN]
  */
 function getSwapChain(): SwapChain {
-  const chainKey = (process.env.NEXT_PUBLIC_ARC_CHAIN || "Arc_Testnet") as keyof typeof SwapChain;
+  const chainKey = publicEnv.arcChain as keyof typeof SwapChain;
   const resolved = SwapChain[chainKey];
   if (!resolved) {
     throw new Error(
@@ -70,7 +72,7 @@ function getSwapChain(): SwapChain {
 }
 
 function getKitKey(): string {
-  const kitKey = process.env.KIT_KEY || process.env.NEXT_PUBLIC_CIRCLE_KIT_KEY || "";
+  const kitKey = serverEnv.circleKitKey;
   if (!kitKey) {
     throw new Error("KIT_KEY not configured — required for AppKit swap");
   }
@@ -115,7 +117,7 @@ export async function getSwapQuote(
 export async function executeSwap(
   opts: SwapOptions
 ): Promise<{ txHash: string; success: boolean; arcScanUrl: string; quote: SwapQuote }> {
-	if (process.env.ROVA_EXECUTION_ENABLED?.toLowerCase() !== 'true') {
+	if (!serverEnv.executionEnabled) {
 		throw new Error('Custodial execution is disabled. Set ROVA_EXECUTION_ENABLED=true only after operational approval.');
 	}
   if (opts.sellCurrency === opts.buyCurrency) {

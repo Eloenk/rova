@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { useWallet } from '@/hooks/useWallet';
+import { publicEnv } from '@/lib/env/public';
 import {
   Menu, X, Copy, Check, MessageCircle, Send, Repeat,
   Monitor, Clock, Home, CheckCircle2, MoreHorizontal, Wallet, LogOut, RefreshCw
@@ -61,7 +62,7 @@ export default function Topbar({
     }
   }, [showWhatsAppModal]);
 
-  const rawWaConfig = process.env.NEXT_PUBLIC_WHATSAPP_LINK || 'https://wa.me/+447446132243';
+  const rawWaConfig = publicEnv.whatsappLink || 'https://wa.me/+447446132243';
   const prefilledText = isWhatsAppLinked ? 'status' : linkToken;
   const waDeepLink = rawWaConfig.includes('?')
     ? `${rawWaConfig}&text=${prefilledText}`

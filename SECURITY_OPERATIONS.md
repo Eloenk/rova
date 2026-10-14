@@ -10,9 +10,9 @@ Unattended engine execution requires both `ROVA_EXECUTION_ENABLED=true` and `ROV
 
 ## Database migration
 
-Before serving the application, apply `schema.sql` in the Supabase SQL editor. The migration adds ownership columns, disables legacy ownerless rules and intents, and enables row-level security on every sensitive table. Only server-side services may use `SUPABASE_SERVICE_ROLE_KEY`; browser code must not receive it or an anonymous key with table access.
+Before serving the application, apply `schema.sql` in the Supabase SQL editor. The migration adds ownership columns, disables legacy ownerless rules and intents, and enables row-level security on every sensitive table. Only server-side services may use `SUPABASE_SECRET_KEY`; browser code must not receive it or an anonymous key with table access.
 
-The Go engine and Next.js server use the service role only from their private runtime environments. Do not place the key in `.env.example`, `NEXT_PUBLIC_*`, source control, client bundles, logs, or chat transcripts.
+The Go engine and Next.js server use the secret key only from their private runtime environments. Application modules read environment values through the typed config boundaries in `lib/env/`; end users never share the deployment environment. Do not place the key in `.env.example`, `NEXT_PUBLIC_*`, source control, client bundles, logs, or chat transcripts.
 
 ## Deployment and contracts
 

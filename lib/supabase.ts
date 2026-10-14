@@ -1,13 +1,13 @@
 import 'server-only';
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SECRET_KEY || '';
+import { serverEnv } from './env/server';
 
 let _supabase: SupabaseClient<any, "public", any> | null = null;
 
 export function getSupabaseClient(): SupabaseClient<any, "public", any> | null {
+  const supabaseUrl = serverEnv.supabaseUrl;
+  const supabaseServiceKey = serverEnv.supabaseSecretKey;
   if (!supabaseUrl || !supabaseServiceKey) {
     return null;
   }
@@ -20,7 +20,7 @@ export function getSupabaseClient(): SupabaseClient<any, "public", any> | null {
 }
 
 export function isSupabaseConfigured(): boolean {
-  return !!(supabaseUrl && supabaseServiceKey);
+  return !!(serverEnv.supabaseUrl && serverEnv.supabaseSecretKey);
 }
 
 

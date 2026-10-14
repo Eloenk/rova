@@ -19,6 +19,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { FxPair } from './rates';
+import { serverEnv } from './env/server';
 
 export const QUOTE_PROVIDERS = ['provider-a', 'provider-b', 'provider-c'] as const;
 export type QuoteProviderId = typeof QUOTE_PROVIDERS[number];
@@ -46,7 +47,7 @@ export function quoteFor(id: QuoteProviderId, midRate: number): number {
 }
 
 function isX402RealMode(): boolean {
-  return !!process.env.ROVA_X402_BUYER_PRIVATE_KEY;
+  return !!serverEnv.x402BuyerPrivateKey;
 }
 
 // ── Buyer side ──────────────────────────────────────────────────────────────────
@@ -71,7 +72,7 @@ export async function shopRates(pair: FxPair, baseUrl: string): Promise<ShoppedQ
       const { GatewayClient } = await import('@circle-fin/x402-batching/client');
       const client = new GatewayClient({
         chain: 'arcTestnet',
-        privateKey: process.env.ROVA_X402_BUYER_PRIVATE_KEY as `0x${string}`,
+        privateKey: serverEnv.x402BuyerPrivateKey as `0x${string}`,
       });
 
       const results = await Promise.all(

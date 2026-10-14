@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import * as yaml from 'js-yaml';
 import { ROVA_SYSTEM_PROMPT, ROVA_MODEL, MAX_TOKENS, TEMPERATURE } from './prompt';
+import { serverEnv } from './env/server';
 
 let _genAI: GoogleGenerativeAI | null = null;
 let _anthropic: Anthropic | null = null;
@@ -59,7 +60,7 @@ export function getIsMockMode(): boolean {
 
 function getGemini() {
   if (_genAI) return _genAI;
-  const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const key = serverEnv.googleGenerativeAiApiKey;
   if (!key) return null;
   _genAI = new GoogleGenerativeAI(key);
   return _genAI;
@@ -67,7 +68,7 @@ function getGemini() {
 
 function getAnthropic() {
   if (_anthropic) return _anthropic;
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = serverEnv.anthropicApiKey;
   if (!key) return null;
   _anthropic = new Anthropic({ apiKey: key });
   return _anthropic;
@@ -81,8 +82,8 @@ interface AIResult {
 }
 
 async function callNvidia(intent: string, model: string, config: RovaAIConfig): Promise<AIResult> {
-  const key = process.env.NVIDIA_API_KEY;
-  const baseUrl = process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1/chat/completions';
+  const key = serverEnv.nvidiaApiKey;
+  const baseUrl = serverEnv.nvidiaBaseUrl;
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -154,7 +155,7 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
   }
 
   // 3. Try Gemini (SDK first, then direct REST API with X-goog-api-key)
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const apiKey = serverEnv.googleGenerativeAiApiKey;
   if (apiKey) {
     const geminiModel = cfgModel.startsWith('gemini') ? cfgModel : 'gemini-flash-latest';
     const gemini = getGemini();
@@ -197,7 +198,7 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
   }
 
   // 4. Try NVIDIA in auto mode fallback
-  if (process.env.NVIDIA_API_KEY || config.ai.provider === 'auto') {
+  if (serverEnv.nvidiaApiKey || config.ai.provider === 'auto') {
     try {
       const nvidiaModel = cfgModel.includes('/') || cfgModel.includes('llama') ? cfgModel : 'z-ai/glm-5.2';
       return await callNvidia(intent, nvidiaModel, config);

@@ -4,6 +4,7 @@ import { getSupabaseClient } from '@/lib/supabase';
 import { getMemoryOtp, deleteMemoryOtp } from '@/lib/otpStore';
 import { redeemSavingsVault } from '@/lib/vault';
 import { requireMutationSession } from '@/lib/auth';
+import { serverEnv } from '@/lib/env/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (!isValid && process.env.NODE_ENV !== 'production' && process.env.ROVA_ALLOW_MEMORY_OTP === 'true') {
+    if (!isValid && serverEnv.allowMemoryOtp) {
       const memOtp = getMemoryOtp(cleanEmail);
       if (memOtp && memOtp.code === cleanCode && memOtp.expiresAt > Date.now()) {
         isValid = true;

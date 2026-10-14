@@ -1,5 +1,12 @@
 import { executeAndConfirm } from './circle';
 import { TOKENS, arcScan } from './config';
+import { serverEnv } from './env/server';
+
+const DEFAULT_VAULT_ADDRESS = '0x9330DA5152Cc676a029cfaCCcA3948e11EDE9BfB';
+
+function getVaultAddress(): string {
+  return serverEnv.savingsVaultAddress || DEFAULT_VAULT_ADDRESS;
+}
 
 export type VaultStrategy = 'smart_contract';
 
@@ -26,10 +33,7 @@ export async function depositSavingsVault(opts: DepositSavingsOpts) {
   const tokenAddress = TOKENS[tokenKey].address;
   const lockDuration = opts.lockDurationSeconds || 30 * 86400; // Default 30 days timelock limit
 
-  const vaultContractAddress =
-    process.env.NEXT_PUBLIC_ROVA_SAVINGS_VAULT_ADDRESS ||
-    process.env.ROVA_SAVINGS_VAULT_ADDRESS ||
-    '0x9330DA5152Cc676a029cfaCCcA3948e11EDE9BfB';
+  const vaultContractAddress = getVaultAddress();
 
   const amountInt = Math.round(opts.amountUsdc * 10 ** TOKENS[tokenKey].decimals);
 
@@ -66,10 +70,7 @@ export async function getUserVaultDeposits(userWalletAddress: string) {
   const { createPublicClient, http, parseAbi } = await import('viem');
   const { arcTestnet } = await import('./arcChain');
 
-  const vaultContractAddress =
-    process.env.NEXT_PUBLIC_ROVA_SAVINGS_VAULT_ADDRESS ||
-    process.env.ROVA_SAVINGS_VAULT_ADDRESS ||
-    '0x9330DA5152Cc676a029cfaCCcA3948e11EDE9BfB';
+  const vaultContractAddress = getVaultAddress();
 
   const publicClient = createPublicClient({ chain: arcTestnet, transport: http() });
   const vaultAbi = parseAbi([
@@ -117,10 +118,7 @@ export async function getUserVaultDeposits(userWalletAddress: string) {
  * Redeems an unlocked deposit from RovaSavingsVault smart contract
  */
 export async function redeemSavingsVault(userWalletAddress: string, depositId: number) {
-  const vaultContractAddress =
-    process.env.NEXT_PUBLIC_ROVA_SAVINGS_VAULT_ADDRESS ||
-    process.env.ROVA_SAVINGS_VAULT_ADDRESS ||
-    '0x9330DA5152Cc676a029cfaCCcA3948e11EDE9BfB';
+  const vaultContractAddress = getVaultAddress();
 
   console.log(`[Savings Vault] Executing redeem for depositId #${depositId} for ${userWalletAddress}`);
 

@@ -2,9 +2,10 @@ import { createHash, randomInt } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { sendOtpEmail } from '@/lib/mailer';
-import { setMemoryOtp } from '@/lib/otpStore';
+import { deleteMemoryOtp, setMemoryOtp } from '@/lib/otpStore';
 import { getClientIp, checkRateLimit } from '@/lib/rateLimit';
 import { hasTrustedOrigin } from '@/lib/auth';
+import { serverEnv } from '@/lib/env/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     const supabase = getSupabaseClient();
-    const allowMemoryOtp = process.env.NODE_ENV !== 'production' && process.env.ROVA_ALLOW_MEMORY_OTP === 'true';
+    const allowMemoryOtp = serverEnv.allowMemoryOtp;
     if (!supabase && !allowMemoryOtp) {
       return NextResponse.json({ ok: false, error: 'Authentication storage is not configured' }, { status: 503 });
     }
@@ -61,12 +62,19 @@ export async function POST(req: NextRequest) {
       setMemoryOtp(cleanEmail, code, expiresAt.getTime());
     }
 
-    // Send email via Nodemailer (or log to server console if SMTP keys missing)
-    await sendOtpEmail(cleanEmail, code);
+    const emailSent = await sendOtpEmail(cleanEmail, code);
+    if (!emailSent && !allowMemoryOtp) {
+      if (supabase) {
+        await supabase.from('otp_codes').delete().eq('email', cleanEmail);
+      }
+      deleteMemoryOtp(cleanEmail);
+      return NextResponse.json({ ok: false, error: 'Unable to deliver verification code' }, { status: 503 });
+    }
 
     return NextResponse.json({
       ok: true,
-      message: 'Verification code sent to email',
+      message: emailSent ? 'Verification code sent to email' : 'Development verification code generated',
+      ...(allowMemoryOtp && !emailSent ? { developmentCode: code } : {}),
     });
   } catch (err: any) {
     console.error('[OTP SEND FATAL ERROR]', err);

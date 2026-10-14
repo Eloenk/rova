@@ -14,6 +14,7 @@ import 'server-only';
 
 import { initiateDeveloperControlledWalletsClient } from '@circle-fin/developer-controlled-wallets';
 import { ARC_TESTNET, TOKENS, ERC8004, ERC8183, ROVA_EXECUTION_LOG, GAS, arcScan } from './config';
+import { serverEnv } from './env/server';
 
 // ── Lazy singleton ─────────────────────────────────────────────────────────────
 
@@ -22,8 +23,8 @@ let _client: ReturnType<typeof initiateDeveloperControlledWalletsClient> | null 
 export function getCircleClient() {
   if (_client) return _client;
 
-  let apiKey       = process.env.CIRCLE_API_KEY;
-  const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
+  let apiKey = serverEnv.circleApiKey;
+  const entitySecret = serverEnv.circleEntitySecret;
 
   if (!apiKey || !entitySecret) {
     throw new Error(
@@ -129,7 +130,7 @@ export async function executeAndConfirm(opts: {
   abiFunctionSignature: string;
   abiParameters:        any[];
 }): Promise<string> {
-	if (process.env.ROVA_EXECUTION_ENABLED?.toLowerCase() !== 'true') {
+	if (!serverEnv.executionEnabled) {
 		throw new Error('Custodial execution is disabled. Set ROVA_EXECUTION_ENABLED=true only after operational approval.');
 	}
   const client = getCircleClient();

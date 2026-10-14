@@ -1,18 +1,13 @@
 import { Resend } from 'resend';
+import { serverEnv } from './env/server';
 
 export async function sendOtpEmail(toEmail: string, code: string): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Rova Security <onboarding@resend.dev>';
-
-  console.log(`\n======================================================`);
-  console.log(`[ROVA AUTH OTP] Target Email : ${toEmail}`);
-  console.log(`[ROVA AUTH OTP] Verification Code : ${code}`);
-  console.log(`[ROVA AUTH OTP] Expires In : 10 minutes`);
-  console.log(`======================================================\n`);
+  const apiKey = serverEnv.resendApiKey;
+  const fromEmail = serverEnv.resendFromEmail;
 
   if (!apiKey) {
-    console.warn('[ROVA MAILER] RESEND_API_KEY missing in .env.local — logged OTP code to console above.');
-    return true;
+    console.warn('[ROVA MAILER] RESEND_API_KEY is not configured; no email was sent.');
+    return false;
   }
 
   try {
@@ -37,7 +32,7 @@ export async function sendOtpEmail(toEmail: string, code: string): Promise<boole
     const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: [toEmail],
-      subject: `Your Rova Sign In Verification Code: ${code}`,
+      subject: 'Your Rova sign-in verification code',
       html: htmlContent,
     });
 

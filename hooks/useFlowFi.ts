@@ -3,6 +3,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import type { FlowPlan, ApiResponse, ExecutionResult } from '@/lib/types';
 import { useFlowHistory } from './flowHistoryStore';
 import { safeClone, safeString } from '@/lib/json';
+import { publicEnv } from '@/lib/env/public';
 
 export type FlowStatus = 'idle' | 'planning' | 'planned' | 'executing' | 'recording' | 'confirmed' | 'error';
 
@@ -29,7 +30,7 @@ const INIT: State = {
   processingMs:null, 
   intentHash:null, 
   intent:null,
-  agentId: process.env.NEXT_PUBLIC_ROVA_AGENT_ID || null,
+  agentId: publicEnv.rovaAgentId || null,
   reputation: 85,
   isValidated: true
 };

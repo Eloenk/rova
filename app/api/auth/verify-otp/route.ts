@@ -4,6 +4,7 @@ import { getSupabaseClient } from '@/lib/supabase';
 import { getMemoryOtp, deleteMemoryOtp } from '@/lib/otpStore';
 import { hasSessionSecret, hasTrustedOrigin, setSessionCookies } from '@/lib/auth';
 import { getClientIp, checkRateLimit } from '@/lib/rateLimit';
+import { serverEnv } from '@/lib/env/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     let isValid = false;
 
     const supabase = getSupabaseClient();
-    const allowMemoryOtp = process.env.NODE_ENV !== 'production' && process.env.ROVA_ALLOW_MEMORY_OTP === 'true';
+    const allowMemoryOtp = serverEnv.allowMemoryOtp;
     if (!supabase && !allowMemoryOtp) {
       return NextResponse.json({ ok: false, error: 'Authentication storage is not configured' }, { status: 503 });
     }
