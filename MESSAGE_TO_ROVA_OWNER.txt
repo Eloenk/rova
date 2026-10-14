@@ -22,6 +22,15 @@ The release has been narrowed for a defensible mainnet submission:
 - RovaSavingsVault and RovaSwapRouter must not be deployed for this submission
 - the app can demonstrate mainnet wallet and balance reads, deterministic policy planning, fail-closed execution, and a verified public log contract
 
+Local validation is complete:
+- clean web install, lint, TypeScript check, 11 tests, Solidity compile/ABI check, and Next.js production build pass
+- the web production dependency audit reports zero vulnerabilities
+- Go test, vet, and build pass; the optional sidecar dependency audit reports zero vulnerabilities
+- the official Arc RPC reports chain ID 5042 and deployed code at the configured USDC, EURC, and ERC-8004 Identity addresses
+- tracked web and Go files passed a redacted credential-pattern scan
+
+This does not mean the owner deployment, database checks, mainnet contract transaction, live acceptance test, demo, or DoraHacks submission is complete.
+
 As project owner, please do the final deployment from accounts controlled by you or your team:
 
 1. Review and merge both PRs together.
