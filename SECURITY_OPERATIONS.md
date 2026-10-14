@@ -10,7 +10,9 @@ Unattended engine execution requires both `ROVA_EXECUTION_ENABLED=true` and `ROV
 
 ## Database migration
 
-Before serving the application, apply `schema.sql` in the Supabase SQL editor. The migration adds ownership columns, disables legacy ownerless rules and intents, and enables row-level security on every sensitive table. Only server-side services may use `SUPABASE_SECRET_KEY`; browser code must not receive it or an anonymous key with table access.
+Before serving the application or engine, apply the complete `schema.sql` in the Supabase SQL editor. The migration adds ownership columns, disables legacy ownerless rules and intents, enables row-level security on every sensitive table, removes unproven execution fees, and installs service-role-only atomic claim functions.
+
+The claim functions move one active record to `ready_to_execute` only when its owner and managed Circle source wallet match the corresponding `users` row. The engine executes the exact row returned by that claim, persists the real transaction receipt before finalizing or re-arming the policy, and returns no executable work when Supabase is unavailable. Realtime messages only request a fresh database-backed evaluation; they cannot execute funds directly.
 
 The Go engine and Next.js server use the secret key only from their private runtime environments. Application modules read environment values through the typed config boundaries in `lib/env/`; end users never share the deployment environment. Do not place the key in `.env.example`, `NEXT_PUBLIC_*`, source control, client bundles, logs, or chat transcripts.
 
@@ -29,7 +31,7 @@ The previously embedded fallback deployment key is considered exposed. Do not us
 
 ## Required path to mainnet
 
-1. Complete a Circle-custody design in which the engine can prove the user wallet, policy, amount, recipient, and idempotency key for every execution.
+1. Add durable Circle request identifiers and an operator reconciliation workflow for the remaining transaction-submission uncertainty window; owner-wallet claims and exact policy snapshots are enforced for the current testnet engine.
 2. Define one persisted plan schema shared by the web app and engine, including explicit user authorization, ceiling, expiry, cancellation, and execution receipt.
 3. Add integration tests for authentication, Supabase RLS, WhatsApp confirmation expiry, engine authorization, Circle transaction creation, and duplicate-scheduler prevention.
 4. Obtain an independent smart-contract and application security review; remediate findings and rehearse the full lifecycle on a fresh testnet account.
@@ -40,4 +42,4 @@ The previously embedded fallback deployment key is considered exposed. Do not us
 
 Use a testnet-only environment with `ROVA_EXECUTION_ENABLED=false`. Demonstrate login, policy validation, quote retrieval, WhatsApp linking, rule history, and disabled automation messages. If a testnet transaction is approved for a demo, enable only the minimum required flag for one bounded rehearsal, then disable it again and preserve the receipt.
 
-The existing History page is browser-local convenience state, not a receipt system. Treat ArcScan transaction records and server-side execution records as evidence; do not market local browser history as monitoring or an auditable job receipt.
+Treat ArcScan transaction records and server-side execution records as evidence. Any policy left in `ready_to_execute` after an error is paused for reconciliation and must not be blindly re-armed or retried.

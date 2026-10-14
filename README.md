@@ -85,7 +85,7 @@ Application code reads configuration only through `lib/env/server.ts` and `lib/e
 
 Copy `.env.example` to `.env.local` for local development and fill only the services being exercised. Never place real credentials in `.env.example`, source files, pull requests, logs, screenshots, or chat. Only non-secret browser values may use the `NEXT_PUBLIC_*` prefix.
 
-Apply `schema.sql` using the Supabase SQL editor before starting the web app. `SUPABASE_SECRET_KEY` is server-only and must never be prefixed with `NEXT_PUBLIC_`.
+Apply the complete `schema.sql` using the Supabase SQL editor before starting either repository. In addition to tables and RLS, it installs service-role-only atomic claim functions used by the Go engine. `SUPABASE_SECRET_KEY` is server-only and must never be prefixed with `NEXT_PUBLIC_`.
 
 ### 3. Installation & Local Development
 

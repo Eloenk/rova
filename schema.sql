@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS agent_executions (
     tx_hash TEXT NOT NULL,
     arc_scan_url TEXT NOT NULL,
     fee_job_id TEXT,
-    fee_amount_usdc NUMERIC NOT NULL DEFAULT 0.006,
+    fee_amount_usdc NUMERIC NOT NULL DEFAULT 0,
     reputation_tx_hash TEXT,
     memo TEXT NOT NULL,
     quote_shop JSONB
@@ -85,6 +85,11 @@ ALTER TABLE otp_codes ADD COLUMN IF NOT EXISTS code_hash TEXT;
 ALTER TABLE agent_rules ADD COLUMN IF NOT EXISTS owner_email TEXT;
 ALTER TABLE standing_intents ADD COLUMN IF NOT EXISTS owner_email TEXT;
 ALTER TABLE agent_executions ADD COLUMN IF NOT EXISTS owner_email TEXT;
+ALTER TABLE agent_executions ALTER COLUMN fee_amount_usdc SET DEFAULT 0;
+
+UPDATE agent_executions
+SET fee_amount_usdc = 0
+WHERE fee_job_id IS NULL;
 
 UPDATE agent_rules SET owner_email = 'legacy-disabled@invalid', status = 'cancelled' WHERE owner_email IS NULL;
 UPDATE standing_intents SET owner_email = 'legacy-disabled@invalid', status = 'cancelled' WHERE owner_email IS NULL;
@@ -119,6 +124,59 @@ ALTER TABLE rova_intents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE otp_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE whatsapp_link_tokens ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION claim_agent_rule(
+    requested_id TEXT,
+    requested_owner_email TEXT
+)
+RETURNS SETOF agent_rules
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+    UPDATE agent_rules AS candidate
+       SET status = 'ready_to_execute'
+     WHERE candidate.id = requested_id
+       AND lower(candidate.owner_email) = lower(trim(requested_owner_email))
+       AND candidate.custody_mode = 'managed'
+       AND candidate.status = 'active'
+       AND EXISTS (
+           SELECT 1
+             FROM users AS account_owner
+            WHERE lower(account_owner.email) = lower(trim(requested_owner_email))
+              AND lower(account_owner.circle_wallet_address) = lower(candidate.source_wallet)
+       )
+    RETURNING candidate.*;
+$$;
+
+CREATE OR REPLACE FUNCTION claim_standing_intent(
+    requested_id TEXT,
+    requested_owner_email TEXT
+)
+RETURNS SETOF standing_intents
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+    UPDATE standing_intents AS candidate
+       SET status = 'ready_to_execute'
+     WHERE candidate.id = requested_id
+       AND lower(candidate.owner_email) = lower(trim(requested_owner_email))
+       AND candidate.custody_mode = 'managed'
+       AND candidate.status = 'active'
+       AND EXISTS (
+           SELECT 1
+             FROM users AS account_owner
+            WHERE lower(account_owner.email) = lower(trim(requested_owner_email))
+              AND lower(account_owner.circle_wallet_address) = lower(candidate.source_wallet)
+       )
+    RETURNING candidate.*;
+$$;
+
+REVOKE ALL ON FUNCTION claim_agent_rule(TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION claim_standing_intent(TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION claim_agent_rule(TEXT, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION claim_standing_intent(TEXT, TEXT) TO service_role;
 
 -- ── Refresh tokens (JWT rotation) ─────────────────────────────────────────────
 -- One row per user. Upserted on login, deleted on logout or on rotation.
