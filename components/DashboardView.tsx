@@ -3,17 +3,14 @@
 import { useRova } from '@/hooks/useRova';
 import { useWallet } from '@/hooks/useWallet';
 import { useEffect, useState, useRef } from 'react';
-import { Send, Clock, Bell, Check, Loader, Sparkles, TrendingUp } from 'lucide-react';
+import { Send, Clock, Check, Loader, Sparkles, TrendingUp } from 'lucide-react';
 import AssetRow from '@/components/viz/AssetRow';
-
-type TriggerChoice = 'recurring' | 'on_receive';
 
 interface ChatMessage {
   id: string;
   sender: 'user' | 'agent';
   text: string;
 }
-
 export function isConversationalPlan(plan: any | null): boolean {
   if (!plan) return true;
   if (!plan.totalAmount || plan.totalAmount <= 0) return true;
@@ -26,17 +23,25 @@ export function isConversationalPlan(plan: any | null): boolean {
 
 export default function Dashboard() {
   const rova = useRova();
-  const { syncAgentStatus, plan, status, executionResult, isProcessing, planIntent, executePlan, reset } = rova;
+  const {
+    syncAgentStatus,
+    plan,
+    status,
+    executionResult,
+    executable,
+    isProcessing,
+    planIntent,
+    requestExecutionApproval,
+    executePlan,
+    reset,
+  } = rova;
 
   const { isConnected, usdcBalance, eurcBalance } = useWallet();
   const [hasMounted, setHasMounted] = useState(false);
   const [intentText, setIntentText] = useState('');
-  const [showTriggerPicker, setShowTriggerPicker] = useState(false);
-  const [triggerChoice, setTriggerChoice] = useState<TriggerChoice>('recurring');
-  const [interval, setInterval_] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
-  const [minAmount, setMinAmount] = useState('50');
-  const [automating, setAutomating] = useState(false);
-  const [automateMsg, setAutomateMsg] = useState<string | null>(null);
+  const [approvalRequested, setApprovalRequested] = useState(false);
+  const [approvalCode, setApprovalCode] = useState('');
+  const [approvalError, setApprovalError] = useState<string | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -71,41 +76,32 @@ export default function Dashboard() {
     };
     setMessages(prev => [...prev, userMsg]);
     setIntentText('');
-    setAutomateMsg(null);
-    setShowTriggerPicker(false);
+    setApprovalRequested(false);
+    setApprovalCode('');
+    setApprovalError(null);
 
     await planIntent(textToSend);
   };
 
-  const handleMakeAutomatic = async () => {
-    if (!plan) return;
-    setAutomating(true);
-    setAutomateMsg(null);
+  const handleRequestApproval = async () => {
+    setApprovalError(null);
     try {
-      const custodyMode = 'managed';
-      const trigger = triggerChoice === 'recurring'
-        ? { type: 'recurring' as const, interval }
-        : { type: 'on_receive' as const, minAmountUsdc: parseFloat(minAmount) || 50 };
+      const approval = await requestExecutionApproval();
+      setApprovalRequested(true);
+      if (approval.developmentCode) setApprovalCode(approval.developmentCode);
+    } catch (error) {
+      setApprovalError(error instanceof Error ? error.message : 'Unable to request approval code');
+    }
+  };
 
-      const res = await fetch('/api/agent/intents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          intentText,
-          plan,
-          trigger,
-          custodyMode,
-        }),
-      });
-      const data = await res.json();
-      if (!data.ok) { setAutomateMsg(`Couldn't automate: ${data.error}`); return; }
-      setAutomateMsg('Automated rule active. Rova will execute this autonomously on Arc.');
-      reset();
-      setShowTriggerPicker(false);
-    } catch (e) {
-      setAutomateMsg(e instanceof Error ? e.message : 'Something went wrong');
-    } finally {
-      setAutomating(false);
+  const handleConfirmExecution = async () => {
+    setApprovalError(null);
+    try {
+      await executePlan(approvalCode);
+      setApprovalRequested(false);
+      setApprovalCode('');
+    } catch (error) {
+      setApprovalError(error instanceof Error ? error.message : 'Execution failed');
     }
   };
 
@@ -212,20 +208,46 @@ export default function Dashboard() {
                   {plan.reasoning || plan.strategy || 'I have parsed your transaction request and prepared the execution path on Arc.'}
                 </div>
 
-                {!isConversationalPlan(plan) && (!showTriggerPicker ? (
+                {!isConversationalPlan(plan) && (
+                  <>
                   <div className="flex flex-wrap gap-2.5 mt-1">
-                    <button
-                      onClick={() => executePlan()}
-                      className="px-4 py-2.5 rounded-full bg-[#BFFF00] text-black font-semibold text-xs border-0 cursor-pointer flex items-center gap-1.5 hover:brightness-110 transition-all"
-                    >
-                      <Sparkles size={14} /> Confirm & Execute
-                    </button>
+                    {executable && !approvalRequested ? (
+                      <button
+                        onClick={() => void handleRequestApproval()}
+                        className="px-4 py-2.5 rounded-full bg-[#BFFF00] text-black font-semibold text-xs border-0 cursor-pointer flex items-center gap-1.5 hover:brightness-110 transition-all"
+                      >
+                        <Sparkles size={14} /> Request approval code
+                      </button>
+                    ) : executable ? (
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <input
+                          value={approvalCode}
+                          onChange={event => setApprovalCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          placeholder="6-digit code"
+                          className="px-3 py-2.5 rounded-full bg-surface border border-border text-text-primary text-xs outline-none"
+                        />
+                        <button
+                          onClick={() => void handleConfirmExecution()}
+                          disabled={!/^\d{6}$/.test(approvalCode) || isProcessing}
+                          className="px-4 py-2.5 rounded-full bg-[#BFFF00] disabled:opacity-40 text-black font-semibold text-xs border-0 cursor-pointer"
+                        >
+                          Approve & Execute
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="px-4 py-2.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 font-semibold text-xs">
+                        Informational plan — execution unavailable
+                      </span>
+                    )}
 
                     <button
-                      onClick={() => setShowTriggerPicker(true)}
-                      className="px-4 py-2.5 rounded-full bg-accent-mint/10 border border-accent-mint/25 text-accent-mint font-bold text-xs cursor-pointer flex items-center gap-1.5 hover:bg-accent-mint/20 transition-all"
+                      disabled
+                      title="Automation remains disabled pending shared policy acceptance tests"
+                      className="px-4 py-2.5 rounded-full bg-surface border border-border text-text-tertiary font-bold text-xs cursor-not-allowed flex items-center gap-1.5 opacity-70"
                     >
-                      <Clock size={14} /> Make Automatic
+                      <Clock size={14} /> Automation paused
                     </button>
 
                     <button
@@ -235,44 +257,9 @@ export default function Dashboard() {
                       Cancel
                     </button>
                   </div>
-                ) : (
-                  <div className="p-4 rounded-xl bg-surface border border-border-strong max-w-md flex flex-col gap-3">
-                    <span className="text-xs font-bold text-accent-primary">Automation Trigger</span>
-                    <div className="flex gap-2">
-                      <TriggerTab active={triggerChoice === 'recurring'} onClick={() => setTriggerChoice('recurring')} icon={<Clock size={14} />} label="On schedule" />
-                      <TriggerTab active={triggerChoice === 'on_receive'} onClick={() => setTriggerChoice('on_receive')} icon={<Bell size={14} />} label="On payment receive" />
-                    </div>
-
-                    {triggerChoice === 'recurring' ? (
-                      <select value={interval} onChange={e => setInterval_(e.target.value as any)} className="w-full p-2.5 rounded-lg bg-surface-raised border border-border text-text-primary text-xs outline-none">
-                        <option value="daily">Every day</option>
-                        <option value="weekly">Every week</option>
-                        <option value="monthly">Every month</option>
-                      </select>
-                    ) : (
-                      <label className="flex flex-col gap-1">
-                        <span className="text-[11px] text-text-secondary">Min payment trigger threshold</span>
-                        <input value={minAmount} onChange={e => setMinAmount(e.target.value)} type="number" step="1" className="w-full p-2.5 rounded-lg bg-surface-raised border border-border text-text-primary text-xs outline-none" />
-                      </label>
-                    )}
-
-                    <div className="flex gap-2 mt-1">
-                      <button
-                        onClick={handleMakeAutomatic}
-                        disabled={automating}
-                        className="flex-1 p-2.5 rounded-lg bg-[#BFFF00] text-black font-semibold text-xs border-0 cursor-pointer hover:brightness-110"
-                      >
-                        {automating ? 'Saving...' : 'Save Autonomous Trigger'}
-                      </button>
-                      <button
-                        onClick={() => setShowTriggerPicker(false)}
-                        className="px-3.5 p-2.5 rounded-lg bg-transparent border border-border text-text-secondary text-xs cursor-pointer hover:text-text-primary"
-                      >
-                        Back
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  {approvalError && <p className="text-xs text-red-400 mt-1">{approvalError}</p>}
+                  </>
+                )}
               </div>
             )}
 
@@ -303,11 +290,6 @@ export default function Dashboard() {
               </div>
             )}
 
-            {automateMsg && (
-              <div className={`mt-2 text-xs font-semibold ${automateMsg.startsWith("Couldn't") ? 'text-accent-error' : 'text-accent-success'}`}>
-                {automateMsg}
-              </div>
-            )}
           </div>
         )}
 
@@ -340,21 +322,5 @@ export default function Dashboard() {
         </div>
       )}
     </div>
-  );
-}
-
-function TriggerTab({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`
-        flex items-center gap-1.5 px-3 py-2 rounded-lg font-bold text-xs border cursor-pointer transition-all
-        ${active
-          ? 'bg-accent-primary/10 border-accent-primary/35 text-accent-primary'
-          : 'bg-surface-raised border-border text-text-secondary hover:text-text-primary'}
-      `}
-    >
-      {icon} {label}
-    </button>
   );
 }

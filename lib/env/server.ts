@@ -23,8 +23,6 @@ type ServerVariable =
   | 'ROVA_SAVINGS_VAULT_ADDRESS'
   | 'ROVA_SESSION_SECRET'
   | 'ROVA_VALIDATOR_WALLET'
-  | 'ROVA_X402_BUYER_PRIVATE_KEY'
-  | 'ROVA_X402_SELLER_ADDRESS'
   | 'SUPABASE_SECRET_KEY'
   | 'SUPABASE_URL';
 
@@ -62,8 +60,6 @@ export const serverEnv = {
   get discordFeedbackWebhookUrl() { return read('DISCORD_FEEDBACK_WEBHOOK_URL'); },
   get resendApiKey() { return read('RESEND_API_KEY'); },
   get resendFromEmail() { return read('RESEND_FROM_EMAIL') || 'Rova Security <onboarding@resend.dev>'; },
-  get x402BuyerPrivateKey() { return read('ROVA_X402_BUYER_PRIVATE_KEY'); },
-  get x402SellerAddress() { return read('ROVA_X402_SELLER_ADDRESS'); },
   get validatorWallet() { return read('ROVA_VALIDATOR_WALLET') || read('FLOWFI_VALIDATOR_WALLET'); },
   get savingsVaultAddress() { return read('ROVA_SAVINGS_VAULT_ADDRESS') || publicEnv.savingsVaultAddress; },
 };

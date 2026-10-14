@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useWallet } from '@/hooks/useWallet';
 import { publicEnv } from '@/lib/env/public';
 import {
@@ -37,11 +37,11 @@ export default function Topbar({
   const [linkedPhone, setLinkedPhone] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
 
-  const triggerRefresh = () => {
+  const triggerRefresh = useCallback(() => {
     setIsSpinning(true);
     refetchBalance();
     setTimeout(() => setIsSpinning(false), 750);
-  };
+  }, [refetchBalance]);
 
   useEffect(() => {
     if (showWhatsAppModal) {
@@ -94,7 +94,7 @@ export default function Topbar({
     if (showDrawer) {
       triggerRefresh();
     }
-  }, [showDrawer]);
+  }, [showDrawer, triggerRefresh]);
 
   // Click outside to close Phantom Wallet Popover Drawer
   useEffect(() => {

@@ -37,8 +37,6 @@ export async function depositSavingsVault(opts: DepositSavingsOpts) {
 
   const amountInt = Math.round(opts.amountUsdc * 10 ** TOKENS[tokenKey].decimals);
 
-  console.log(`[Savings Vault] Depositing ${opts.amountUsdc} ${tokenKey} into smart contract vault: ${vaultContractAddress}`);
-
   // Step 1: Approve vault contract
   await executeAndConfirm({
     walletAddress:        opts.userWalletAddress,
@@ -119,8 +117,6 @@ export async function getUserVaultDeposits(userWalletAddress: string) {
  */
 export async function redeemSavingsVault(userWalletAddress: string, depositId: number) {
   const vaultContractAddress = getVaultAddress();
-
-  console.log(`[Savings Vault] Executing redeem for depositId #${depositId} for ${userWalletAddress}`);
 
   const txHash = await executeAndConfirm({
     walletAddress: userWalletAddress,

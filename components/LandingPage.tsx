@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -75,9 +76,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-8 h-8 flex items-center justify-center transition-transform group-hover:scale-105">
-              <img
+              <Image
                 src="/logo.png"
                 alt="ROVA Logo"
+                width={32}
+                height={32}
                 className="w-full h-full object-contain"
               />
             </div>
@@ -161,7 +164,7 @@ export default function LandingPage() {
               Clarity and control for every part of your portfolio.
             </h2>
             <p className="text-text-secondary text-base md:text-lg">
-              Three core execution pillars power Rova's cross-border capital engine.
+              Three core execution pillars power Rova&apos;s cross-border capital engine.
             </p>
           </ScrollReveal>
 
@@ -170,9 +173,9 @@ export default function LandingPage() {
             <ScrollReveal delayMs={100} className="p-8 rounded-2xl bg-surface border border-border hover:border-border-strong transition-all duration-300 flex flex-col justify-between">
               <div className="space-y-4">
                 <span className="text-sm font-mono font-bold text-accent-primary">[1]</span>
-                <h3 className="text-xl font-bold text-text-primary">x402 Nanopayments</h3>
+                <h3 className="text-xl font-bold text-text-primary">Parallel Quote Comparison</h3>
                 <p className="text-text-secondary text-sm leading-relaxed">
-                  Before moving money, Rova queries 3 independent FX desks paying a fraction of a cent per quote over x402 to capture the tightest spread.
+                  Before moving money, Rova compares 3 simulated FX desks in parallel to demonstrate deterministic best-quote selection without claiming live settlement.
                 </p>
               </div>
               <div className="mt-8 p-4 rounded-xl bg-surface-raised border border-border text-xs space-y-2 font-mono">
@@ -235,7 +238,7 @@ export default function LandingPage() {
               One platform. Multiple intelligence layers.
             </h2>
             <p className="text-text-secondary text-base md:text-lg max-w-2xl mx-auto">
-              Rova unifies plain-English intent understanding, micro-nanopayment shopping, and native EVM execution into a single high-availability stack.
+              Rova unifies plain-English intent understanding, policy validation, parallel quote comparison, and gated EVM execution.
             </p>
           </ScrollReveal>
 
@@ -259,9 +262,9 @@ export default function LandingPage() {
 
               <div className="p-6 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-2.5">
                 <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 2 • QUOTE</div>
-                <h4 className="text-base font-extrabold text-white">x402 / Gateway</h4>
+                <h4 className="text-base font-extrabold text-white">Quote Simulation</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Queries 3 independent market liquidity desks over x402 HTTP headers, paying sub-cent micro-nanopayments for real-time rates.
+                  Compares 3 simulated market quotes; live x402 verification and settlement remain an explicit integration gate.
                 </p>
               </div>
 
@@ -328,8 +331,8 @@ export default function LandingPage() {
             {/* Table Body Rows */}
             {[
               {
-                cap: 'x402 Nanopayment Rate Shopping',
-                desc: 'Real-time HTTP header quotes across 3 liquidity desks via micro-nanopayments',
+                cap: 'Parallel Quote Simulation',
+                desc: 'Concurrent comparison across 3 simulated liquidity quotes with no payment claim',
                 rova: true,
                 legacy: false,
               },
@@ -421,7 +424,7 @@ export default function LandingPage() {
         <footer className="py-6 bg-surface/80 border-t border-border text-xs text-text-secondary">
           <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="ROVA" className="w-6 h-6 rounded" />
+              <Image src="/logo.png" alt="ROVA" width={24} height={24} className="w-6 h-6 rounded" />
               <span className="font-bold text-text-primary">ROVA</span>
               <span>© 2026 Rova Protocol. Built on Arc.</span>
             </div>

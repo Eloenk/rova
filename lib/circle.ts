@@ -283,7 +283,6 @@ export async function appKitBridge(opts: {
   toChain: string;
   amount: number;
 }) {
-  console.log(`[AppKit] Executing real CCTP V2 bridge: ${opts.amount} USDC ${opts.fromChain} -> ${opts.toChain}`);
   const amountInt = Math.round(opts.amount * 10 ** TOKENS.USDC.decimals);
   const destinationDomain = opts.toChain.toLowerCase().includes('base') ? 6 : 0;
   const recipientBytes32 = '0x' + opts.walletAddress.replace('0x', '').padStart(64, '0');

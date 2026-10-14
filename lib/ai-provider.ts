@@ -5,7 +5,6 @@ import path from 'path';
 import * as yaml from 'js-yaml';
 import { ROVA_SYSTEM_PROMPT, ROVA_MODEL, MAX_TOKENS, TEMPERATURE } from './prompt';
 import { serverEnv } from './env/server';
-
 let _genAI: GoogleGenerativeAI | null = null;
 let _anthropic: Anthropic | null = null;
 
@@ -20,7 +19,6 @@ export interface RovaAIConfig {
     supabase_enabled: boolean;
   };
 }
-
 const defaultConfig: RovaAIConfig = {
   ai: {
     provider: 'gemini',
@@ -149,7 +147,7 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
         const text = msg.content[0].type === 'text' ? msg.content[0].text : '';
         if (text) return { text, provider: 'anthropic' };
       } catch (e: any) {
-        console.error('[AI Provider] Anthropic failed:', e.message);
+        console.error('[AI Provider] Anthropic request failed');
       }
     }
   }
@@ -172,7 +170,7 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
         const text = result.response.text();
         if (text) return { text, provider: 'gemini' };
       } catch (e: any) {
-        console.warn('[AI Provider] Gemini SDK failed, falling back to direct REST API:', e.message);
+        console.warn('[AI Provider] Gemini SDK request failed; trying REST fallback');
       }
     }
 
@@ -193,7 +191,7 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
         if (text) return { text, provider: 'gemini' };
       }
     } catch (e: any) {
-      console.error('[AI Provider] Gemini direct REST API failed:', e.message);
+      console.error('[AI Provider] Gemini REST request failed');
     }
   }
 
@@ -203,51 +201,9 @@ export async function callAI(intent: string, forceProvider?: AIProvider): Promis
       const nvidiaModel = cfgModel.includes('/') || cfgModel.includes('llama') ? cfgModel : 'z-ai/glm-5.2';
       return await callNvidia(intent, nvidiaModel, config);
     } catch (e: any) {
-      console.error('[AI Provider] NVIDIA fallback failed:', e.message);
+      console.error('[AI Provider] NVIDIA request failed');
     }
   }
 
   throw new Error('No AI Providers available or configured correctly in environment / config.yaml.');
-}
-
-export async function generateFlowPlan(intent: string): Promise<import('./types').FlowPlan> {
-  const { getFailsafePlan } = await import('./failsafe');
-  const { validateFlowPlan } = await import('./validator');
-
-  const failsafe = getFailsafePlan(intent);
-  if (failsafe) return failsafe;
-
-  try {
-    const result = await callAI(intent);
-    const jsonMatch = result.text.match(/\{[\s\S]*\}/);
-    const jsonStr = jsonMatch ? jsonMatch[0] : result.text;
-    const parsed = JSON.parse(jsonStr.trim());
-    const { valid, plan } = validateFlowPlan(parsed);
-    if (valid && plan) return plan;
-  } catch (e) {
-    console.warn('[AI Provider] AI generation fallback to generic plan:', e);
-  }
-
-  return {
-    strategy: `Transfer based on intent: "${intent}"`,
-    splits: [
-      {
-        recipient: 'Sister',
-        address: '0xfe4f5d1ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-        amount: 50,
-        currency: 'USDC',
-        country: 'US',
-        fxRate: 1.0,
-        fxSymbol: '$',
-        arcProtocol: 'Arc Native',
-      },
-    ],
-    routes: [],
-    gasEstimate: { totalTxCount: 1, totalGasUsdc: 0.006 },
-    reasoning: `Auto-generated fallback plan for "${intent}"`,
-    confidence: 95,
-    risk: 'low',
-    reserveAmount: 0,
-    totalAmount: 50,
-  };
 }

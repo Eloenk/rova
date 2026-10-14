@@ -18,7 +18,7 @@ const CURRENCIES = ['USDC', 'EURC', 'USYC'];
 
 export default function SendView() {
   const { isConnected, usdcBalance } = useWallet();
-  const { executeFlow, isProcessing } = useRova();
+  const { prepareExecution, executePlan, isProcessing } = useRova();
 
   const [action, setAction] = useState<Action>('send');
   const [recipient, setRecipient] = useState('');
@@ -28,8 +28,9 @@ export default function SendView() {
   const [fromCurrency, setFromCurrency] = useState('USDC');
   const [toCurrency, setToCurrency] = useState('EURC');
   const [memo, setMemo] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'approval' | 'success' | 'error'>('idle');
   const [resultMsg, setResultMsg] = useState('');
+  const [approvalCode, setApprovalCode] = useState('');
 
   const buildIntent = () => {
     if (action === 'send') {
@@ -48,13 +49,32 @@ export default function SendView() {
     setResultMsg('');
     try {
       const intent = buildIntent();
-      await executeFlow(intent);
-      setStatus('success');
-      setResultMsg(`${action === 'send' ? 'Transfer' : action === 'bridge' ? 'Bridge' : 'Swap'} initiated on Arc. Check your Ledger for confirmation.`);
-      setAmount(''); setRecipient(''); setMemo('');
+      const approval = await prepareExecution(intent);
+      setApprovalCode(approval.developmentCode || '');
+      setStatus('approval');
+      setResultMsg('Enter the 6-digit execution approval code sent to your email.');
     } catch (err: unknown) {
       setStatus('error');
       setResultMsg(err instanceof Error ? err.message : 'Something went wrong. Try again.');
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!/^\d{6}$/.test(approvalCode)) {
+      setStatus('approval');
+      setResultMsg('Enter the complete 6-digit execution approval code.');
+      return;
+    }
+    setStatus('loading');
+    setResultMsg('');
+    try {
+      await executePlan(approvalCode);
+      setStatus('success');
+      setResultMsg(`${action === 'send' ? 'Transfer' : action === 'bridge' ? 'Bridge' : 'Swap'} confirmed on Arc. Check your receipt for the transaction hash.`);
+      setAmount(''); setRecipient(''); setMemo(''); setApprovalCode('');
+    } catch (err: unknown) {
+      setStatus('approval');
+      setResultMsg(err instanceof Error ? err.message : 'Execution failed.');
     }
   };
 
@@ -80,7 +100,7 @@ export default function SendView() {
           return (
             <button
               key={a.id}
-              onClick={() => { setAction(a.id); setStatus('idle'); }}
+              onClick={() => { setAction(a.id); setStatus('idle'); setApprovalCode(''); }}
               className={`
                 flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-full border-0 cursor-pointer font-bold text-xs sm:text-sm transition-all
                 ${isActive
@@ -183,22 +203,35 @@ export default function SendView() {
         {status !== 'idle' && status !== 'loading' && (
           <div className={`
             flex items-start gap-2.5 p-3.5 rounded-lg text-xs leading-relaxed border
-            ${status === 'success' ? 'bg-accent-mint/10 border-accent-mint/25 text-accent-mint' : 'bg-accent-error/10 border-accent-error/25 text-accent-error'}
+            ${status === 'success' ? 'bg-accent-mint/10 border-accent-mint/25 text-accent-mint' : status === 'approval' ? 'bg-amber-500/10 border-amber-500/25 text-amber-300' : 'bg-accent-error/10 border-accent-error/25 text-accent-error'}
           `}>
             {status === 'success' ? <CheckCircle size={16} className="shrink-0 mt-0.5" /> : <AlertCircle size={16} className="shrink-0 mt-0.5" />}
             <p>{resultMsg}</p>
           </div>
         )}
 
+        {status === 'approval' && (
+          <input
+            value={approvalCode}
+            onChange={event => setApprovalCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="6-digit approval code"
+            className="w-full p-3 rounded-lg bg-surface border border-border text-text-primary text-sm outline-none"
+          />
+        )}
+
         {/* Submit Button */}
         <button
-          onClick={handleSubmit}
+          onClick={status === 'approval' ? handleApprove : handleSubmit}
           disabled={isProcessing || status === 'loading'}
           className="w-full py-3.5 rounded-lg bg-[#BFFF00] text-black font-semibold text-sm border-0 cursor-pointer flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-md"
         >
           {isProcessing || status === 'loading'
             ? <><Loader size={16} className="animate-spin" /> Processing...</>
-            : <>{action === 'send' ? `Send ${fromCurrency}` : action === 'bridge' ? `Bridge ${fromCurrency}` : `Swap ${fromCurrency} ↔ ${toCurrency}`} <ArrowRight size={16} /></>
+            : status === 'approval'
+              ? <>Approve & Execute <ArrowRight size={16} /></>
+              : <>{action === 'send' ? `Review ${fromCurrency} transfer` : action === 'bridge' ? `Review ${fromCurrency} bridge` : `Review ${fromCurrency} swap`} <ArrowRight size={16} /></>
           }
         </button>
       </div>

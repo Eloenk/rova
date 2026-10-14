@@ -75,6 +75,9 @@ export interface ApiSuccess {
     processingMs: number;
     intentHash:   string;
     arcChainId:   number;
+    executable:   boolean;
+    executionPlanId?: string;
+    expiresAt?:   string;
   };
 }
 

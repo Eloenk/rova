@@ -227,6 +227,10 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
   }
 
   // 3. TRANSFER INTENT (Fallback for 'send', 'pay', 'route', or generic statements)
+  if (address === "0x0000000000000000000000000000000000000000") {
+    return null;
+  }
+
   return {
       totalAmount: amount,
       splits: [{

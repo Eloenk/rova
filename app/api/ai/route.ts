@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateFlowPlan } from '@/lib/validator';
+import { validateFlowPlan, validatePlanIntentBinding } from '@/lib/validator';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { sha256 } from '@/lib/crypto';
 import type { ApiResponse } from '@/lib/types';
 import { callAI, AIProvider } from '@/lib/ai-provider';
 import { getFailsafePlan } from '@/lib/failsafe';
-import { requireMutationSession } from '@/lib/auth';
+import { AuthenticatedSession, requireMutationSession } from '@/lib/auth';
+import { createExecutionPlan } from '@/lib/executionPlans';
+import type { FlowPlan } from '@/lib/types';
 
 function err(status: number, code: string, message: string, detail?: string): NextResponse<ApiResponse> {
   return NextResponse.json({ ok: false, error: { code, message, ...(detail ? { detail } : {}) } }, { status });
@@ -13,11 +15,46 @@ function err(status: number, code: string, message: string, detail?: string): Ne
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
+async function planResponse(
+  plan: FlowPlan,
+  session: AuthenticatedSession,
+  model: string,
+  processingMs: number,
+  intentHash: string,
+): Promise<NextResponse<ApiResponse>> {
+  let executionPlan: { id: string; expiresAt: string } | undefined;
+  if (plan.totalAmount > 0 && session.walletAddress) {
+    try {
+      executionPlan = await createExecutionPlan({
+        ownerEmail: session.email,
+        walletAddress: session.walletAddress,
+        intentHash,
+        plan,
+      });
+    } catch {
+      console.error('[AI Route] Unable to persist executable plan');
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    plan,
+    meta: {
+      model,
+      processingMs,
+      intentHash,
+      arcChainId: 5042002,
+      executable: Boolean(executionPlan),
+      ...(executionPlan ? { executionPlanId: executionPlan.id, expiresAt: executionPlan.expiresAt } : {}),
+    },
+  });
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse>> {
-  const guard = requireMutationSession(req);
+  const guard = await requireMutationSession(req);
   if ('response' in guard) return guard.response as NextResponse<ApiResponse>;
   const start = Date.now();
-  const { allowed } = checkRateLimit(getClientIp(req));
+  const { allowed } = checkRateLimit(`ai:${guard.session.email}:${getClientIp(req)}`);
   if (!allowed) return err(429, 'RATE_LIMITED', 'Too many requests. Wait a moment.');
 
   let body: { intent?: string };
@@ -31,12 +68,16 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse>>
   // 1. FAST-PATH: Try Deterministic Failsafe First
   const failsafe = getFailsafePlan(intent);
   if (failsafe) {
-    console.log('[AI Route] Failsafe Triggered for Intent:', intent);
-    return NextResponse.json({
-      ok: true,
-      plan: failsafe,
-      meta: { model: 'failsafe', processingMs: Date.now() - start, intentHash, arcChainId: 5042002 },
-    });
+    if (failsafe.totalAmount > 0) {
+      const validation = validateFlowPlan(failsafe);
+      if (!validation.valid) {
+        return err(400, 'UNSAFE_PLAN', 'The requested action is missing safe execution details.');
+      }
+      if (validatePlanIntentBinding(failsafe, intent).length > 0) {
+        return err(400, 'UNBOUND_RECIPIENT', 'Every transfer recipient must be explicitly supplied by the user.');
+      }
+    }
+    return planResponse(failsafe, guard.session, 'failsafe', Date.now() - start, intentHash);
   }
   
   // 2. NEURAL-PATH: Try AI Orchestrator with Retries
@@ -69,15 +110,15 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse>>
 
   } catch (e: any) {
     const msg = e.message || String(e);
-    console.error('[AI Final Failure]', msg);
+    console.error('[AI Route] Planning provider failed');
 
     if (msg.includes('balance') || msg.includes('credit')) {
-        return err(402, 'INSUFFICIENT_CREDITS', 'Your Anthropic key is low on credits. Please add credits or check your .env key.', msg);
+        return err(503, 'AI_PROVIDER_UNAVAILABLE', 'The planning service is temporarily unavailable.');
     }
     if (msg.includes('429') || msg.toLowerCase().includes('quota')) {
       return err(429, 'AI_QUOTA_EXCEEDED', 'All AI providers are currently busy. Please wait a moment.');
     }
-    return err(502, 'BRAIN_FAILURE', 'All AI neurons failed to activate.', msg);
+    return err(502, 'PLANNING_FAILED', 'The planning service could not produce a safe plan.');
   }
 
   // 3. VALIDATION: Parse and Validate
@@ -88,12 +129,12 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse>>
     
     const { valid, errors, plan } = validateFlowPlan(parsed);
     if (!valid || !plan) return err(502, 'INVALID_PLAN_SCHEMA', 'AI brain returned malformed logic', errors.join('; '));
+    const bindingErrors = validatePlanIntentBinding(plan, intent);
+    if (bindingErrors.length > 0) {
+      return err(400, 'UNBOUND_RECIPIENT', 'Every transfer recipient must be explicitly supplied by the user.');
+    }
 
-    return NextResponse.json({
-      ok: true,
-      plan,
-      meta: { model: providerToUse, processingMs: Date.now() - start, intentHash, arcChainId: 5042002 },
-    });
+    return planResponse(plan, guard.session, providerToUse, Date.now() - start, intentHash);
   } catch {
     return err(502, 'PARSE_ERROR', 'AI response could not be understood as a financial plan.');
   }

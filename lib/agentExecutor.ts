@@ -5,10 +5,9 @@
 // MOCK/REAL branching used elsewhere, and reuses the exact same Circle SDK
 // primitives from lib/circle.ts — no parallel execution path.
 //
-// Before moving money, the agent shops: it pays three independent quote
-// providers a fraction of a cent each (real x402/Nanopayments in real mode,
-// protocol-faithful mock otherwise — see lib/nanopay.ts) and executes at
-// whichever quoted best. On top of the transfer, every autonomous fire also
+// Before moving money, the agent compares three simulated quote providers in
+// parallel and selects the best result. No nanopayment is claimed until a real
+// x402 seller-verification path is integrated. Every autonomous fire also
 // charges the agent's own ERC-8183 execution fee, writes an ERC-8004
 // reputation entry, and logs a permanent record to Rova's own
 // RovaExecutionLog contract.
@@ -33,8 +32,8 @@ export interface FireResult {
   resolvedRecipient: string;
 }
 
-/// Runs the nanopayment rate-shopping round: pays 3 providers a fraction of a
-/// cent each for their current quote, picks the best. wantHighRate = true for
+/// Runs the parallel quote-simulation round and picks the best result.
+/// wantHighRate = true for
 /// USDC->EURC style pairs where a higher number is a better deal for the sender.
 export async function shopForBestRate(pair: AgentRule['pair'], baseUrl: string): Promise<QuoteShopResult> {
   const wantHighRate = pair === 'USDC/EURC';

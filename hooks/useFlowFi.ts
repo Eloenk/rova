@@ -15,6 +15,8 @@ interface State {
   error:           string | null;
   processingMs:    number | null;
   intentHash:      string | null;
+  executionPlanId: string | null;
+  executable:      boolean;
   intent:          string | null;
   agentId:         string | null;
   reputation:      number | null;
@@ -29,6 +31,8 @@ const INIT: State = {
   error:null, 
   processingMs:null, 
   intentHash:null, 
+  executionPlanId:null,
+  executable:false,
   intent:null,
   agentId: publicEnv.rovaAgentId || null,
   reputation: 85,
@@ -48,7 +52,7 @@ export function useRova() {
     const intent = safeString(intentInput).trim();
     if (!intent) return null;
 
-    patch({ status:'planning', error:null, plan:null, executionResult:null, reputationTx:null, intent });
+    patch({ status:'planning', error:null, plan:null, executionResult:null, reputationTx:null, intent, executionPlanId:null, executable:false });
     try {
       const res = await fetch('/api/ai', { 
         method:'POST', 
@@ -71,8 +75,21 @@ export function useRova() {
         risk: cleanPlan.risk, 
         processingMs: Number(data.meta.processingMs) 
       });
-      patch({ status:'planned', plan:cleanPlan, processingMs:data.meta.processingMs, intentHash:data.meta.intentHash });
-      return cleanPlan;
+      const plannedFlow = {
+        plan: cleanPlan,
+        intentHash: data.meta.intentHash,
+        executionPlanId: data.meta.executionPlanId || null,
+        executable: data.meta.executable,
+      };
+      patch({
+        status:'planned',
+        plan:cleanPlan,
+        processingMs:data.meta.processingMs,
+        intentHash:data.meta.intentHash,
+        executionPlanId:plannedFlow.executionPlanId,
+        executable:plannedFlow.executable,
+      });
+      return plannedFlow;
     } catch (err) {
       console.error('[Rova] Critical Intent Error:', err);
       const msg = err instanceof Error ? err.message : 'Plan generation failed';
@@ -81,20 +98,69 @@ export function useRova() {
     }
   }, [addEntry]);
 
-  const executePlan = useCallback(async () => {
-    const { plan, intentHash } = ref.current;
-    if (!plan || !intentHash) return;
+  const requestExecutionApproval = useCallback(async (planId = ref.current.executionPlanId) => {
+    if (!planId) {
+      throw new Error('This plan is informational or secure execution storage is not configured.');
+    }
+    const response = await fetch('/api/execute/authorize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ executionPlanId: planId }),
+    });
+    const data = await response.json();
+    if (!data.ok) throw new Error(data.error || 'Unable to request execution approval');
+    return { executionPlanId: planId, developmentCode: data.developmentCode as string | undefined };
+  }, []);
+
+  const submitExecution = useCallback(async (
+    executionPlanId: string | null,
+    intentHash: string,
+    approvalCode: string,
+  ) => {
+    if (!executionPlanId) {
+      throw new Error('This plan is informational or secure execution storage is not configured.');
+    }
     patch({ status:'executing', error:null });
     try {
-      const res = await fetch('/api/execute', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan, intentHash }) });
+      const res = await fetch('/api/execute', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ executionPlanId, approvalCode }),
+      });
       const data = await res.json();
-      if (!data.ok) { updateEntry(intentHash, { status:'failed' }); patch({ status:'error', error: data.error?.message ?? 'Execution failed' }); return; }
+      if (!data.ok) {
+        const message = data.error?.message ?? 'Execution failed';
+        const retryable = data.error?.retryable === true;
+        if (!retryable) {
+          updateEntry(intentHash, { status:'failed' });
+        }
+        patch({
+          status: retryable ? 'planned' : 'error',
+          error: message,
+          executable: retryable,
+          executionPlanId: retryable ? executionPlanId : null,
+        });
+        throw new Error(message);
+      }
       const exec: ExecutionResult = data.result;
       updateEntry(intentHash, { status:'executed', executionResult:exec, executedAt:new Date().toISOString() });
-      patch({ status:'recording', executionResult:exec });
+      patch({ status:'recording', executionResult:exec, executable:false, executionPlanId:null });
       patch({ status:'confirmed' });
-    } catch (err) { patch({ status:'error', error: err instanceof Error ? err.message : 'Network error' }); }
+      return exec;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Network error';
+      if (ref.current.status === 'executing') {
+        patch({ status:'error', error: message, executable:false, executionPlanId:null });
+      }
+      throw err;
+    }
   }, [updateEntry]);
+
+  const executePlan = useCallback(async (approvalCode: string) => {
+    const { executionPlanId, intentHash } = ref.current;
+    if (!intentHash) return;
+    return submitExecution(executionPlanId, intentHash, approvalCode);
+  }, [submitExecution]);
 
   const syncAgentStatus = useCallback(async () => {
     try {
@@ -116,15 +182,26 @@ export function useRova() {
 
   // Convenience wrapper for callers (e.g. SendView) that just want "plan it,
   // then execute it" as a single call, rather than orchestrating both steps.
-  const executeFlow = useCallback(async (intentInput: any) => {
-    const plan = await planIntent(intentInput);
-    if (!plan) throw new Error(ref.current.error || 'Failed to plan intent');
-    await executePlan();
-    if (ref.current.status === 'error') throw new Error(ref.current.error || 'Execution failed');
-  }, [planIntent, executePlan]);
+  const prepareExecution = useCallback(async (intentInput: any) => {
+    const plannedFlow = await planIntent(intentInput);
+    if (!plannedFlow) throw new Error(ref.current.error || 'Failed to plan intent');
+    if (!plannedFlow.executable) {
+      throw new Error('Secure execution is unavailable for this plan.');
+    }
+    return requestExecutionApproval(plannedFlow.executionPlanId);
+  }, [planIntent, requestExecutionApproval]);
 
   const isProcessing = state.status === 'planning' || state.status === 'executing' || state.status === 'recording';
 
   const reset = useCallback(() => setState(INIT), []);
-  return { ...state, planIntent, executePlan, executeFlow, isProcessing, syncAgentStatus, reset };
+  return {
+    ...state,
+    planIntent,
+    requestExecutionApproval,
+    prepareExecution,
+    executePlan,
+    isProcessing,
+    syncAgentStatus,
+    reset,
+  };
 }

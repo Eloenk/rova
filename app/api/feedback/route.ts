@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireMutationSession } from '@/lib/auth';
 import { serverEnv } from '@/lib/env/server';
+import { randomUUID } from 'crypto';
 
 interface FeedbackPayload {
   category: string;
@@ -76,12 +77,14 @@ export async function POST(req: NextRequest) {
   body.email = guard.session.email;
   body.walletAddress = guard.session.walletAddress || null;
 
-  // Always log to Vercel function logs (visible in Vercel dashboard → Functions)
+  const correlationId = randomUUID();
   console.log('[Rova Feedback]', JSON.stringify({
-    ...body,
-    message: body.message.slice(0, 200), // truncate for log readability
-    receivedAt: new Date().toISOString(),
-  }, null, 2));
+    event: 'feedback_received',
+    correlationId,
+    category: body.category,
+    rating: body.rating,
+    page: body.page || '/',
+  }));
 
   // Optionally forward to Discord
   const webhookUrl = serverEnv.discordFeedbackWebhookUrl;
@@ -98,7 +101,7 @@ export async function POST(req: NextRequest) {
         discordSent = true;
         console.log('[Rova Feedback] Forwarded to Discord successfully');
       } else {
-        console.error('[Rova Feedback] Discord webhook failed:', res.status, await res.text());
+        console.error('[Rova Feedback] Discord webhook failed:', res.status, correlationId);
       }
     } catch (err) {
       console.error('[Rova Feedback] Discord webhook error:', err);
@@ -108,6 +111,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     discordSent,
+    correlationId,
     message: 'Feedback received. Thank you!',
   });
 }

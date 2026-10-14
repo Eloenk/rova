@@ -130,10 +130,6 @@ export async function executeSwap(
   const quote = await getSwapQuote(opts);
   const slippageBps = opts.maxSlippageBps ?? DEFAULT_SLIPPAGE_BPS;
 
-  console.log(
-    `[SwapService] Executing swap: ${opts.amount} ${opts.sellCurrency} -> ~${quote.estimatedBuyAmount} ${opts.buyCurrency} (min ${quote.minBuyAmount})`
-  );
-
   const params = {
     from: { adapter: getAdapter(), chain: getSwapChain(), address: opts.walletAddress },
     tokenIn: opts.sellCurrency,
@@ -159,7 +155,7 @@ export async function executeSwap(
         config: { ...baseConfig, allowanceStrategy: "approve" },
       });
     } else {
-      console.error("[SwapService] kit.swap() failed:", String(err));
+      console.error('[SwapService] Circle swap failed');
       throw err;
     }
   }

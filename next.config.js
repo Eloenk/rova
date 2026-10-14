@@ -1,19 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingRoot: __dirname,
   transpilePackages: [
     '@circle-fin/developer-controlled-wallets',
     '@circle-fin/adapter-circle-wallets',
     '@circle-fin/adapter-viem-v2',
     '@circle-fin/app-kit',
-    '@circle-fin/bridge-kit'
   ],
   experimental: {
     workerThreads: false,
     cpus: 1,
-    serverComponentsExternalPackages: [
-      '@anthropic-ai/sdk',
-    ],
   },
+  serverExternalPackages: ['@anthropic-ai/sdk'],
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

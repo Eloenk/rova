@@ -19,8 +19,6 @@ export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, wa
   for (const split of plan.splits) {
     if (!split.address || split.amount <= 0) continue;
 
-    console.log(`[Executor] Processing split: ${split.amount} ${split.currency} via ${split.arcProtocol}`);
-
     if (split.arcProtocol === 'Arc StableFX') {
       const sellCurrency = split.currency === 'EURC' ? 'USDC' : 'EURC';
       const buyCurrency = split.currency === 'EURC' ? 'EURC' : 'USDC';
@@ -56,11 +54,13 @@ export async function executeFlowPlanReal(plan: FlowPlan, intentHash: string, wa
 
       jobId = `J-${intentHash.slice(0, 8)}`;
       txHashes.push(txHash);
-    } else {
+    } else if (split.arcProtocol === 'Arc Native') {
       const { resolveRecipient } = await import('./emailWallets');
       const { address: targetAddress } = await resolveRecipient(split.address);
       const { txHash } = await sendUsdcOnArc(targetWallet, targetAddress, split.amount);
       txHashes.push(txHash);
+    } else {
+      throw new Error(`Unsupported execution protocol: ${split.arcProtocol}`);
     }
   }
 

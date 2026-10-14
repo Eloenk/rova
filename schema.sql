@@ -134,3 +134,100 @@ CREATE INDEX IF NOT EXISTS idx_refresh_tokens_hash       ON refresh_tokens(token
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
 
 ALTER TABLE refresh_tokens ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION consume_refresh_token(requested_token_hash TEXT)
+RETURNS TABLE(email TEXT)
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+    DELETE FROM refresh_tokens
+     WHERE token_hash = requested_token_hash
+       AND expires_at > now()
+    RETURNING refresh_tokens.email;
+$$;
+
+REVOKE ALL ON FUNCTION consume_refresh_token(TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION consume_refresh_token(TEXT) TO service_role;
+
+-- ── One-time execution plans ────────────────────────────────────────────────
+-- The browser receives only the opaque id. The server reloads the exact plan
+-- and atomically claims it, preventing payload tampering and replay.
+CREATE TABLE IF NOT EXISTS execution_plans (
+    id TEXT PRIMARY KEY,
+    owner_email TEXT NOT NULL REFERENCES users(email) ON DELETE CASCADE,
+    wallet_address TEXT NOT NULL,
+    intent_hash TEXT NOT NULL,
+    plan JSONB NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('planned', 'executing', 'executed', 'failed', 'expired')),
+    expires_at TIMESTAMPTZ NOT NULL,
+    approval_code_hash TEXT,
+    approval_expires_at TIMESTAMPTZ,
+    approval_attempts INTEGER NOT NULL DEFAULT 0,
+    receipt JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    claimed_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_execution_plans_owner_created
+    ON execution_plans(owner_email, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_execution_plans_status_expiry
+    ON execution_plans(status, expires_at);
+
+ALTER TABLE execution_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE execution_plans ADD COLUMN IF NOT EXISTS approval_code_hash TEXT;
+ALTER TABLE execution_plans ADD COLUMN IF NOT EXISTS approval_expires_at TIMESTAMPTZ;
+ALTER TABLE execution_plans ADD COLUMN IF NOT EXISTS approval_attempts INTEGER NOT NULL DEFAULT 0;
+REVOKE ALL ON TABLE execution_plans FROM anon, authenticated;
+
+DROP FUNCTION IF EXISTS claim_execution_plan(TEXT, TEXT);
+DROP FUNCTION IF EXISTS claim_execution_plan(TEXT, TEXT, TEXT);
+DROP FUNCTION IF EXISTS claim_execution_plan(TEXT, TEXT, TEXT, TEXT);
+CREATE OR REPLACE FUNCTION claim_execution_plan(
+    requested_id TEXT,
+    requested_owner_email TEXT,
+    requested_wallet_address TEXT,
+    requested_approval_hash TEXT
+)
+RETURNS SETOF execution_plans
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+    candidate execution_plans%ROWTYPE;
+BEGIN
+    UPDATE execution_plans
+       SET approval_attempts = approval_attempts + 1
+     WHERE id = requested_id
+       AND owner_email = lower(trim(requested_owner_email))
+       AND lower(wallet_address) = lower(trim(requested_wallet_address))
+       AND status = 'planned'
+       AND expires_at > now()
+       AND approval_expires_at > now()
+       AND approval_attempts < 5
+    RETURNING * INTO candidate;
+
+    IF NOT FOUND OR candidate.approval_code_hash IS NULL
+       OR candidate.approval_code_hash <> requested_approval_hash THEN
+        RETURN;
+    END IF;
+
+    UPDATE execution_plans
+       SET status = 'executing',
+           claimed_at = now(),
+           approval_code_hash = NULL,
+           approval_expires_at = NULL
+     WHERE id = requested_id
+       AND status = 'planned'
+    RETURNING * INTO candidate;
+
+    IF FOUND THEN
+        RETURN NEXT candidate;
+    END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION claim_execution_plan(TEXT, TEXT, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION claim_execution_plan(TEXT, TEXT, TEXT, TEXT) TO service_role;
