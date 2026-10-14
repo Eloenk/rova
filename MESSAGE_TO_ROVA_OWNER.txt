@@ -1,0 +1,36 @@
+Hey bro, the first Rova security and hackathon-submission round is ready for review.
+
+Please review these two PRs together because the web database migration and Go engine claim logic depend on each other:
+
+Web app:
+https://github.com/Eloenk/rova/pull/2
+
+Go engine and WhatsApp service:
+https://github.com/Eloenk/rova-agent-go/pull/2
+
+What is included:
+- execution is disabled by default and all sensitive actions fail closed
+- one-time web execution plans are bound to the authenticated owner and managed source wallet
+- the engine atomically claims the exact owner-bound database row before acting
+- unsupported yield, staking, ERC-8183, new automation, and executable bridge paths are paused instead of being presented as working
+- the old embedded deployment key path is removed and the historical key is treated as exposed
+- current tracked files pass a redacted credential-pattern scan
+- web lint, TypeScript checks, 10 tests, and the production build pass
+- Go test, vet, and build pass with Go 1.25
+- the submission runbook, acceptance matrix, secret-handling guide, and guarded deployment instructions are included
+
+Important before the hackathon submission:
+1. Merge both PRs together.
+2. Apply the complete web schema.sql to the non-production Supabase project.
+3. Rotate the historical deployer account and any real credential that was ever pasted into source control, chat, logs, screenshots, or an untrusted machine. Please do not send us the replacement values.
+4. Configure unique testnet secrets in the hosting dashboards. Do not reuse or upload anyone else's .env file.
+5. Keep web, WhatsApp, and autonomous execution flags disabled during baseline testing.
+6. Deploy a fresh preview. The previously advertised rovaagent.vercel.app URL currently returns 404, so it cannot be submitted as the live app yet.
+7. Run docs/TESTNET_ACCEPTANCE_MATRIX.md with two fresh users.
+8. Test WhatsApp linking and confirmation yourself on your own account; you do not need to share the account, QR code, phone number, or OTP with us.
+9. If you approve one bounded Arc testnet transfer for the demo, enable only the manual execution flag for that test, save the public transaction hash and matching receipt, then disable it immediately.
+10. Recheck the app, docs, repositories, demo, and explorer receipt while signed out before submitting.
+
+Please send back only pass/fail results, the final public app URL, and any public testnet transaction hash. Do not send passwords, private keys, API keys, entity secrets, session secrets, scheduler tokens, OTPs, cookies, or QR data.
+
+This round is suitable for a clearly disclosed Arc testnet hackathon submission after the acceptance checklist passes. It is not approval for mainnet, production custody, autonomous execution, or yield.
