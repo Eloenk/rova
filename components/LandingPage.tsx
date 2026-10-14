@@ -121,7 +121,7 @@ export default function LandingPage() {
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-text-primary leading-[1.08]">
                 A New Standard <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-primary via-emerald-300 to-accent-mint font-extrabold">
-                  in Autonomous Capital.
+                  in Policy-Gated Capital.
                 </span>
               </h1>
 
@@ -194,9 +194,9 @@ export default function LandingPage() {
             <ScrollReveal delayMs={200} className="p-8 rounded-2xl bg-surface border border-border hover:border-border-strong transition-all duration-300 flex flex-col justify-between">
               <div className="space-y-4">
                 <span className="text-sm font-mono font-bold text-accent-primary">[2]</span>
-                <h3 className="text-xl font-bold text-text-primary">Autonomous Daemons</h3>
+                <h3 className="text-xl font-bold text-text-primary">Policy-Gated Watcher</h3>
                 <p className="text-text-secondary text-sm leading-relaxed">
-                  Set standing instructions once. The native `rova-agent-go` background engine monitors chain state and executes transfers even while you sleep.
+                  The native `rova-agent-go` engine monitors testnet state, atomically claims owner-bound policies, and remains disabled unless both execution gates are approved.
                 </p>
               </div>
               <div className="mt-8 p-4 rounded-xl bg-surface-raised border border-border text-xs space-y-2 font-mono">
@@ -214,7 +214,7 @@ export default function LandingPage() {
                 <span className="text-sm font-mono font-bold text-accent-primary">[3]</span>
                 <h3 className="text-xl font-bold text-text-primary">CCTP V2 Cross-Chain</h3>
                 <p className="text-text-secondary text-sm leading-relaxed">
-                  Burn-and-mint native USDC transfers across Sepolia, Base, Polygon, and Arc with zero slippage and sub-second finality.
+                  Prepares supported USDC testnet routes for review; execution remains paused until destination binding and acceptance tests pass.
                 </p>
               </div>
               <div className="mt-8 p-4 rounded-xl bg-surface-raised border border-border text-xs space-y-2 font-mono">
@@ -272,7 +272,7 @@ export default function LandingPage() {
                 <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 3 • ROUTER</div>
                 <h4 className="text-base font-extrabold text-white">CCTP V2 Bridge</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Executes native burn-and-mint cross-chain liquidity routing between Sepolia, Base, Polygon, and Arc with 1:1 parity guarantee.
+                  Prepares supported testnet bridge routes for deterministic review and explicit approval before submission.
                 </p>
               </div>
 
@@ -280,7 +280,7 @@ export default function LandingPage() {
                 <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 4 • AUDIT</div>
                 <h4 className="text-base font-extrabold text-white">Arc Audit Ledger</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Records every user action and automated trigger on `RovaExecutionLog` smart contract for immutable, verifiable proof of reserves.
+                  Persists real engine receipts with ArcScan references; optional contract logging is secondary evidence, not proof of reserves.
                 </p>
               </div>
             </div>
@@ -337,8 +337,8 @@ export default function LandingPage() {
                 legacy: false,
               },
               {
-                cap: '24/7 Autonomous Execution Daemons',
-                desc: 'Native Go background engine executes standing rules continuously without user intervention',
+                cap: 'Owner-Bound Policy Watcher',
+                desc: 'Native Go engine uses atomic claims, explicit gates, and durable ArcScan-linked receipts',
                 rova: true,
                 legacy: false,
               },
@@ -349,8 +349,8 @@ export default function LandingPage() {
                 legacy: false,
               },
               {
-                cap: 'Zero-Slippage Atomic FX Settlement',
-                desc: 'Direct 1:1 Circle CCTP V2 burn-and-mint settlement across 5 chains',
+                cap: 'Gated Testnet Routing',
+                desc: 'Supported transfers, swaps, and bridge plans require deterministic validation and approval',
                 rova: true,
                 legacy: false,
               },
@@ -402,10 +402,10 @@ export default function LandingPage() {
         <div className="flex-1 flex flex-col justify-center">
           <ScrollReveal className="max-w-5xl mx-auto px-6 text-center space-y-8">
             <h2 className="text-4xl md:text-6xl font-extrabold text-text-primary tracking-tight">
-              Ready to automate your money movement?
+              Ready to review your Arc testnet flow?
             </h2>
             <p className="text-text-secondary text-lg max-w-xl mx-auto">
-              Experience sub-second finality and autonomous capital execution on Arc Testnet.
+              Build a bounded plan, inspect the policy, and execute only through the approved testnet gates.
             </p>
 
             <div className="pt-4">

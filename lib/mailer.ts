@@ -21,7 +21,7 @@ async function sendCodeEmail(
       <div style="font-family: Inter, -apple-system, sans-serif; background-color: #0d1520; color: #ffffff; padding: 40px 20px; border-radius: 12px; max-width: 480px; margin: 0 auto; border: 1px solid rgba(180, 244, 215, 0.15);">
         <div style="text-align: center; margin-bottom: 24px;">
           <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 0;">ROVA</h1>
-          <p style="color: #8b9ba8; font-size: 13px; margin-top: 4px;">Autonomous Money Movement on Arc</p>
+          <p style="color: #8b9ba8; font-size: 13px; margin-top: 4px;">Policy-Gated Testnet Flows on Arc</p>
         </div>
         <div style="background-color: #131d2a; padding: 24px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); text-align: center;">
           <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 16px;">Your 6-digit ${purpose} code is:</p>

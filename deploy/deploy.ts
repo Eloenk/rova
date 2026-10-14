@@ -1,32 +1,11 @@
 import { ethers } from 'ethers';
-import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
 import solc from 'solc';
-import yaml from 'js-yaml';
-
-// Load environment variables from .env.local and .env
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
-dotenv.config();
-
-// Read config.yaml for primary RPC
-let configYamlRpc = 'https://arc-testnet.drpc.org';
-try {
-  const yamlPath = path.resolve(process.cwd(), 'config.yaml');
-  if (fs.existsSync(yamlPath)) {
-    const yamlContent = fs.readFileSync(yamlPath, 'utf8');
-    const parsed: any = yaml.load(yamlContent);
-    if (parsed?.arc?.rpc_url) {
-      configYamlRpc = parsed.arc.rpc_url;
-    }
-  }
-} catch (e) {
-  console.warn("⚠️ Could not parse config.yaml, using fallback RPC");
-}
+import { operationalChainId, operationalFlag, readOperationalVariable, requireOperationalVariable } from '../tools/runtimeConfig';
 
 const RPC_ENDPOINTS = [
-  configYamlRpc,
-  process.env.ARC_RPC_URL,
+  readOperationalVariable('ARC_RPC_URL'),
   "https://arc-testnet.drpc.org",
   "https://5042002.rpc.thirdweb.com",
   "https://rpc.testnet.arc.network",
@@ -112,20 +91,17 @@ async function main() {
   if (!expectedContract || targetContract !== expectedContract) {
     throw new Error('Only RovaSavingsVault.sol and RovaExecutionLog.sol may be deployed by this script');
   }
-  if (process.env.ROVA_ALLOW_CONTRACT_DEPLOY !== 'true') {
+  if (!operationalFlag('ROVA_ALLOW_CONTRACT_DEPLOY')) {
     throw new Error('Contract deployment is disabled. Set ROVA_ALLOW_CONTRACT_DEPLOY=true only after approval.');
   }
 
-  const expectedChainId = BigInt(process.env.ARC_CHAIN_ID || '5042002');
+  const expectedChainId = operationalChainId();
   const expectedConfirmation = `DEPLOY:${targetContract}:${expectedChainId}`;
-  if (process.env.ROVA_DEPLOY_CONFIRMATION !== expectedConfirmation) {
+  if (readOperationalVariable('ROVA_DEPLOY_CONFIRMATION') !== expectedConfirmation) {
     throw new Error(`Set ROVA_DEPLOY_CONFIRMATION=${expectedConfirmation} to authorize this exact deployment`);
   }
 
-  const rawKey = process.env.ROVA_DEPLOYER_PRIVATE_KEY;
-  if (!rawKey) {
-    throw new Error('ROVA_DEPLOYER_PRIVATE_KEY is required for deployment');
-  }
+  const rawKey = requireOperationalVariable('ROVA_DEPLOYER_PRIVATE_KEY');
   const cleanKey = rawKey.startsWith('0x') ? rawKey : `0x${rawKey}`;
   if (!/^0x[0-9a-fA-F]{64}$/.test(cleanKey)) {
     throw new Error('ROVA_DEPLOYER_PRIVATE_KEY must be a 32-byte hexadecimal private key');
@@ -151,22 +127,7 @@ async function main() {
 
   const factory = new ethers.ContractFactory(abi, bytecode, wallet);
   
-  let contract;
-  let attempts = 0;
-  while (attempts < 3) {
-    try {
-      attempts++;
-      contract = await factory.deploy();
-      break;
-    } catch (err: any) {
-      console.warn(`⚠️ Deployment attempt ${attempts} failed (${err.message}). Retrying in 2 seconds...`);
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-  }
-
-  if (!contract) {
-    throw new Error("Deployment failed after max retries");
-  }
+  const contract = await factory.deploy();
 
   console.log(`⏳ Tx Hash: ${contract.deploymentTransaction()?.hash}`);
   console.log(`⏳ Waiting for confirmation on Arc chain ${expectedChainId}...`);
@@ -177,7 +138,7 @@ async function main() {
   console.log("\n====================================================");
   console.log(`🎉 SUCCESS! ${targetContract} deployed to: ${deployedAddress}`);
   console.log("====================================================\n");
-  console.log("Add this address to your environment files:");
+  console.log("Add this public address to the deployment configuration:");
   if (targetContract === 'RovaSavingsVault') {
     console.log(`NEXT_PUBLIC_ROVA_SAVINGS_VAULT_ADDRESS=${deployedAddress}`);
     console.log(`ROVA_SAVINGS_VAULT_ADDRESS=${deployedAddress}`);

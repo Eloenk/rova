@@ -3,6 +3,7 @@ import test from 'node:test';
 import { getFailsafePlan } from '../lib/failsafe';
 import type { FlowPlan } from '../lib/types';
 import { validateFlowPlan, validatePlanIntentBinding } from '../lib/validator';
+import { isManualExecutionSupported, unsupportedManualProtocols } from '../lib/executionCapabilities';
 
 function validPlan(overrides: Partial<FlowPlan> = {}): FlowPlan {
   return {
@@ -85,4 +86,19 @@ test('accepts a transfer address copied exactly from the user intent', () => {
     validatePlanIntentBinding(plan, 'send 10 USDC to 0x1111111111111111111111111111111111111111'),
     [],
   );
+});
+
+test('allows only bounded native transfers and StableFX swaps for manual execution', () => {
+  assert.equal(isManualExecutionSupported(validPlan()), true);
+  assert.equal(isManualExecutionSupported(validPlan({
+    splits: [{ ...validPlan().splits[0], arcProtocol: 'Arc StableFX' }],
+  })), true);
+});
+
+test('keeps bridge plans informational until destination binding is implemented', () => {
+  const plan = validPlan({
+    splits: [{ ...validPlan().splits[0], arcProtocol: 'CCTP V2' }],
+  });
+  assert.equal(isManualExecutionSupported(plan), false);
+  assert.deepEqual(unsupportedManualProtocols(plan), ['CCTP V2']);
 });

@@ -1,8 +1,8 @@
 # ⚡ Rova — AI-Powered Capital Flow Engine on Arc
 
-> **Autonomous Money Movement & Agentic Capital Allocation on Arc Testnet** — Built Africa-first, for the world.
+> **Policy-Gated Capital Planning and Testnet Settlement on Arc** — Built Africa-first, for the world.
 
-Rova enables users and autonomous AI agents to send, bridge, swap, and execute recurring flow rules for stablecoins on Arc using natural language. Featuring zero-friction email onboarding via Circle Programmable Wallets, native Web3 wallet connections, a deterministic conversational agent fast-path, and deep-linked WhatsApp bot integration.
+Rova prepares and validates natural-language stablecoin transfer, swap, and bridge plans on Arc Testnet. It combines email onboarding through Circle Programmable Wallets, native Web3 wallet connections, one-time execution plans, a deterministic conversational fast-path, and WhatsApp account linking.
 
 > [!IMPORTANT]
 > Rova is currently a testnet prototype. Custody actions and autonomous execution are disabled by default, and this repository state does not authorize a mainnet deployment. Review [`SECURITY_OPERATIONS.md`](SECURITY_OPERATIONS.md) and the [`hackathon implementation roadmap`](docs/HACKATHON_IMPLEMENTATION_ROADMAP.md) before operating or extending the system.
@@ -18,17 +18,17 @@ Rova enables users and autonomous AI agents to send, bridge, swap, and execute r
   - **Send USDC**: To any EVM address or email recipient.
   - **Atomic FX Swaps**: USDC ↔ EURC via Circle StableFX with smart contract escrow.
   - **Cross-Chain CCTP V2 Bridging**: Transfer USDC seamlessly between Sepolia, Base, Polygon, and Arc.
-- 🤖 **Autonomous Standing Instructions & Watchers**
+- 🤖 **Policy Watcher Foundation**
   - Create trigger-based rules (e.g., *"If USDC rate > $1.02, swap 100 USDC to EURC"*).
-  - Background daemon monitors market state and executes rules automatically on Arc.
+  - New policy creation is paused; the Go watcher remains fail-closed and requires owner-bound database claims plus separate execution gates.
 - 📱 **Native WhatsApp AI Integration**
   - Deep-link verification modal for one-tap WhatsApp wallet linking.
   - Direct conversational banking via WhatsApp powered by `whatsmeow` & Go backend engine.
 - 👛 **Dynamic Multi-Token Drawer**
-  - Phantom-inspired popover drawer rendering live onchain balances for USDC, EURC, and USYC.
+  - Phantom-inspired popover drawer rendering supported Arc testnet balances.
   - Real-time wallet address resolution supporting both Web3 injected wallets and Circle Managed Wallets.
-- 🔒 **Autonomous Savings Vault System**
-  - Allocate a percentage of incoming funds into isolated storage protected from routine operational flows.
+- 🔒 **Guarded Savings Vault Prototype**
+  - Testnet vault contracts and guarded deposit/redemption paths exist; no production yield venue or return is claimed.
   - Dual strategy engine configurable via `config.yaml`: **Smart Contract Timelock Vault** (`RovaSavingsVault.sol`) or **Circle Sub-Wallet SCA**.
 - 📜 **On-Chain Audit Ledger**
   - Full activity log linked to `RovaExecutionLog.sol` smart contract with Arc Transaction Memos.
@@ -51,7 +51,7 @@ Token access and security on `RovaSavingsVault.sol` are enforced through 4 disti
 | Layer | Technology |
 |---|---|
 | **Blockchain** | Arc Testnet (Chain ID `5042002`, Circle native USDC gas L1) |
-| **Smart Contracts** | `RovaExecutionLog.sol`, ERC-8004 Identity/Reputation, ERC-8183 Flow Standard |
+| **Smart Contracts** | `RovaExecutionLog.sol`, `RovaSavingsVault.sol`, ERC-8004 Identity/Reputation |
 | **Wallets** | Circle Programmable Wallets (Email OTP via Resend) + Wagmi / RainbowKit (Web3) |
 | **AI Router** | Anthropic Claude 3.7 Sonnet + Failsafe Intent Parser |
 | **Cross-Chain & FX** | Circle CCTP V2, Circle Gateway, StableFX Escrow |
@@ -68,7 +68,7 @@ Token access and security on `RovaSavingsVault.sol` are enforced through 4 disti
 | `/login` | **Authentication** | Email OTP via Resend & Web3 Wallet login |
 | `/dashboard` | **Command Hub** | Main AI chat prompt, stats, standing rules summary, quick action pills |
 | `/send` | **Send & Swap** | Full manual interface for transfers, cross-chain bridging, and FX swaps |
-| `/agent` | **Agent Watchers** | Manage active autonomous rules, triggers, and execution history |
+| `/agent` | **Agent Watchers** | Review or cancel stored policies and inspect durable engine receipts |
 | `/history` | **Ledger Activity** | Detailed transaction table with ArcScan links and Arc Memos |
 
 ---

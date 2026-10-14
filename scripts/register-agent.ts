@@ -1,17 +1,29 @@
 #!/usr/bin/env tsx
 // Run: npm run register-agent
-import 'dotenv/config';
 import { createPublicClient, http, parseAbiItem } from 'viem';
 import { arcTestnet } from 'viem/chains';
 import { createAgentWallets, registerAgentIdentity, recordReputation } from '../lib/circle';
-import { ARC_TESTNET, ERC8004, AGENT_METADATA, arcScan, TOKENS } from '../lib/config';
+import { ARC_TESTNET, ERC8004, arcScan, TOKENS } from '../lib/config';
 import { parseAbi } from 'viem';
+import { operationalFlag, readOperationalVariable, requireOperationalVariable } from '../tools/runtimeConfig';
 
 const step = (n: number, s: string) => console.log(`\n${'─'.repeat(55)}\n[${n}/4] ${s}\n${'─'.repeat(55)}`);
 const ok   = (s: string) => console.log(`  ✓  ${s}`);
 const info = (k: string, v: string) => console.log(`  ${k.padEnd(22)} ${v}`);
 
 async function main() {
+	if (!operationalFlag('ROVA_ALLOW_AGENT_REGISTRATION')) {
+		throw new Error('Agent registration is disabled. Set ROVA_ALLOW_AGENT_REGISTRATION=true only after approval.');
+	}
+	const expectedConfirmation = 'REGISTER_AGENT:5042002';
+	if (readOperationalVariable('ROVA_AGENT_REGISTRATION_CONFIRMATION') !== expectedConfirmation) {
+		throw new Error(`Set ROVA_AGENT_REGISTRATION_CONFIRMATION=${expectedConfirmation} to authorize this registration`);
+	}
+	const metaURI = requireOperationalVariable('ROVA_METADATA_URI');
+	if (!/^ipfs:\/\/|^https:\/\//i.test(metaURI)) {
+		throw new Error('ROVA_METADATA_URI must use ipfs:// or https://');
+	}
+
   console.log('\n╔═══════════════════════════════════════════════════╗');
   console.log('║  Rova — ERC-8004 Agent Registration         ║');
   console.log('║  Arc Testnet (Chain ID: 5042002)                  ║');
@@ -32,7 +44,7 @@ async function main() {
   const usdcAbi = parseAbi(['function balanceOf(address) view returns (uint256)']);
   
   let balance = 0n;
-  while (balance === 0n) {
+  for (let attempt = 0; attempt < 120 && balance === 0n; attempt++) {
     try {
       balance = await client.readContract({
         address: TOKENS.USDC.address as `0x${string}`,
@@ -44,11 +56,13 @@ async function main() {
     } catch (e) {}
     await new Promise(r => setTimeout(r, 5000));
   }
+  if (balance === 0n) {
+    throw new Error('Funding was not detected within 10 minutes. Keep the displayed wallet addresses and reconcile them before retrying registration.');
+  }
 
   ok('Funds detected. Proceeding to registration…');
 
   step(2, 'Registering agent identity on ERC-8004 IdentityRegistry');
-  const metaURI = process.env.ROVA_METADATA_URI ?? 'ipfs://bafkreibdi6623n3xpf7ymk62ckb4bo75o3qemwkpfvp5i25j66itxvsoei';
   const regHash = await registerAgentIdentity(wallets.ownerAddress, metaURI);
   ok('Identity NFT minted on Arc');
   info('Transaction:', arcScan.tx(regHash));
@@ -62,6 +76,9 @@ async function main() {
     args:    { to: wallets.ownerAddress as `0x${string}` },
     fromBlock: from, toBlock: latest,
   });
+  if (!logs.length || logs[logs.length - 1].args.tokenId === undefined) {
+    throw new Error('Registration transaction completed but no matching identity token was found; reconcile the transaction before retrying.');
+  }
   const agentId = logs[logs.length - 1].args.tokenId!.toString();
   ok(`Agent ID: #${agentId}`);
   info('NFT explorer:', arcScan.nft(agentId));
@@ -72,9 +89,9 @@ async function main() {
   info('Transaction:', arcScan.tx(repHash));
 
   console.log('\n╔═══════════════════════════════════════════════════╗');
-  console.log('║  ✅  Done — Copy these to your .env.local         ║');
+  console.log('║  ✅  Done — Record these deployment values        ║');
   console.log('╚═══════════════════════════════════════════════════╝\n');
-  console.log(`ROVA_AGENT_ID=${agentId}`);
+  console.log(`NEXT_PUBLIC_ROVA_AGENT_ID=${agentId}`);
   console.log(`ROVA_OWNER_WALLET=${wallets.ownerAddress}`);
   console.log(`ROVA_VALIDATOR_WALLET=${wallets.validatorAddress}`);
   console.log(`\nView your agent:\n  ${arcScan.nft(agentId)}\n`);

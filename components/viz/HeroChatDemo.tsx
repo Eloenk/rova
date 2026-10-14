@@ -135,7 +135,7 @@ export default function HeroChatDemo() {
           <span className="font-extrabold text-text-primary tracking-wide text-sm">Rova Agent</span>
         </div>
         <span className="text-[10px] font-mono text-text-tertiary uppercase tracking-widest font-bold">
-          Live Execution Demo
+          Gated Plan Demo
         </span>
       </div>
 

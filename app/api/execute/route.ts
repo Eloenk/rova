@@ -46,10 +46,9 @@ export async function POST(req: NextRequest) {
     }
     assertPermittedPlan(validation.plan, 'manual');
 
-    const result = await executeFlowPlan(validation.plan, storedPlan.intentHash, guard.session.walletAddress);
+    const result = await executeFlowPlan(validation.plan, guard.session.walletAddress);
     await finishExecutionPlan(storedPlan.id, 'executed', {
       txHashes: result.txHashes,
-      jobId: result.jobId || null,
       executedAt: result.executedAt,
     });
 

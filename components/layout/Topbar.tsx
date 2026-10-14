@@ -13,7 +13,7 @@ const META: Record<string, { title: string; sub: string }> = {
   '/':          { title: 'Rova',         sub: 'AI-powered money movement on Arc' },
   '/dashboard': { title: 'Command Hub',  sub: 'Your stablecoin activity on Arc' },
   '/send':      { title: 'Send & Swap',  sub: 'Transfer, bridge, or swap stablecoins' },
-  '/agent':     { title: 'Agent',        sub: 'Autonomous agent triggers and watchers' },
+  '/agent':     { title: 'Agent',        sub: 'Policy review, cancellation, and engine receipts' },
   '/history':   { title: 'Recent Activity', sub: 'Browser-local activity with ArcScan links' },
 };
 
@@ -630,7 +630,7 @@ export default function Topbar({
 
             <p style={{ fontSize: '13.5px', color: '#c2d1e0', lineHeight: 1.5, marginBottom: '20px' }}>
               {isWhatsAppLinked
-                ? `Your WhatsApp line ${linkedPhone ? `(${linkedPhone}) ` : ''}is already linked to your active Rova wallet. You can open WhatsApp directly to check balance, send funds, or create automated rules.`
+                ? `Your WhatsApp line ${linkedPhone ? `(${linkedPhone}) ` : ''}is linked to your Rova account. You can check balances and request bounded actions; new automated policies remain paused.`
                 : 'Click the button below to open WhatsApp with your pre-filled verification token. Sending the message automatically links your phone number to your active Rova wallet.'}
             </p>
 

@@ -7,6 +7,7 @@ import { callAI, AIProvider } from '@/lib/ai-provider';
 import { getFailsafePlan } from '@/lib/failsafe';
 import { AuthenticatedSession, requireMutationSession } from '@/lib/auth';
 import { createExecutionPlan } from '@/lib/executionPlans';
+import { isManualExecutionSupported } from '@/lib/executionCapabilities';
 import type { FlowPlan } from '@/lib/types';
 
 function err(status: number, code: string, message: string, detail?: string): NextResponse<ApiResponse> {
@@ -23,7 +24,7 @@ async function planResponse(
   intentHash: string,
 ): Promise<NextResponse<ApiResponse>> {
   let executionPlan: { id: string; expiresAt: string } | undefined;
-  if (plan.totalAmount > 0 && session.walletAddress) {
+  if (plan.totalAmount > 0 && session.walletAddress && isManualExecutionSupported(plan)) {
     try {
       executionPlan = await createExecutionPlan({
         ownerEmail: session.email,
@@ -62,6 +63,9 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse>>
 
   const intent = body?.intent?.trim();
   if (!intent) return err(400, 'MISSING_INTENT', 'Intent is required');
+  if (/\b(yield|stake|staking|usyc|automate|automation|recurring|standing rule|erc-?8183)\b/i.test(intent)) {
+    return err(409, 'CAPABILITY_UNAVAILABLE', 'Yield, staking, new autonomous policies, and ERC-8183 jobs are not enabled in this release.');
+  }
   
   const intentHash = await sha256(intent);
 

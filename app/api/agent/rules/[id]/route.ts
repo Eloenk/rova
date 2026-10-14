@@ -13,8 +13,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!rule) return NextResponse.json({ ok: false, error: 'Rule not found' }, { status: 404 });
 
   const { status }: { status: RuleStatus } = await req.json();
-  if (!['active', 'cancelled'].includes(status)) {
-    return NextResponse.json({ ok: false, error: 'Invalid status' }, { status: 400 });
+  if (status !== 'cancelled') {
+    return NextResponse.json({ ok: false, error: 'Rules may be cancelled but cannot be reactivated from the web application.' }, { status: 409 });
   }
 
   const updated = await updateRuleStatus(id, guard.session.email, status);

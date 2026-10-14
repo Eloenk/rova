@@ -13,26 +13,18 @@ export type CircleChain =
   | 'Polygon_Amoy';
 
 // Circle's CCTP bridge type
-export type BridgeType = 'cctp' | 'gateway' | 'native' | 'stablefx' | 'yield' | 'staking';
-
-export interface JobMetadata {
-  provider:    string;          // Agent/Provider address
-  evaluator:   string;          // Evaluator address (defaults to user)
-  description: string;          // Work scope
-  expiryDays:  number;          // Duration until timeout
-}
+export type BridgeType = 'cctp' | 'gateway' | 'native' | 'stablefx';
 
 // A single capital allocation target
 export interface FlowSplit {
   recipient:   string;          // Human-readable name
   address:     string;          // Arc wallet/contract address
   amount:      number;          // USDC amount
-  currency:    'USDC' | 'EURC' | 'USYC';
+  currency:    'USDC' | 'EURC';
   country:     string;          // ISO 3166-1 (e.g. "US")
   fxRate:      number;          // vs USD (USD=1.0, EUR≈1.09)
   fxSymbol:    string;          // "$", "€"
-  arcProtocol: string;          // "Arc Native", "CCTP", "Gateway", "StableFX", "ERC-8183 Job"
-  jobMetadata?: JobMetadata;    // Only present if protocol is ERC-8183 Job
+  arcProtocol: string;          // "Arc Native", "CCTP V2", "Circle Gateway", "Arc StableFX"
 }
 
 // A routing path between chains/protocols
@@ -94,29 +86,10 @@ export interface ExecutionResult {
   arcScanLinks: string[];
   gasUsed:      number;
   confirmedAt:  string;
-  jobId?:       string;         // Present if an ERC-8183 job was created
-}
-
-// ERC-8183 Job State
-export type JobStatus = 'Open' | 'Funded' | 'Submitted' | 'Completed' | 'Rejected' | 'Expired';
-
-export interface FlowJob {
-  id:              string;         // Onchain Job ID
-  client:          string;
-  provider:        string;
-  evaluator:       string;
-  amount:          number;
-  currency:        'USDC' | 'EURC' | 'USYC';
-  description:     string;
-  status:          JobStatus;
-  createdAt:       string;
-  expiresAt:       string;
-  txHash:          string;
-  deliverableHash?: string;
 }
 
 // Persisted history entry
-export type FlowEntryStatus = 'planned' | 'executed' | 'failed' | 'job_created';
+export type FlowEntryStatus = 'planned' | 'executed' | 'failed';
 
 export interface FlowEntry {
   id:              string;
@@ -130,6 +103,5 @@ export interface FlowEntry {
   totalAmount:     number;
   risk:            'low' | 'medium' | 'high';
   processingMs:    number | null;
-  jobId?:          string;
   memo?:           string;
 }

@@ -9,22 +9,22 @@ type Action = 'send' | 'bridge' | 'swap';
 
 const ACTIONS: { id: Action; label: string; icon: React.ReactNode; desc: string }[] = [
   { id: 'send',   label: 'Send',   icon: <Send size={16} />,   desc: 'Transfer stablecoins to a wallet address or recipient' },
-  { id: 'bridge', label: 'Bridge', icon: <Globe size={16} />,  desc: 'Move USDC cross-chain via CCTP V2' },
+  { id: 'bridge', label: 'Bridge', icon: <Globe size={16} />,  desc: 'Review an informational CCTP V2 route' },
   { id: 'swap',   label: 'Swap',   icon: <Repeat size={16} />, desc: 'Exchange USDC ↔ EURC with StableFX' },
 ];
 
 const BRIDGE_CHAINS = ['Ethereum', 'Base', 'Polygon', 'Solana', 'Arbitrum'];
-const CURRENCIES = ['USDC', 'EURC', 'USYC'];
+const SWAP_CURRENCIES = ['USDC', 'EURC'];
 
 export default function SendView() {
   const { isConnected, usdcBalance } = useWallet();
-  const { prepareExecution, executePlan, isProcessing } = useRova();
+  const { planIntent, prepareExecution, executePlan, isProcessing } = useRova();
 
   const [action, setAction] = useState<Action>('send');
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
-  const [fromChain, setFromChain] = useState('Ethereum');
-  const [toChain, setToChain] = useState('Arc');
+  const [fromChain, setFromChain] = useState('Arc');
+  const [toChain, setToChain] = useState('Ethereum');
   const [fromCurrency, setFromCurrency] = useState('USDC');
   const [toCurrency, setToCurrency] = useState('EURC');
   const [memo, setMemo] = useState('');
@@ -49,6 +49,13 @@ export default function SendView() {
     setResultMsg('');
     try {
       const intent = buildIntent();
+      if (action === 'bridge') {
+        const plannedFlow = await planIntent(intent);
+        if (!plannedFlow) throw new Error('Unable to prepare the bridge route.');
+        setStatus('success');
+        setResultMsg('Bridge route prepared for review. Bridge execution remains paused until destination binding and acceptance tests are complete.');
+        return;
+      }
       const approval = await prepareExecution(intent);
       setApprovalCode(approval.developmentCode || '');
       setStatus('approval');
@@ -89,7 +96,7 @@ export default function SendView() {
           Send & Swap
         </h1>
         <p className="text-text-secondary text-sm sm:text-base mt-1">
-          Move stablecoins on Arc with instant sub-second finality.
+          Review bounded Arc testnet transfers, swaps, and bridge routes.
         </p>
       </header>
 
@@ -100,7 +107,7 @@ export default function SendView() {
           return (
             <button
               key={a.id}
-              onClick={() => { setAction(a.id); setStatus('idle'); setApprovalCode(''); }}
+              onClick={() => { setAction(a.id); setFromCurrency('USDC'); setToCurrency('EURC'); setStatus('idle'); setApprovalCode(''); }}
               className={`
                 flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-full border-0 cursor-pointer font-bold text-xs sm:text-sm transition-all
                 ${isActive
@@ -128,7 +135,7 @@ export default function SendView() {
               />
             </Field>
             <Field label="Currency">
-              <Select value={fromCurrency} onChange={setFromCurrency} options={CURRENCIES} />
+              <Select value={fromCurrency} onChange={setFromCurrency} options={['USDC']} />
             </Field>
           </div>
         )}
@@ -138,15 +145,15 @@ export default function SendView() {
           <div className="space-y-4">
             <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-end">
               <Field label="From chain">
-                <Select value={fromChain} onChange={setFromChain} options={BRIDGE_CHAINS} />
+                <Select value={fromChain} onChange={setFromChain} options={['Arc']} />
               </Field>
               <div className="pb-3 text-text-secondary"><ArrowRight size={18} /></div>
               <Field label="To chain">
-                <Select value={toChain} onChange={setToChain} options={['Arc', ...BRIDGE_CHAINS.filter(c => c !== fromChain)]} />
+                <Select value={toChain} onChange={setToChain} options={BRIDGE_CHAINS} />
               </Field>
             </div>
             <Field label="Currency">
-              <Select value={fromCurrency} onChange={setFromCurrency} options={CURRENCIES} />
+              <Select value={fromCurrency} onChange={setFromCurrency} options={['USDC']} />
             </Field>
           </div>
         )}
@@ -155,11 +162,11 @@ export default function SendView() {
         {action === 'swap' && (
           <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-end">
             <Field label="From currency">
-              <Select value={fromCurrency} onChange={setFromCurrency} options={CURRENCIES} />
+              <Select value={fromCurrency} onChange={setFromCurrency} options={SWAP_CURRENCIES} />
             </Field>
             <div className="pb-3 text-text-secondary"><Repeat size={18} /></div>
             <Field label="To currency">
-              <Select value={toCurrency} onChange={setToCurrency} options={CURRENCIES.filter(c => c !== fromCurrency)} />
+              <Select value={toCurrency} onChange={setToCurrency} options={SWAP_CURRENCIES.filter(c => c !== fromCurrency)} />
             </Field>
           </div>
         )}
@@ -231,7 +238,7 @@ export default function SendView() {
             ? <><Loader size={16} className="animate-spin" /> Processing...</>
             : status === 'approval'
               ? <>Approve & Execute <ArrowRight size={16} /></>
-              : <>{action === 'send' ? `Review ${fromCurrency} transfer` : action === 'bridge' ? `Review ${fromCurrency} bridge` : `Review ${fromCurrency} swap`} <ArrowRight size={16} /></>
+              : <>{action === 'send' ? `Review ${fromCurrency} transfer` : action === 'bridge' ? `Prepare ${fromCurrency} route` : `Review ${fromCurrency} swap`} <ArrowRight size={16} /></>
           }
         </button>
       </div>

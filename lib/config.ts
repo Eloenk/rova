@@ -43,15 +43,6 @@ export const TOKENS = {
     name:     'Euro Coin',
     isNative:  false,
   },
-  USYC: {
-    address:      '0xe9185F0c5F296Ed1797AaE4238D26CCaBEadb86C' as `0x${string}`,
-    teller:       '0x9fdF14c5B14173D74C08Af27AebFf39240dC105A' as `0x${string}`,
-    entitlements: '0xcc205224862c7641930c87679e98999d23c26113' as `0x${string}`,
-    decimals:  6,
-    symbol:   'USYC',
-    name:     'US Treasury Yield Coin',
-    permissioned: true, // Requires allowlisting from Circle Support
-  },
 } as const;
 
 // ── CCTP V2 — Cross-Chain Transfer Protocol ────────────────────────────────────
@@ -67,12 +58,11 @@ export const CCTP = {
 } as const;
 
 // ── Circle Gateway ─────────────────────────────────────────────────────────────
-// Unified USDC balance across chains. Transfers in <500ms.
-// No sign-up needed — fully permissionless.
+// Gateway routing metadata. Availability is verified at quote time.
 export const GATEWAY = {
   // Same address on ALL supported chains
   walletAddress: '0x0077777d7EBA4688BDeF3E311b846F25870A19B9' as `0x${string}`,
-  description:   'Unified USDC balance accessible from any supported chain (<500ms)',
+  description:   'Unified USDC routing across supported chains',
   docs:          'https://developers.circle.com/gateway.md',
 } as const;
 
@@ -86,18 +76,13 @@ export const ERC8004 = {
   standard:          'ERC-8004',
 } as const;
 
-// ── ERC-8183 Agentic Flow ──────────────────────────────────────────────────────
-export const ERC8183 = {
-  address: '0x0747EEf0706327138c69792bF28Cd525089e4583' as `0x${string}`,
-} as const;
-
 // ── Rova Execution Log ─────────────────────────────────────────────────────────
 // Rova's own contract — NOT shared Circle/Arc infra. Deployed via Remix, see
 // contracts/RovaExecutionLog.sol and DEPLOY_CONTRACT.md for instructions.
 // Address comes from env because it's set once at deploy time, not baked into
 // the repo (so a fresh deploy doesn't require an app code change).
 export const ROVA_EXECUTION_LOG = {
-  address: (publicEnv.executionLogAddress || '0x58d1e3e11C7a93cb26C371B115f2710aF68d427a') as `0x${string}`,
+  address: publicEnv.executionLogAddress as `0x${string}`,
   abiFunctionSignature: 'logExecution(bytes32,address,uint256,uint256,string)',
 } as const;
 
@@ -132,21 +117,19 @@ export const arcScan = {
 
 export const AGENT_METADATA = {
   name:        'Rova Capital Flow Engine',
-  description: 'Autonomous capital allocation agent on Arc. Native support for ERC-8004 identity and ERC-8183 economic flows.',
+  description: 'Policy-gated capital planning agent on Arc Testnet with ERC-8004 identity.',
   agent_type:  'capital_flow',
   capabilities: [
     'intent_parsing',
     'usdc_routing',
-    'cctp_bridging',
-    'gateway_transfers',
+    'cctp_route_planning',
     'stablefx_fx',
     'erc8004_identity',
-    'erc8004_validation',
-    'erc8183_escrowed_flows'
+    'erc8004_validation'
   ],
   version:     '1.1.0',
   network:     'ARC-TESTNET',
-  powered_by:  'Anthropic Claude + Arc SDK + Circle App Kit',
+  powered_by:  'AI planning + Arc SDK + Circle App Kit',
 } as const;
 
 // ── App Kit Config ─────────────────────────────────────────────────────────────

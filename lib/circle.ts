@@ -13,7 +13,7 @@
 import 'server-only';
 
 import { initiateDeveloperControlledWalletsClient } from '@circle-fin/developer-controlled-wallets';
-import { ARC_TESTNET, TOKENS, ERC8004, ERC8183, ROVA_EXECUTION_LOG, GAS, arcScan } from './config';
+import { ARC_TESTNET, TOKENS, ERC8004, ROVA_EXECUTION_LOG, GAS, arcScan } from './config';
 import { serverEnv } from './env/server';
 
 // ── Lazy singleton ─────────────────────────────────────────────────────────────
@@ -122,7 +122,7 @@ export async function createSavingsSubWallet(label: string, existingWalletSetId?
 }
 
 // ── Execute and confirm ────────────────────────────────────────────────────────
-// Polls until confirmed. Arc finality is sub-second so this is fast.
+// Polls Circle until the provider reports a terminal state.
 
 export async function executeAndConfirm(opts: {
   walletAddress:        string;
@@ -147,7 +147,7 @@ export async function executeAndConfirm(opts: {
   const txId = txResp.data?.id;
   if (!txId) throw new Error('No transaction ID returned from Circle');
 
-  // Poll up to 30s (Arc is sub-second, but Circle API processing adds overhead)
+  // Poll up to 30s; provider processing and chain confirmation are asynchronous.
   for (let i = 0; i < 30; i++) {
     await new Promise(r => setTimeout(r, 1000));
     const { data } = await client.getTransaction({ id: txId });
@@ -342,86 +342,4 @@ export async function sendUsdcOnArc(
   }
 
   throw new Error('Transfer timed out');
-}
-
-// ── ERC-8183 Agentic Work Flow ─────────────────────────────────────────────────
-
-export async function createErc8183Job(
-  clientWalletAddress: string,
-  providerAddress:     string,
-  evaluatorAddress:    string,
-  description:         string,
-  expiredAt:           number
-) {
-  return executeAndConfirm({
-    walletAddress:        clientWalletAddress,
-    contractAddress:      ERC8183.address,
-    abiFunctionSignature: 'createJob(address,address,uint256,string,address)',
-    abiParameters:        [providerAddress, evaluatorAddress, String(expiredAt), description, '0x0000000000000000000000000000000000000000'],
-  });
-}
-
-export async function setErc8183Budget(
-  providerWalletAddress: string,
-  jobId:                 string,
-  amountUsdc:            number
-) {
-  const amountInt = Math.round(amountUsdc * 10 ** TOKENS.USDC.decimals);
-  return executeAndConfirm({
-    walletAddress:        providerWalletAddress,
-    contractAddress:      ERC8183.address,
-    abiFunctionSignature: 'setBudget(uint256,uint256,bytes)',
-    abiParameters:        [jobId, String(amountInt), '0x'],
-  });
-}
-
-export async function approveErc8183USDC(
-  clientWalletAddress: string,
-  amountUsdc:          number
-) {
-  const amountInt = Math.round(amountUsdc * 10 ** TOKENS.USDC.decimals);
-  return executeAndConfirm({
-    walletAddress:        clientWalletAddress,
-    contractAddress:      TOKENS.USDC.address,
-    abiFunctionSignature: 'approve(address,uint256)',
-    abiParameters:        [ERC8183.address, String(amountInt)],
-  });
-}
-
-export async function fundErc8183Job(
-  clientWalletAddress: string,
-  jobId:               string
-) {
-  return executeAndConfirm({
-    walletAddress:        clientWalletAddress,
-    contractAddress:      ERC8183.address,
-    abiFunctionSignature: 'fund(uint256,bytes)',
-    abiParameters:        [jobId, '0x'],
-  });
-}
-
-export async function submitErc8183Deliverable(
-  providerWalletAddress: string,
-  jobId:                 string,
-  deliverableHash:       string
-) {
-  return executeAndConfirm({
-    walletAddress:        providerWalletAddress,
-    contractAddress:      ERC8183.address,
-    abiFunctionSignature: 'submit(uint256,bytes32,bytes)',
-    abiParameters:        [jobId, deliverableHash, '0x'],
-  });
-}
-
-export async function completeErc8183Job(
-  evaluatorWalletAddress: string,
-  jobId:                  string,
-  reasonHash:             string
-) {
-  return executeAndConfirm({
-    walletAddress:        evaluatorWalletAddress,
-    contractAddress:      ERC8183.address,
-    abiFunctionSignature: 'complete(uint256,bytes32,bytes)',
-    abiParameters:        [jobId, reasonHash, '0x'],
-  });
 }
