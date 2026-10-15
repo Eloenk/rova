@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@/hooks/useWallet';
@@ -104,7 +105,7 @@ export default function LoginPage() {
             color: '#94a3b8',
             margin: 0,
           }}>
-            Autonomous cross-border stablecoin execution engine. Managed Circle wallets, threshold security, and x402 nanopayment rate shopping.
+            Policy-gated cross-border stablecoin planning with managed Circle wallets, step-up approval, and parallel quote comparison.
           </p>
         </div>
 
@@ -117,7 +118,7 @@ export default function LoginPage() {
           fontWeight: 600,
         }}>
           <div>Circle SCA Wallets</div>
-          <div>Arc Testnet</div>
+          <div>Arc Mainnet</div>
           <div>StableFX Engine</div>
         </div>
       </div>
@@ -136,9 +137,11 @@ export default function LoginPage() {
       }}>
         <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <img
+            <Image
               src="/logo.png"
               alt="ROVA Logo"
+              width={38}
+              height={38}
               style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'contain' }}
             />
             <span style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a' }}>ROVA</span>

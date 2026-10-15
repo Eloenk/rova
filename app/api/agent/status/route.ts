@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AGENT_METADATA, ERC8004, ARC_TESTNET } from '@/lib/config';
+import { AGENT_METADATA, ERC8004, ARC_NETWORK } from '@/lib/config';
 import { createPublicClient, http, parseAbi } from 'viem';
-import { arcTestnet } from '@/lib/arcChain';
+import { arcChain } from '@/lib/arcChain';
 import { requireSession } from '@/lib/auth';
+import { publicEnv } from '@/lib/env/public';
 
 export async function GET(request: NextRequest) {
   const guard = await requireSession(request);
   if ('response' in guard) return guard.response;
-  const agentId = process.env.NEXT_PUBLIC_ROVA_AGENT_ID;
+  const agentId = publicEnv.rovaAgentId;
 
   let reputationScore = 75; // Default for new agents
   let isValidated = true;
@@ -15,8 +16,8 @@ export async function GET(request: NextRequest) {
   if (agentId) {
     try {
       const client = createPublicClient({ 
-        chain: arcTestnet, 
-        transport: http(ARC_TESTNET.rpc) 
+        chain: arcChain,
+        transport: http(ARC_NETWORK.rpc)
       });
       
       const abi = parseAbi(['function getReputation(uint256) view returns (int128)']);

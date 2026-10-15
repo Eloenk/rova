@@ -135,7 +135,7 @@ type ExecutionRow = {
 function database() {
   const client = getSupabaseClient();
   if (!client) {
-    throw new Error('Agent persistence requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+    throw new Error('Agent persistence requires SUPABASE_URL and SUPABASE_SECRET_KEY');
   }
   return client as any;
 }

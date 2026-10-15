@@ -6,8 +6,8 @@ Two kinds of automation, one watcher, one custody model.
 
 1. **Agent rules** — a single transfer with a rate or date trigger ("send 200
    USDC when the rate hits X, or by Friday"). Before firing, the agent shops:
-   it pays three independent quote providers a fraction of a cent each via
-   Nanopayments (x402) and executes at whichever quoted best.
+   it compares three simulated quote providers in parallel and selects the best
+   result. No live nanopayment is claimed in the current release.
 2. **Standing intents** — an arbitrary Command Hub plan ("send 100 split
    between supplier and savings") saved to re-run on a schedule, or the
    moment an incoming payment is detected.
@@ -25,12 +25,12 @@ user's own wallet.
 |---|---|
 | Agents with clear decision logic tied to real signals | Rate/date triggers, plus quote comparison logic before every spend |
 | Autonomous spending, payments, or settlement flows | Paused pending a shared Circle-custody engine policy and independent security review |
-| **Use of Nanopayments for micro-transactions between agents or services** | `lib/nanopay.ts` — real x402 protocol negotiation (402 → pay → 200) against three quote-provider endpoints, using `@circle-fin/x402-batching` in real mode |
-| USDC-denominated operations with demonstrable autonomy | Every transfer, fee, and quote payment is USDC on Arc |
+| **Use of Nanopayments for micro-transactions between agents or services** | Not yet complete; the current implementation is a clearly labeled parallel quote simulation and must not be submitted as settled x402 payment |
+| USDC-denominated operations with demonstrable autonomy | Transfers remain gated; simulated quote comparison records no payment |
 
 ## What's new in this pass
 
-- **Rate-shopping via Nanopayments** (`lib/nanopay.ts`, `app/api/quotes/provider-{a,b,c}`) — three independently-drifting mock FX desks, each paywalled with a real x402-shaped 402 response. The agent pays all three (parallel), picks the best rate, and only then executes. Real mode uses Circle's actual `@circle-fin/x402-batching` SDK (`GatewayClient` buyer-side); mock mode fakes the same negotiation shape so it's demoable without live Gateway credentials. Note: the x402 buyer role needs a raw EOA private key to sign payment authorizations locally — Circle DCW's HSM-managed wallets can't do this themselves, so nanopayments use a small dedicated buyer key (`ROVA_X402_BUYER_PRIVATE_KEY`), separate from the Circle-managed wallets that hold the user's actual funds. This mirrors Circle's own reference implementation (`github.com/circlefin/arc-nanopayments`).
+- **Parallel quote simulation** (`lib/nanopay.ts`) — three independently drifting simulated FX desks are compared concurrently. `paidUsdc` remains zero and references are labeled as simulation. A future x402 integration must use facilitator-backed seller verification and settlement before any payment claim is restored.
 
 - **Standing intents** (`lib/agentStore.ts`, `app/api/agent/intents/*`) — persisted records are available for review and cancellation. Creating or executing an unattended intent is paused until the web plan schema and the engine's Circle custody model use one reviewed policy contract.
 
@@ -46,7 +46,7 @@ user's own wallet.
 |---|---|
 | Developer-Controlled Wallets | settlement leg for managed-custody transfers; single-wallet creation for email onboarding |
 | StableFX | swap leg when a rule/intent needs USDC↔EURC conversion |
-| Nanopayments (x402 + Gateway) | rate-shopping — the core Agentic Economy hook |
+| Nanopayments (x402 + Gateway) | Not active; facilitator-backed verification and settlement remain required |
 | ERC-8004 (Identity/Reputation) | reputation entry per autonomous fire |
 | ERC-8183 (Agentic Flow) | agent's self-charged execution fee |
 | App Kit / CCTP | cross-chain leg, available via the shared `lib/flowExecutor.ts` path |

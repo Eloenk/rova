@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http, parseAbi } from 'viem';
 import { getSupabaseClient } from '@/lib/supabase';
-import { TOKENS, ARC_TESTNET } from '@/lib/config';
+import { TOKENS, ARC_NETWORK } from '@/lib/config';
 import fs from 'fs';
 import path from 'path';
 import * as yaml from 'js-yaml';
 import { requireSession } from '@/lib/auth';
+import { serverEnv } from '@/lib/env/server';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 function getConfigValues(): { rpcUrl: string; usdcAddress: `0x${string}`; eurcAddress: `0x${string}` } {
-  let rpcUrl = process.env.ARC_RPC_URL || ARC_TESTNET.rpc;
+  let rpcUrl = serverEnv.arcRpcUrl || ARC_NETWORK.rpc;
   let usdcAddress = TOKENS.USDC.address as `0x${string}`;
   let eurcAddress = TOKENS.EURC.address as `0x${string}`;
 
@@ -21,7 +22,7 @@ function getConfigValues(): { rpcUrl: string; usdcAddress: `0x${string}`; eurcAd
     if (fs.existsSync(configPath)) {
       const fileContents = fs.readFileSync(configPath, 'utf8');
       const parsed = yaml.load(fileContents) as any;
-      if (parsed?.arc?.rpc_url && !process.env.ARC_RPC_URL) {
+      if (parsed?.arc?.rpc_url && !serverEnv.arcRpcUrl) {
         rpcUrl = parsed.arc.rpc_url;
       }
       if (parsed?.arc?.usdc_address) {

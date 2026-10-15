@@ -1,9 +1,10 @@
 import type { FlowPlan } from './types';
 
 const ADDRESS_RE  = /^0x[0-9a-fA-F]{40}$/;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const RISK_SET    = new Set(['low', 'medium', 'high']);
 const BRIDGE_SET  = new Set(['cctp', 'gateway', 'native', 'stablefx', null]);
-const PROTO_SET   = new Set(['Arc Native', 'CCTP V2', 'Circle Gateway', 'Arc StableFX', 'Agent Reserve']);
+const PROTO_SET   = new Set(['Arc Native', 'CCTP V2', 'Circle Gateway', 'Arc StableFX']);
 const ARC_GAS     = 0.006;
 
 export interface ValidationResult { valid: boolean; errors: string[]; plan?: FlowPlan; }
@@ -12,12 +13,21 @@ function checkSplit(s: Record<string, unknown>, i: number): string[] {
   const e: string[] = [];
   if (typeof s.recipient   !== 'string' || !s.recipient.trim())         e.push(`splits[${i}].recipient required`);
   if (typeof s.address     !== 'string' || !ADDRESS_RE.test(s.address)) e.push(`splits[${i}].address must be 0x...`);
+  else if (s.address.toLowerCase() === ZERO_ADDRESS && s.arcProtocol === 'Arc Native') {
+    e.push(`splits[${i}].address cannot be the zero address for a transfer`);
+  }
   if (typeof s.amount      !== 'number' || !Number.isFinite(s.amount) || s.amount <= 0) e.push(`splits[${i}].amount must be a positive finite number`);
   if (!['USDC','EURC'].includes(s.currency as string))                  e.push(`splits[${i}].currency must be USDC or EURC`);
   if (typeof s.fxRate      !== 'number' || !Number.isFinite(s.fxRate) || s.fxRate <= 0) e.push(`splits[${i}].fxRate must be > 0`);
   if (typeof s.fxSymbol    !== 'string' || !s.fxSymbol.trim())          e.push(`splits[${i}].fxSymbol required`);
   if (typeof s.arcProtocol !== 'string' || !PROTO_SET.has(s.arcProtocol as string)) {
     e.push(`splits[${i}].arcProtocol must be one of: ${[...PROTO_SET].join(', ')}`);
+  }
+  if (s.arcProtocol === 'Arc Native' && s.currency !== 'USDC') {
+    e.push(`splits[${i}] Arc Native transfers currently support USDC only`);
+  }
+  if ((s.arcProtocol === 'CCTP V2' || s.arcProtocol === 'Circle Gateway') && s.currency !== 'USDC') {
+    e.push(`splits[${i}] cross-chain routes currently support USDC only`);
   }
   return e;
 }
@@ -55,9 +65,11 @@ export function validateFlowPlan(raw: unknown): ValidationResult {
   const obj = raw as Record<string, unknown>;
 
   if (!Array.isArray(obj.splits) || !obj.splits.length)  e.push('splits must be a non-empty array');
+  else if (obj.splits.length > 10) e.push('splits cannot contain more than 10 entries');
   else (obj.splits as Record<string, unknown>[]).forEach((s, i) => e.push(...checkSplit(s, i)));
 
   if (!Array.isArray(obj.routes)) e.push('routes must be an array');
+  else if (obj.routes.length > 20) e.push('routes cannot contain more than 20 entries');
   else (obj.routes as Record<string, unknown>[]).forEach((r, i) => e.push(...checkRoute(r, i)));
 
   e.push(...checkGas(obj.gasEstimate));
@@ -72,11 +84,24 @@ export function validateFlowPlan(raw: unknown): ValidationResult {
   if (Array.isArray(obj.splits) && typeof obj.reserveAmount === 'number' && typeof obj.totalAmount === 'number') {
     const splitSum = (obj.splits as Record<string, unknown>[]).reduce((acc, s) => acc + (typeof s.amount === 'number' ? s.amount : 0), 0);
     const expected = obj.totalAmount - obj.reserveAmount;
-    if (Math.abs(splitSum - expected) > 1) {
+    if (Math.abs(splitSum - expected) > 0.01) {
       e.push(`Amount invariant: sum(splits)=${splitSum.toFixed(2)} ≠ totalAmount-reserveAmount=${expected.toFixed(2)}`);
     }
   }
 
   if (e.length) return { valid: false, errors: e };
   return { valid: true, errors: [], plan: obj as unknown as FlowPlan };
+}
+
+export function validatePlanIntentBinding(plan: FlowPlan, intent: string): string[] {
+  const explicitAddresses = new Set(
+    (intent.match(/0x[0-9a-fA-F]{40}/g) || []).map(address => address.toLowerCase()),
+  );
+  const errors: string[] = [];
+  plan.splits.forEach((split, index) => {
+    if (split.arcProtocol === 'Arc Native' && !explicitAddresses.has(split.address.toLowerCase())) {
+      errors.push(`splits[${index}].address was not explicitly supplied by the user`);
+    }
+  });
+  return errors;
 }

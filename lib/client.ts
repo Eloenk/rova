@@ -1,12 +1,12 @@
 import { createPublicClient, http } from 'viem';
-import { arcTestnet } from './arcChain';
-import { TOKENS } from './config';
+import { arcChain } from './arcChain';
+import { ARC_NETWORK, TOKENS } from './config';
 
 let _client: ReturnType<typeof createPublicClient> | null = null;
 
 export function getArcPublicClient() {
   if (_client) return _client;
-  _client = createPublicClient({ chain: arcTestnet, transport: http('https://rpc.testnet.arc.network') });
+  _client = createPublicClient({ chain: arcChain, transport: http(ARC_NETWORK.rpc) });
   return _client;
 }
 

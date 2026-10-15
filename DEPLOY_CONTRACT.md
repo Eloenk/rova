@@ -1,79 +1,36 @@
-# Deploying RovaExecutionLog (no coding required)
+# Guarded Arc Mainnet Contract Deployment
 
-This is the one contract in the Rova codebase that's actually yours — everything
-else in `lib/config.ts` (USDC, EURC, CCTP, Gateway, ERC-8004/8183 registries) is
-shared Circle/Arc infrastructure every builder on Arc points to. This is the
-address to put in the hackathon form's "smart contract" field.
+The Arc Microgrants submission requires a working Arc Mainnet deployment. This release permits only the non-custodial `RovaExecutionLog` contract. It stores caller-submitted public audit metadata and does not hold, approve, swap, or transfer tokens.
 
-You don't need to install anything. This uses Remix (a contract IDE that runs
-entirely in your browser) and MetaMask.
+`RovaSavingsVault` and `RovaSwapRouter` are not approved by this release and are rejected by the deployment CLI.
 
----
+## Owner-controlled preconditions
 
-## 1. Add Arc Testnet to MetaMask
+1. Merge the reviewed release and run the clean-checkout validation commands.
+2. Use a new dedicated Arc Mainnet deployer funded only with the small amount of USDC required for gas.
+3. Inject `ROVA_DEPLOYER_PRIVATE_KEY` into a one-off local process from an approved secret manager. Never place it in the web host, repository, command history, chat, screenshots, or an environment file.
+4. Set `ARC_RPC_URL=https://rpc.mainnet.arc.io` and `ARC_CHAIN_ID=5042`.
+5. Set `ROVA_ALLOW_CONTRACT_DEPLOY=true` only for this deployment window.
+6. Set `ROVA_DEPLOY_CONFIRMATION=DEPLOY:RovaExecutionLog:5042`.
 
-Open MetaMask → Networks → **Add a network manually**, and enter:
+## Validate and deploy
 
-| Field | Value |
-|---|---|
-| Network name | Arc Testnet |
-| RPC URL | `https://rpc.testnet.arc.network` |
-| Chain ID | `5042002` |
-| Currency symbol | `USDC` |
-| Block explorer | `https://testnet.arcscan.app` |
+```text
+npm run lint
+npm run typecheck
+npm test
+npm run deploy:contract -- RovaExecutionLog.sol RovaExecutionLog
+```
 
-## 2. Get testnet gas
+The CLI validates the allow flag, exact confirmation, private-key format, contract allowlist, RPC connectivity, and chain ID. It submits once and does not automatically retry an ambiguous broadcast.
 
-Arc uses USDC itself as the gas token (no separate ETH-like gas coin). Get
-free testnet USDC from **https://faucet.circle.com** — paste in your MetaMask
-wallet address, select Arc Testnet.
+## Reconcile and close
 
-## 3. Open Remix and load the contract
+1. Save only the public transaction hash and contract address.
+2. Verify both at `https://explorer.arc.io` and confirm chain ID `5042`.
+3. Compare deployed runtime bytecode with the reviewed compiler artifact.
+4. Configure `NEXT_PUBLIC_ROVA_EXECUTION_LOG_ADDRESS` with the public address.
+5. Clear `ROVA_ALLOW_CONTRACT_DEPLOY`, `ROVA_DEPLOY_CONFIRMATION`, and the private key from the process environment.
+6. If status is uncertain, inspect the deployer nonce and explorer before any retry.
 
-1. Go to **https://remix.ethereum.org**
-2. In the file explorer on the left, create a new file named `RovaExecutionLog.sol`
-3. Open `contracts/RovaExecutionLog.sol` from your Rova project folder, copy
-   its full contents, and paste into the new Remix file
-
-## 4. Compile
-
-1. Click the **Solidity Compiler** tab (left sidebar, looks like an "S")
-2. Set compiler version to `0.8.24` (or anything `0.8.24` and above)
-3. Click **Compile RovaExecutionLog.sol**
-4. You should see a green checkmark — no red errors
-
-## 5. Deploy
-
-1. Click the **Deploy & Run Transactions** tab (left sidebar, looks like an Ethereum logo with an arrow)
-2. Under **Environment**, choose **Injected Provider - MetaMask**
-3. MetaMask will pop up — make sure it's connected and switched to **Arc Testnet** (from step 1)
-4. Confirm `RovaExecutionLog` is selected in the contract dropdown
-5. Click the orange **Deploy** button
-6. MetaMask pops up asking you to confirm the transaction — confirm it
-7. Wait a few seconds (Arc has sub-second finality, but the UI needs a moment to catch up)
-
-## 6. Copy the deployed address
-
-1. Under **Deployed Contracts** at the bottom of the Remix sidebar, you'll see
-   `ROVAEXECUTIONLOG AT 0x...` — click the copy icon next to it
-2. This address is what goes in:
-   - The hackathon form's "smart contract" field
-   - Your `.env` file, as `NEXT_PUBLIC_ROVA_EXECUTION_LOG_ADDRESS=0x...`
-
-## 7. Verify it on ArcScan (optional but recommended)
-
-Go to `https://testnet.arcscan.app/address/<your contract address>` — you
-should see your deployment transaction. This is what you'd link to if the
-form or judges ask for proof.
-
-## 8. Confirm it's wired up correctly
-
-Once the env var is set and you redeploy the app, every autonomous Agent
-execution will call `logExecution(...)` on this contract automatically —
-you'll see the transaction show up in the Agent tab's execution log, and on
-ArcScan under your contract's address.
-
----
-
-**If you get stuck at any step**, paste the error message here and I'll help
-you debug it.
+An optional smoke call may write a clearly labelled zero-value demonstration record through the verified explorer's connected-wallet interface. Use zero values for the recipient, amount, and rate fields, and identify the entry as a non-financial deployment smoke test in the memo. It must not imply that Rova transferred, swapped, bridged, invested, or custodyed funds.

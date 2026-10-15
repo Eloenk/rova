@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ARC_TESTNET } from '@/lib/config';
+import { ARC_NETWORK } from '@/lib/config';
 
 interface SessionUser {
   email: string;
@@ -75,6 +75,6 @@ export function useWallet() {
     logout,
     switchToArc: () => {},
     refetchBalance: fetchServerState,
-    arcChainId: ARC_TESTNET.chainId,
+    arcChainId: ARC_NETWORK.chainId,
   };
 }

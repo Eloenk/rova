@@ -1,8 +1,9 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useWallet } from '@/hooks/useWallet';
+import { publicEnv } from '@/lib/env/public';
 import {
   Menu, X, Copy, Check, MessageCircle, Send, Repeat,
   Monitor, Clock, Home, CheckCircle2, MoreHorizontal, Wallet, LogOut, RefreshCw
@@ -12,7 +13,7 @@ const META: Record<string, { title: string; sub: string }> = {
   '/':          { title: 'Rova',         sub: 'AI-powered money movement on Arc' },
   '/dashboard': { title: 'Command Hub',  sub: 'Your stablecoin activity on Arc' },
   '/send':      { title: 'Send & Swap',  sub: 'Transfer, bridge, or swap stablecoins' },
-  '/agent':     { title: 'Agent',        sub: 'Autonomous agent triggers and watchers' },
+  '/agent':     { title: 'Agent',        sub: 'Policy review, cancellation, and engine receipts' },
   '/history':   { title: 'Recent Activity', sub: 'Browser-local activity with ArcScan links' },
 };
 
@@ -36,11 +37,11 @@ export default function Topbar({
   const [linkedPhone, setLinkedPhone] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
 
-  const triggerRefresh = () => {
+  const triggerRefresh = useCallback(() => {
     setIsSpinning(true);
     refetchBalance();
     setTimeout(() => setIsSpinning(false), 750);
-  };
+  }, [refetchBalance]);
 
   useEffect(() => {
     if (showWhatsAppModal) {
@@ -61,7 +62,7 @@ export default function Topbar({
     }
   }, [showWhatsAppModal]);
 
-  const rawWaConfig = process.env.NEXT_PUBLIC_WHATSAPP_LINK || 'https://wa.me/+447446132243';
+  const rawWaConfig = publicEnv.whatsappLink || 'https://wa.me/+447446132243';
   const prefilledText = isWhatsAppLinked ? 'status' : linkToken;
   const waDeepLink = rawWaConfig.includes('?')
     ? `${rawWaConfig}&text=${prefilledText}`
@@ -93,7 +94,7 @@ export default function Topbar({
     if (showDrawer) {
       triggerRefresh();
     }
-  }, [showDrawer]);
+  }, [showDrawer, triggerRefresh]);
 
   // Click outside to close Phantom Wallet Popover Drawer
   useEffect(() => {
@@ -319,7 +320,7 @@ export default function Topbar({
                     background: '#ffffff',
                     display: 'inline-block',
                   }} />
-                  <span style={{ fontSize: '13px', fontWeight: 400, color: '#ffffff' }}>Arc Testnet</span>
+                  <span style={{ fontSize: '13px', fontWeight: 400, color: '#ffffff' }}>Arc Mainnet</span>
                 </div>
               </div>
 
@@ -629,7 +630,7 @@ export default function Topbar({
 
             <p style={{ fontSize: '13.5px', color: '#c2d1e0', lineHeight: 1.5, marginBottom: '20px' }}>
               {isWhatsAppLinked
-                ? `Your WhatsApp line ${linkedPhone ? `(${linkedPhone}) ` : ''}is already linked to your active Rova wallet. You can open WhatsApp directly to check balance, send funds, or create automated rules.`
+                ? `Your WhatsApp line ${linkedPhone ? `(${linkedPhone}) ` : ''}is linked to your Rova account. You can check balances and request bounded actions; new automated policies remain paused.`
                 : 'Click the button below to open WhatsApp with your pre-filled verification token. Sending the message automatically links your phone number to your active Rova wallet.'}
             </p>
 

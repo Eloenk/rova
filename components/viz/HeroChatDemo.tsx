@@ -135,7 +135,7 @@ export default function HeroChatDemo() {
           <span className="font-extrabold text-text-primary tracking-wide text-sm">Rova Agent</span>
         </div>
         <span className="text-[10px] font-mono text-text-tertiary uppercase tracking-widest font-bold">
-          Live Execution Demo
+          Gated Plan Demo
         </span>
       </div>
 
@@ -152,7 +152,7 @@ export default function HeroChatDemo() {
             {step === 'processing' ? (
               <div className="flex items-center gap-2.5 p-3 rounded-xl bg-surface border border-border text-xs text-text-secondary">
                 <Loader2 size={15} className="animate-spin text-accent-primary shrink-0" />
-                <span>Finding best rate & shopping x402 desks...</span>
+                <span>Comparing simulated quote providers...</span>
               </div>
             ) : (
               currentScenario.resolution

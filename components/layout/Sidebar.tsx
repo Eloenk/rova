@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Send, LayoutDashboard, BookOpen, Bot, X } from 'lucide-react';
 
@@ -40,9 +41,11 @@ export default function Sidebar({
         <div className="flex items-center justify-between pl-2">
           <Link href="/" className="flex items-center gap-2.5 no-underline group">
             <div className="w-8 h-8 flex items-center justify-center transition-transform group-hover:scale-105">
-              <img
+              <Image
                 src="/logo.png"
                 alt="ROVA Logo"
+                width={32}
+                height={32}
                 className="w-full h-full object-contain"
               />
             </div>
@@ -85,7 +88,7 @@ export default function Sidebar({
         {/* Bottom inscription */}
         <div className="mt-auto pl-2 pb-1">
           <span className="text-xs text-text-secondary font-mono tracking-wider">
-            Arc Testnet • 5042002
+            Arc Mainnet • 5042
           </span>
         </div>
       </aside>

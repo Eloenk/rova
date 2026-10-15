@@ -1,9 +1,10 @@
 import 'server-only';
 
 import { SignJWT, jwtVerify } from 'jose';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import { requireSecret, serverEnv } from '@/lib/env/server';
 
 // ── Cookie names ────────────────────────────────────────────────────────────
 const ACCESS_COOKIE  = 'rova_access';
@@ -12,6 +13,8 @@ const REFRESH_COOKIE = 'rova_refresh';
 // ── Token lifetimes ─────────────────────────────────────────────────────────
 const ACCESS_TTL_SECONDS  = 15 * 60;          // 15 minutes — stateless verify
 const REFRESH_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days   — stored in DB
+const JWT_ISSUER = 'rova-web';
+const JWT_AUDIENCE = 'rova-session';
 
 // ── Shared types ─────────────────────────────────────────────────────────────
 export interface AuthenticatedSession {
@@ -25,28 +28,26 @@ type GuardResult =
 
 // ── Secret key ───────────────────────────────────────────────────────────────
 function getSigningKey(): Uint8Array {
-  const secret = process.env.ROVA_SESSION_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error('ROVA_SESSION_SECRET must be set with at least 32 characters');
-  }
+  const secret = requireSecret(serverEnv.sessionSecret, 'ROVA_SESSION_SECRET', 32);
   return new TextEncoder().encode(secret);
 }
-
 export function hasSessionSecret(): boolean {
-  return Boolean(
-    process.env.ROVA_SESSION_SECRET &&
-    process.env.ROVA_SESSION_SECRET.length >= 32
-  );
+  return serverEnv.sessionSecret.length >= 32;
 }
 
 // ── Access token (JWT, stateless) ────────────────────────────────────────────
 
 async function signAccessToken(session: AuthenticatedSession): Promise<string> {
+  const email = session.email.toLowerCase().trim();
   return new SignJWT({
-    email:         session.email.toLowerCase().trim(),
+    email,
     walletAddress: session.walletAddress ?? null,
   })
     .setProtectedHeader({ alg: 'HS256' })
+    .setIssuer(JWT_ISSUER)
+    .setAudience(JWT_AUDIENCE)
+    .setSubject(email)
+    .setJti(randomBytes(16).toString('hex'))
     .setIssuedAt()
     .setExpirationTime(`${ACCESS_TTL_SECONDS}s`)
     .sign(getSigningKey());
@@ -56,8 +57,10 @@ async function verifyAccessToken(token: string): Promise<AuthenticatedSession | 
   try {
     const { payload } = await jwtVerify(token, getSigningKey(), {
       algorithms: ['HS256'],
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
     });
-    if (typeof payload.email !== 'string') return null;
+    if (typeof payload.email !== 'string' || payload.sub !== payload.email) return null;
     return {
       email:         payload.email,
       walletAddress: typeof payload.walletAddress === 'string'
@@ -79,17 +82,19 @@ function hashRefreshToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
-async function storeRefreshToken(email: string, rawToken: string): Promise<void> {
+async function storeRefreshToken(email: string, rawToken: string): Promise<boolean> {
   const supabase = getSupabaseClient();
-  if (!supabase) return;
+  if (!supabase) return false;
 
   const tokenHash = hashRefreshToken(rawToken);
   const expiresAt = new Date(Date.now() + REFRESH_TTL_SECONDS * 1000).toISOString();
 
-  await supabase.from('refresh_tokens').upsert(
+  const { error } = await supabase.from('refresh_tokens').upsert(
     { email, token_hash: tokenHash, expires_at: expiresAt },
     { onConflict: 'email' }
   );
+  if (error) throw new Error('Unable to persist refresh session');
+  return true;
 }
 
 async function consumeRefreshToken(
@@ -99,21 +104,22 @@ async function consumeRefreshToken(
   if (!supabase) return null;
 
   const tokenHash = hashRefreshToken(rawToken);
-  const nowIso    = new Date().toISOString();
-
   const { data, error } = await supabase
-    .from('refresh_tokens')
-    .select('email, expires_at')
-    .eq('token_hash', tokenHash)
-    .gte('expires_at', nowIso)
+    .rpc('consume_refresh_token', { requested_token_hash: tokenHash });
+
+  const consumed = Array.isArray(data) ? data[0] : data;
+  if (error || !consumed?.email) return null;
+
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('circle_wallet_address')
+    .eq('email', consumed.email)
     .single();
-
-  if (error || !data) return null;
-
-  // Rotate: delete the used token immediately (prevents replay)
-  await supabase.from('refresh_tokens').delete().eq('token_hash', tokenHash);
-
-  return { email: data.email };
+  if (userError) return null;
+  return {
+    email: consumed.email,
+    walletAddress: user?.circle_wallet_address || undefined,
+  };
 }
 
 async function revokeRefreshToken(email: string): Promise<void> {
@@ -124,7 +130,7 @@ async function revokeRefreshToken(email: string): Promise<void> {
 
 // ── Cookie helpers ───────────────────────────────────────────────────────────
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = serverEnv.isProduction;
 
 export async function setSessionCookies(
   response: NextResponse,
@@ -133,7 +139,7 @@ export async function setSessionCookies(
   const accessToken  = await signAccessToken(session);
   const refreshToken = generateRefreshToken();
 
-  await storeRefreshToken(session.email, refreshToken);
+  const refreshStored = await storeRefreshToken(session.email, refreshToken);
 
   response.cookies.set(ACCESS_COOKIE, accessToken, {
     httpOnly: true,
@@ -143,25 +149,15 @@ export async function setSessionCookies(
     maxAge:   ACCESS_TTL_SECONDS,
   });
 
-  response.cookies.set(REFRESH_COOKIE, refreshToken, {
-    httpOnly: true,
-    secure:   isProduction,
-    sameSite: 'strict',
-    path:     '/api/auth',  // scope to auth routes only
-    maxAge:   REFRESH_TTL_SECONDS,
-  });
-}
-
-// Keep old name as alias so existing callers don't break immediately
-/** @deprecated Use setSessionCookies (async) */
-export function setSessionCookie(
-  response: NextResponse,
-  session: AuthenticatedSession
-): void {
-  // Fire-and-forget async — caller should migrate to setSessionCookies
-  setSessionCookies(response, session).catch((err) =>
-    console.error('[Auth] setSessionCookie error:', err)
-  );
+  if (refreshStored) {
+    response.cookies.set(REFRESH_COOKIE, refreshToken, {
+      httpOnly: true,
+      secure:   isProduction,
+      sameSite: 'strict',
+      path:     '/api/auth',
+      maxAge:   REFRESH_TTL_SECONDS,
+    });
+  }
 }
 
 export function clearSessionCookies(response: NextResponse): void {
@@ -180,9 +176,6 @@ export function clearSessionCookies(response: NextResponse): void {
     maxAge:   0,
   });
 }
-
-/** @deprecated Use clearSessionCookies */
-export const clearSessionCookie = clearSessionCookies;
 
 // ── Session reading ──────────────────────────────────────────────────────────
 
@@ -249,10 +242,12 @@ export async function handleTokenRefresh(
 
   const session = await consumeRefreshToken(rawToken);
   if (!session) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { ok: false, error: 'Invalid or expired refresh token' },
       { status: 401 }
     );
+    clearSessionCookies(response);
+    return response;
   }
 
   // Issue fresh pair
@@ -283,28 +278,14 @@ export async function handleLogout(request: NextRequest): Promise<NextResponse> 
 
 // ── Service / admin token guards ─────────────────────────────────────────────
 
-export function requireServiceToken(request: NextRequest): NextResponse | null {
-  const expected = process.env.ROVA_SCHEDULER_TOKEN;
-  const supplied  = request.headers.get('authorization');
-  if (!expected || expected.length < 32) {
-    console.error('[Auth] ROVA_SCHEDULER_TOKEN is not configured');
-    return NextResponse.json(
-      { ok: false, error: 'Scheduler is not configured' },
-      { status: 503 }
-    );
-  }
-  if (supplied !== `Bearer ${expected}`) {
-    return NextResponse.json(
-      { ok: false, error: 'Scheduler authorization required' },
-      { status: 401 }
-    );
-  }
-  return null;
+function hasValidBearer(request: NextRequest, expected: string): boolean {
+  const supplied = request.headers.get('authorization') || '';
+  const expectedHeader = `Bearer ${expected}`;
+  if (supplied.length !== expectedHeader.length) return false;
+  return timingSafeEqual(Buffer.from(supplied), Buffer.from(expectedHeader));
 }
-
 export function requireAdminToken(request: NextRequest): NextResponse | null {
-  const expected = process.env.ROVA_ADMIN_TOKEN;
-  const supplied  = request.headers.get('authorization');
+  const expected = serverEnv.adminToken;
   if (!expected || expected.length < 32) {
     console.error('[Auth] ROVA_ADMIN_TOKEN is not configured');
     return NextResponse.json(
@@ -312,18 +293,11 @@ export function requireAdminToken(request: NextRequest): NextResponse | null {
       { status: 503 }
     );
   }
-  if (supplied !== `Bearer ${expected}`) {
+  if (!hasValidBearer(request, expected)) {
     return NextResponse.json(
       { ok: false, error: 'Admin authorization required' },
       { status: 401 }
     );
   }
   return null;
-}
-
-// ── Legacy compat (sync createSessionToken — only used in tests/scripts) ─────
-export function createSessionToken(_session: AuthenticatedSession): string {
-  throw new Error(
-    'createSessionToken is removed. Use setSessionCookies (async) instead.'
-  );
 }

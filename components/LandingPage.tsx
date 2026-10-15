@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -75,15 +76,17 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-8 h-8 flex items-center justify-center transition-transform group-hover:scale-105">
-              <img
+              <Image
                 src="/logo.png"
                 alt="ROVA Logo"
+                width={32}
+                height={32}
                 className="w-full h-full object-contain"
               />
             </div>
             <span className="text-xl font-extrabold tracking-tight text-text-primary">ROVA</span>
             <span className="text-[9px] uppercase font-mono font-normal tracking-widest text-white/70 hidden sm:inline-block">
-              ARC TESTNET
+              ARC MAINNET
             </span>
           </Link>
 
@@ -118,7 +121,7 @@ export default function LandingPage() {
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-text-primary leading-[1.08]">
                 A New Standard <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-primary via-emerald-300 to-accent-mint font-extrabold">
-                  in Autonomous Capital.
+                  in Policy-Gated Capital.
                 </span>
               </h1>
 
@@ -161,7 +164,7 @@ export default function LandingPage() {
               Clarity and control for every part of your portfolio.
             </h2>
             <p className="text-text-secondary text-base md:text-lg">
-              Three core execution pillars power Rova's cross-border capital engine.
+              Three core execution pillars power Rova&apos;s cross-border capital engine.
             </p>
           </ScrollReveal>
 
@@ -170,9 +173,9 @@ export default function LandingPage() {
             <ScrollReveal delayMs={100} className="p-8 rounded-2xl bg-surface border border-border hover:border-border-strong transition-all duration-300 flex flex-col justify-between">
               <div className="space-y-4">
                 <span className="text-sm font-mono font-bold text-accent-primary">[1]</span>
-                <h3 className="text-xl font-bold text-text-primary">x402 Nanopayments</h3>
+                <h3 className="text-xl font-bold text-text-primary">Parallel Quote Comparison</h3>
                 <p className="text-text-secondary text-sm leading-relaxed">
-                  Before moving money, Rova queries 3 independent FX desks paying a fraction of a cent per quote over x402 to capture the tightest spread.
+                  Before moving money, Rova compares 3 simulated FX desks in parallel to demonstrate deterministic best-quote selection without claiming live settlement.
                 </p>
               </div>
               <div className="mt-8 p-4 rounded-xl bg-surface-raised border border-border text-xs space-y-2 font-mono">
@@ -191,9 +194,9 @@ export default function LandingPage() {
             <ScrollReveal delayMs={200} className="p-8 rounded-2xl bg-surface border border-border hover:border-border-strong transition-all duration-300 flex flex-col justify-between">
               <div className="space-y-4">
                 <span className="text-sm font-mono font-bold text-accent-primary">[2]</span>
-                <h3 className="text-xl font-bold text-text-primary">Autonomous Daemons</h3>
+                <h3 className="text-xl font-bold text-text-primary">Policy-Gated Watcher</h3>
                 <p className="text-text-secondary text-sm leading-relaxed">
-                  Set standing instructions once. The native `rova-agent-go` background engine monitors chain state and executes transfers even while you sleep.
+                  The native `rova-agent-go` engine can monitor Arc mainnet state, atomically claim owner-bound policies, and remains disabled for this release.
                 </p>
               </div>
               <div className="mt-8 p-4 rounded-xl bg-surface-raised border border-border text-xs space-y-2 font-mono">
@@ -211,13 +214,13 @@ export default function LandingPage() {
                 <span className="text-sm font-mono font-bold text-accent-primary">[3]</span>
                 <h3 className="text-xl font-bold text-text-primary">CCTP V2 Cross-Chain</h3>
                 <p className="text-text-secondary text-sm leading-relaxed">
-                  Burn-and-mint native USDC transfers across Sepolia, Base, Polygon, and Arc with zero slippage and sub-second finality.
+                  Prepares supported Arc mainnet USDC routes for review; managed-wallet execution remains paused.
                 </p>
               </div>
               <div className="mt-8 p-4 rounded-xl bg-surface-raised border border-border text-xs space-y-2 font-mono">
                 <div className="flex justify-between text-text-secondary">
                   <span>Source: Polygon</span>
-                  <span>Dest: Arc Testnet</span>
+                  <span>Dest: Arc Mainnet</span>
                 </div>
                 <div className="text-accent-mint font-bold">Circle Gateway Verified</div>
               </div>
@@ -235,7 +238,7 @@ export default function LandingPage() {
               One platform. Multiple intelligence layers.
             </h2>
             <p className="text-text-secondary text-base md:text-lg max-w-2xl mx-auto">
-              Rova unifies plain-English intent understanding, micro-nanopayment shopping, and native EVM execution into a single high-availability stack.
+              Rova unifies plain-English intent understanding, policy validation, parallel quote comparison, and gated EVM execution.
             </p>
           </ScrollReveal>
 
@@ -259,9 +262,9 @@ export default function LandingPage() {
 
               <div className="p-6 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 transition-all duration-300 space-y-2.5">
                 <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 2 • QUOTE</div>
-                <h4 className="text-base font-extrabold text-white">x402 / Gateway</h4>
+                <h4 className="text-base font-extrabold text-white">Quote Simulation</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Queries 3 independent market liquidity desks over x402 HTTP headers, paying sub-cent micro-nanopayments for real-time rates.
+                  Compares 3 simulated market quotes; live x402 verification and settlement remain an explicit integration gate.
                 </p>
               </div>
 
@@ -269,7 +272,7 @@ export default function LandingPage() {
                 <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 3 • ROUTER</div>
                 <h4 className="text-base font-extrabold text-white">CCTP V2 Bridge</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Executes native burn-and-mint cross-chain liquidity routing between Sepolia, Base, Polygon, and Arc with 1:1 parity guarantee.
+                  Prepares supported mainnet bridge routes for deterministic review without submitting them.
                 </p>
               </div>
 
@@ -277,7 +280,7 @@ export default function LandingPage() {
                 <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">LAYER 4 • AUDIT</div>
                 <h4 className="text-base font-extrabold text-white">Arc Audit Ledger</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Records every user action and automated trigger on `RovaExecutionLog` smart contract for immutable, verifiable proof of reserves.
+                  Persists real engine receipts with ArcScan references; optional contract logging is secondary evidence, not proof of reserves.
                 </p>
               </div>
             </div>
@@ -328,14 +331,14 @@ export default function LandingPage() {
             {/* Table Body Rows */}
             {[
               {
-                cap: 'x402 Nanopayment Rate Shopping',
-                desc: 'Real-time HTTP header quotes across 3 liquidity desks via micro-nanopayments',
+                cap: 'Parallel Quote Simulation',
+                desc: 'Concurrent comparison across 3 simulated liquidity quotes with no payment claim',
                 rova: true,
                 legacy: false,
               },
               {
-                cap: '24/7 Autonomous Execution Daemons',
-                desc: 'Native Go background engine executes standing rules continuously without user intervention',
+                cap: 'Owner-Bound Policy Watcher',
+                desc: 'Native Go engine uses atomic claims, explicit gates, and durable ArcScan-linked receipts',
                 rova: true,
                 legacy: false,
               },
@@ -346,14 +349,14 @@ export default function LandingPage() {
                 legacy: false,
               },
               {
-                cap: 'Zero-Slippage Atomic FX Settlement',
-                desc: 'Direct 1:1 Circle CCTP V2 burn-and-mint settlement across 5 chains',
+                cap: 'Mainnet Planning Mode',
+                desc: 'Builds deterministic transfer, swap, and bridge plans without moving user funds',
                 rova: true,
                 legacy: false,
               },
               {
                 cap: 'Circle Programmable Wallet Security',
-                desc: 'Enterprise MPC key management with optional user self-custody fallback',
+                desc: 'Enterprise MPC wallet integration with fund movement disabled for this release',
                 rova: true,
                 legacy: true,
               },
@@ -399,10 +402,10 @@ export default function LandingPage() {
         <div className="flex-1 flex flex-col justify-center">
           <ScrollReveal className="max-w-5xl mx-auto px-6 text-center space-y-8">
             <h2 className="text-4xl md:text-6xl font-extrabold text-text-primary tracking-tight">
-              Ready to automate your money movement?
+              Ready to review your Arc mainnet flow?
             </h2>
             <p className="text-text-secondary text-lg max-w-xl mx-auto">
-              Experience sub-second finality and autonomous capital execution on Arc Testnet.
+              Build a bounded plan, inspect the policy, and verify the public Arc mainnet deployment.
             </p>
 
             <div className="pt-4">
@@ -421,7 +424,7 @@ export default function LandingPage() {
         <footer className="py-6 bg-surface/80 border-t border-border text-xs text-text-secondary">
           <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="ROVA" className="w-6 h-6 rounded" />
+              <Image src="/logo.png" alt="ROVA" width={24} height={24} className="w-6 h-6 rounded" />
               <span className="font-bold text-text-primary">ROVA</span>
               <span>© 2026 Rova Protocol. Built on Arc.</span>
             </div>

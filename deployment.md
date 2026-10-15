@@ -1,36 +1,46 @@
-# Deployment Guide — FlowFi Agent
+# Rova Arc Mainnet Deployment Guide
 
-Your Agentic Commerce engine is now refined, debugged, and ready for global deployment. 
+This guide covers the owner-controlled Arc Microgrants release. It authorizes only the public application, the engine with all money-moving gates disabled, and the non-custodial `RovaExecutionLog` contract.
 
-## 1. Prerequisites (Secrets)
-Ensure you have the following API keys from the Arc Network and Circle Developer consoles:
+## Prerequisites
 
-| Variable | Source | Description |
-| :--- | :--- | :--- |
-| `ANTHROPIC_API_KEY` | Anthropic | powers the Claude AI Engine |
-| `CIRCLE_API_KEY` | Circle Console | required for USD settlements |
-| `ARC_RPC_URL` | Arc Network | `https://testnet.arc.network/rpc` |
-| `NEXT_PUBLIC_FLOWFI_AGENT_ID` | `register-agent.ts` | Your unique Agent Identity NFT token ID |
+- Node.js 22 and npm;
+- an owner-controlled Supabase project with the complete `schema.sql` applied;
+- owner-controlled Circle, email, AI, Vercel, and engine-hosting resources required by the demonstrated paths;
+- a dedicated mainnet deployer funded only for the approved log-contract operation;
+- the exact reviewed web and Go commits.
 
-## 2. Onchain Identity Registration
-Before the app goes live, you must secure your agent's identity on the Arc Testnet. 
-Run this command once in your terminal:
-```bash
-npm run register-agent
+## Configure the host
+
+Use encrypted hosting environment variables and follow `.env.example` plus `docs/CONFIGURATION_AND_SECRET_HANDLING.md`. Never upload or reuse another person's `.env` file.
+
+Required public network values:
+
+```text
+NEXT_PUBLIC_ARC_CHAIN=Arc
+NEXT_PUBLIC_ARC_RPC_URL=https://rpc.mainnet.arc.io
+ARC_RPC_URL=https://rpc.mainnet.arc.io
 ```
-**Note:** Copy the resulting **Agent Identity Token ID** and add it to your environment variables as `NEXT_PUBLIC_FLOWFI_AGENT_ID`.
 
-## 3. Deploying to Vercel
-1.  **Push to GitHub**: Initialize a repo and push the current code.
-2.  **Import to Vercel**: Connect your repository.
-3.  **Configure Build**: Vercel will auto-detect Next.js.
-4.  **Add Environment Variables**: Paste the secrets from Step 1.
-5.  **Deploy**: Your app will be live at `https://flowfi-agent.vercel.app`.
+Required execution posture:
 
-## 4. Final Verification
-Once live, navigate to your `/dashboard`. 
-- **Check Topbar**: You should see the **🛡️ NODE VERIFIED** badge.
-- **Test Builder**: Input an intent like *"Route 50 USDC to Arc wallet 0x..."* to confirm the AI planning and Circle execution flow is active.
+```text
+ROVA_EXECUTION_ENABLED=false
+ROVA_WHATSAPP_EXECUTION_ENABLED=false
+ROVA_AUTONOMOUS_EXECUTION_ENABLED=false
+ROVA_ALLOW_MEMORY_OTP=false
+```
 
-> [!SUCCESS]
-> You are now running an elite, ERC-8004 verified agent on the Arc Network.
+Do not add deployment private keys to the web or engine environment.
+
+## Validate and release
+
+1. Run the clean-checkout commands in `docs/HACKATHON_SUBMISSION_RUNBOOK.md`.
+2. Deploy the merged web and Go commits from projects controlled by the owner.
+3. Run `docs/MAINNET_ACCEPTANCE_MATRIX.md` before enabling public access.
+4. Deploy only `RovaExecutionLog` using `DEPLOY_CONTRACT.md` and configure its verified public address.
+5. Rebuild/redeploy the web app after adding the public contract address.
+6. Let the owner complete WhatsApp linking on their own account with execution disabled.
+7. Verify every app, repository, demo, profile, contract, and explorer link while signed out.
+
+The hosted release must remain fail-closed for transfers, swaps, bridges, yield, staking, savings custody, and autonomous execution.

@@ -1,0 +1,57 @@
+Hey bro, urgent correction after checking the official Arc Microgrants page directly.
+
+This program requires a live working deployment on Arc Mainnet. Testnet-only builds are explicitly ineligible.
+
+Submission deadline:
+October 14, 2026 at 23:59 ET
+October 15, 2026 at 03:59 UTC
+October 15, 2026 at 05:59 SAST
+
+Please review these two PRs together because the web database changes and Go engine security logic depend on each other:
+
+Web app:
+https://github.com/Eloenk/rova/pull/2
+
+Go engine and WhatsApp service:
+https://github.com/Eloenk/rova-agent-go/pull/2
+
+The release has been narrowed for a defensible mainnet submission:
+- the app uses official Arc Mainnet chain ID 5042, RPC, explorer, token, CCTP, Gateway, StableFX, and ERC-8004 addresses
+- managed-wallet transfers, swaps, bridges, yield, staking, savings custody, WhatsApp money movement, and autonomous execution remain disabled
+- only the non-custodial RovaExecutionLog contract is allowed by the deployment tool
+- RovaSavingsVault and RovaSwapRouter must not be deployed for this submission
+- the app can demonstrate mainnet wallet and balance reads, deterministic policy planning, fail-closed execution, and a verified public log contract
+
+Local validation is complete:
+- clean web install, lint, TypeScript check, 11 tests, Solidity compile/ABI check, and Next.js production build pass
+- the web production dependency audit reports zero vulnerabilities
+- Go test, vet, and build pass; the optional sidecar dependency audit reports zero vulnerabilities
+- the official Arc RPC reports chain ID 5042 and deployed code at the configured USDC, EURC, and ERC-8004 Identity addresses
+- tracked web and Go files passed a redacted credential-pattern scan
+
+This does not mean the owner deployment, database checks, mainnet contract transaction, live acceptance test, demo, or DoraHacks submission is complete.
+
+As project owner, please do the final deployment from accounts controlled by you or your team:
+
+1. Review and merge both PRs together.
+2. Deploy the merged web app and Go engine from your owner repositories and hosting projects.
+3. Configure fresh secrets directly in Vercel, Supabase, Circle, and the engine host. Do not send the secret values to me.
+4. Apply the complete schema.sql and run the two-user isolation checks.
+5. Keep ROVA_EXECUTION_ENABLED, ROVA_WHATSAPP_EXECUTION_ENABLED, and ROVA_AUTONOMOUS_EXECUTION_ENABLED set to false.
+6. Use DEPLOY_CONTRACT.md to deploy only RovaExecutionLog on Arc Mainnet from a new dedicated deployer funded only for gas.
+7. Verify the contract transaction, address, source, and bytecode on https://explorer.arc.io.
+8. Add the public contract address to the hosting configuration and redeploy the web app.
+9. Run docs/MAINNET_ACCEPTANCE_MATRIX.md, including WhatsApp linking on your own account.
+10. Record the demo only after acceptance passes. Show the live public app, Arc Mainnet chain 5042, the verified contract, planning flow, disabled money movement, and the public explorer evidence.
+11. Submit the public app, repositories, short description, public builder profile, demo, and mainnet explorer links on DoraHacks before the deadline.
+
+If you approve a smoke transaction, use only a clearly labelled zero-value/non-financial RovaExecutionLog entry. Do not approve tokens or move/custody user funds for this rushed release.
+
+Please send back only:
+- merge approval or requested PR changes
+- the final public app URL
+- the public mainnet contract address and transaction hash
+- acceptance checklist pass/fail results
+- the demo and DoraHacks submission links
+
+Do not send passwords, private keys, API keys, entity secrets, session secrets, scheduler tokens, OTPs, cookies, phone numbers, or QR data.

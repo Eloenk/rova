@@ -121,17 +121,19 @@ export default function AgentView() {
     <div className="py-8 px-4 sm:px-8 max-w-[980px] mx-auto animate-fade-up font-sans">
       <header className="flex justify-between items-end mb-7">
         <div>
-          <span className="text-[11px] font-mono font-bold tracking-widest text-accent-mint uppercase block mb-1">Autonomous Agent</span>
+          <span className="text-[11px] font-mono font-bold tracking-widest text-accent-mint uppercase block mb-1">Policy Review</span>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text-primary">Agent</h1>
           <p className="text-text-secondary text-sm sm:text-base mt-1">
-            Schedules managed-wallet actions within configured policy limits. The protected scheduler, not this browser, evaluates and executes active rules.
+            Review and cancel stored policies. Creating or resuming automation remains paused until the shared acceptance tests pass.
           </p>
         </div>
         <button
           onClick={() => setShowForm(s => !s)}
-          className="py-2.5 px-5 rounded-lg bg-[#BFFF00] text-black font-semibold text-xs cursor-pointer hover:brightness-110 transition-all border-0 shadow-md"
+          disabled
+          title="New autonomous policies are paused in this release"
+          className="py-2.5 px-5 rounded-lg bg-[#BFFF00] text-black font-semibold text-xs cursor-not-allowed opacity-60 transition-all border-0 shadow-md"
         >
-          {showForm ? 'Cancel' : '+ New Rule'}
+            Automation Paused
         </button>
       </header>
 
@@ -196,7 +198,7 @@ export default function AgentView() {
 
       {/* Active Rate Rules */}
       <SectionHeader icon={<Bot size={16} className="text-accent-mint" />} title="Active rules" count={activeRules.length} />
-      {activeRules.length === 0 ? <EmptyState text="No active rate rules. Create one above." /> : (
+      {activeRules.length === 0 ? <EmptyState text="No active rate rules are stored." /> : (
         <div className="flex flex-col gap-2.5 mb-8">
           {activeRules.map(r => (
             <div key={r.id} className="p-4 rounded-xl bg-surface border border-border flex items-center justify-between gap-4">
@@ -218,7 +220,7 @@ export default function AgentView() {
       )}
 
       {/* Execution Log */}
-      <SectionHeader icon={<Zap size={16} className="text-accent-primary" />} title="Autonomous executions" count={executions.length} />
+      <SectionHeader icon={<Zap size={16} className="text-accent-primary" />} title="Verified engine receipts" count={executions.length} />
       {executions.length === 0 ? <EmptyState text="Nothing has fired yet." /> : (
         <div className="flex flex-col gap-2.5">
           {executions.map(ex => (

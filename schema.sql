@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS agent_executions (
     tx_hash TEXT NOT NULL,
     arc_scan_url TEXT NOT NULL,
     fee_job_id TEXT,
-    fee_amount_usdc NUMERIC NOT NULL DEFAULT 0.006,
+    fee_amount_usdc NUMERIC NOT NULL DEFAULT 0,
     reputation_tx_hash TEXT,
     memo TEXT NOT NULL,
     quote_shop JSONB
@@ -85,6 +85,11 @@ ALTER TABLE otp_codes ADD COLUMN IF NOT EXISTS code_hash TEXT;
 ALTER TABLE agent_rules ADD COLUMN IF NOT EXISTS owner_email TEXT;
 ALTER TABLE standing_intents ADD COLUMN IF NOT EXISTS owner_email TEXT;
 ALTER TABLE agent_executions ADD COLUMN IF NOT EXISTS owner_email TEXT;
+ALTER TABLE agent_executions ALTER COLUMN fee_amount_usdc SET DEFAULT 0;
+
+UPDATE agent_executions
+SET fee_amount_usdc = 0
+WHERE fee_job_id IS NULL;
 
 UPDATE agent_rules SET owner_email = 'legacy-disabled@invalid', status = 'cancelled' WHERE owner_email IS NULL;
 UPDATE standing_intents SET owner_email = 'legacy-disabled@invalid', status = 'cancelled' WHERE owner_email IS NULL;
@@ -120,6 +125,59 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE otp_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE whatsapp_link_tokens ENABLE ROW LEVEL SECURITY;
 
+CREATE OR REPLACE FUNCTION claim_agent_rule(
+    requested_id TEXT,
+    requested_owner_email TEXT
+)
+RETURNS SETOF agent_rules
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+    UPDATE agent_rules AS candidate
+       SET status = 'ready_to_execute'
+     WHERE candidate.id = requested_id
+       AND lower(candidate.owner_email) = lower(trim(requested_owner_email))
+       AND candidate.custody_mode = 'managed'
+       AND candidate.status = 'active'
+       AND EXISTS (
+           SELECT 1
+             FROM users AS account_owner
+            WHERE lower(account_owner.email) = lower(trim(requested_owner_email))
+              AND lower(account_owner.circle_wallet_address) = lower(candidate.source_wallet)
+       )
+    RETURNING candidate.*;
+$$;
+
+CREATE OR REPLACE FUNCTION claim_standing_intent(
+    requested_id TEXT,
+    requested_owner_email TEXT
+)
+RETURNS SETOF standing_intents
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+    UPDATE standing_intents AS candidate
+       SET status = 'ready_to_execute'
+     WHERE candidate.id = requested_id
+       AND lower(candidate.owner_email) = lower(trim(requested_owner_email))
+       AND candidate.custody_mode = 'managed'
+       AND candidate.status = 'active'
+       AND EXISTS (
+           SELECT 1
+             FROM users AS account_owner
+            WHERE lower(account_owner.email) = lower(trim(requested_owner_email))
+              AND lower(account_owner.circle_wallet_address) = lower(candidate.source_wallet)
+       )
+    RETURNING candidate.*;
+$$;
+
+REVOKE ALL ON FUNCTION claim_agent_rule(TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION claim_standing_intent(TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION claim_agent_rule(TEXT, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION claim_standing_intent(TEXT, TEXT) TO service_role;
+
 -- ── Refresh tokens (JWT rotation) ─────────────────────────────────────────────
 -- One row per user. Upserted on login, deleted on logout or on rotation.
 -- Only the SHA-256 hash of the opaque token is stored — never the raw value.
@@ -134,3 +192,100 @@ CREATE INDEX IF NOT EXISTS idx_refresh_tokens_hash       ON refresh_tokens(token
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
 
 ALTER TABLE refresh_tokens ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION consume_refresh_token(requested_token_hash TEXT)
+RETURNS TABLE(email TEXT)
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+    DELETE FROM refresh_tokens
+     WHERE token_hash = requested_token_hash
+       AND expires_at > now()
+    RETURNING refresh_tokens.email;
+$$;
+
+REVOKE ALL ON FUNCTION consume_refresh_token(TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION consume_refresh_token(TEXT) TO service_role;
+
+-- ── One-time execution plans ────────────────────────────────────────────────
+-- The browser receives only the opaque id. The server reloads the exact plan
+-- and atomically claims it, preventing payload tampering and replay.
+CREATE TABLE IF NOT EXISTS execution_plans (
+    id TEXT PRIMARY KEY,
+    owner_email TEXT NOT NULL REFERENCES users(email) ON DELETE CASCADE,
+    wallet_address TEXT NOT NULL,
+    intent_hash TEXT NOT NULL,
+    plan JSONB NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('planned', 'executing', 'executed', 'failed', 'expired')),
+    expires_at TIMESTAMPTZ NOT NULL,
+    approval_code_hash TEXT,
+    approval_expires_at TIMESTAMPTZ,
+    approval_attempts INTEGER NOT NULL DEFAULT 0,
+    receipt JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    claimed_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_execution_plans_owner_created
+    ON execution_plans(owner_email, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_execution_plans_status_expiry
+    ON execution_plans(status, expires_at);
+
+ALTER TABLE execution_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE execution_plans ADD COLUMN IF NOT EXISTS approval_code_hash TEXT;
+ALTER TABLE execution_plans ADD COLUMN IF NOT EXISTS approval_expires_at TIMESTAMPTZ;
+ALTER TABLE execution_plans ADD COLUMN IF NOT EXISTS approval_attempts INTEGER NOT NULL DEFAULT 0;
+REVOKE ALL ON TABLE execution_plans FROM anon, authenticated;
+
+DROP FUNCTION IF EXISTS claim_execution_plan(TEXT, TEXT);
+DROP FUNCTION IF EXISTS claim_execution_plan(TEXT, TEXT, TEXT);
+DROP FUNCTION IF EXISTS claim_execution_plan(TEXT, TEXT, TEXT, TEXT);
+CREATE OR REPLACE FUNCTION claim_execution_plan(
+    requested_id TEXT,
+    requested_owner_email TEXT,
+    requested_wallet_address TEXT,
+    requested_approval_hash TEXT
+)
+RETURNS SETOF execution_plans
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+    candidate execution_plans%ROWTYPE;
+BEGIN
+    UPDATE execution_plans
+       SET approval_attempts = approval_attempts + 1
+     WHERE id = requested_id
+       AND owner_email = lower(trim(requested_owner_email))
+       AND lower(wallet_address) = lower(trim(requested_wallet_address))
+       AND status = 'planned'
+       AND expires_at > now()
+       AND approval_expires_at > now()
+       AND approval_attempts < 5
+    RETURNING * INTO candidate;
+
+    IF NOT FOUND OR candidate.approval_code_hash IS NULL
+       OR candidate.approval_code_hash <> requested_approval_hash THEN
+        RETURN;
+    END IF;
+
+    UPDATE execution_plans
+       SET status = 'executing',
+           claimed_at = now(),
+           approval_code_hash = NULL,
+           approval_expires_at = NULL
+     WHERE id = requested_id
+       AND status = 'planned'
+    RETURNING * INTO candidate;
+
+    IF FOUND THEN
+        RETURN NEXT candidate;
+    END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION claim_execution_plan(TEXT, TEXT, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION claim_execution_plan(TEXT, TEXT, TEXT, TEXT) TO service_role;

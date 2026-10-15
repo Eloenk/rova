@@ -9,27 +9,28 @@ type Action = 'send' | 'bridge' | 'swap';
 
 const ACTIONS: { id: Action; label: string; icon: React.ReactNode; desc: string }[] = [
   { id: 'send',   label: 'Send',   icon: <Send size={16} />,   desc: 'Transfer stablecoins to a wallet address or recipient' },
-  { id: 'bridge', label: 'Bridge', icon: <Globe size={16} />,  desc: 'Move USDC cross-chain via CCTP V2' },
+  { id: 'bridge', label: 'Bridge', icon: <Globe size={16} />,  desc: 'Review an informational CCTP V2 route' },
   { id: 'swap',   label: 'Swap',   icon: <Repeat size={16} />, desc: 'Exchange USDC ↔ EURC with StableFX' },
 ];
 
 const BRIDGE_CHAINS = ['Ethereum', 'Base', 'Polygon', 'Solana', 'Arbitrum'];
-const CURRENCIES = ['USDC', 'EURC', 'USYC'];
+const SWAP_CURRENCIES = ['USDC', 'EURC'];
 
 export default function SendView() {
   const { isConnected, usdcBalance } = useWallet();
-  const { executeFlow, isProcessing } = useRova();
+  const { planIntent, prepareExecution, executePlan, isProcessing } = useRova();
 
   const [action, setAction] = useState<Action>('send');
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
-  const [fromChain, setFromChain] = useState('Ethereum');
-  const [toChain, setToChain] = useState('Arc');
+  const [fromChain, setFromChain] = useState('Arc');
+  const [toChain, setToChain] = useState('Ethereum');
   const [fromCurrency, setFromCurrency] = useState('USDC');
   const [toCurrency, setToCurrency] = useState('EURC');
   const [memo, setMemo] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'approval' | 'success' | 'error'>('idle');
   const [resultMsg, setResultMsg] = useState('');
+  const [approvalCode, setApprovalCode] = useState('');
 
   const buildIntent = () => {
     if (action === 'send') {
@@ -48,13 +49,39 @@ export default function SendView() {
     setResultMsg('');
     try {
       const intent = buildIntent();
-      await executeFlow(intent);
-      setStatus('success');
-      setResultMsg(`${action === 'send' ? 'Transfer' : action === 'bridge' ? 'Bridge' : 'Swap'} initiated on Arc. Check your Ledger for confirmation.`);
-      setAmount(''); setRecipient(''); setMemo('');
+      if (action === 'bridge') {
+        const plannedFlow = await planIntent(intent);
+        if (!plannedFlow) throw new Error('Unable to prepare the bridge route.');
+        setStatus('success');
+        setResultMsg('Bridge route prepared for review. Bridge execution remains paused until destination binding and acceptance tests are complete.');
+        return;
+      }
+      const approval = await prepareExecution(intent);
+      setApprovalCode(approval.developmentCode || '');
+      setStatus('approval');
+      setResultMsg('Enter the 6-digit execution approval code sent to your email.');
     } catch (err: unknown) {
       setStatus('error');
       setResultMsg(err instanceof Error ? err.message : 'Something went wrong. Try again.');
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!/^\d{6}$/.test(approvalCode)) {
+      setStatus('approval');
+      setResultMsg('Enter the complete 6-digit execution approval code.');
+      return;
+    }
+    setStatus('loading');
+    setResultMsg('');
+    try {
+      await executePlan(approvalCode);
+      setStatus('success');
+      setResultMsg(`${action === 'send' ? 'Transfer' : action === 'bridge' ? 'Bridge' : 'Swap'} confirmed on Arc. Check your receipt for the transaction hash.`);
+      setAmount(''); setRecipient(''); setMemo(''); setApprovalCode('');
+    } catch (err: unknown) {
+      setStatus('approval');
+      setResultMsg(err instanceof Error ? err.message : 'Execution failed.');
     }
   };
 
@@ -69,7 +96,7 @@ export default function SendView() {
           Send & Swap
         </h1>
         <p className="text-text-secondary text-sm sm:text-base mt-1">
-          Move stablecoins on Arc with instant sub-second finality.
+          Review bounded Arc mainnet plans. Fund-moving execution remains disabled for this release.
         </p>
       </header>
 
@@ -80,7 +107,7 @@ export default function SendView() {
           return (
             <button
               key={a.id}
-              onClick={() => { setAction(a.id); setStatus('idle'); }}
+              onClick={() => { setAction(a.id); setFromCurrency('USDC'); setToCurrency('EURC'); setStatus('idle'); setApprovalCode(''); }}
               className={`
                 flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-full border-0 cursor-pointer font-bold text-xs sm:text-sm transition-all
                 ${isActive
@@ -108,7 +135,7 @@ export default function SendView() {
               />
             </Field>
             <Field label="Currency">
-              <Select value={fromCurrency} onChange={setFromCurrency} options={CURRENCIES} />
+              <Select value={fromCurrency} onChange={setFromCurrency} options={['USDC']} />
             </Field>
           </div>
         )}
@@ -118,15 +145,15 @@ export default function SendView() {
           <div className="space-y-4">
             <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-end">
               <Field label="From chain">
-                <Select value={fromChain} onChange={setFromChain} options={BRIDGE_CHAINS} />
+                <Select value={fromChain} onChange={setFromChain} options={['Arc']} />
               </Field>
               <div className="pb-3 text-text-secondary"><ArrowRight size={18} /></div>
               <Field label="To chain">
-                <Select value={toChain} onChange={setToChain} options={['Arc', ...BRIDGE_CHAINS.filter(c => c !== fromChain)]} />
+                <Select value={toChain} onChange={setToChain} options={BRIDGE_CHAINS} />
               </Field>
             </div>
             <Field label="Currency">
-              <Select value={fromCurrency} onChange={setFromCurrency} options={CURRENCIES} />
+              <Select value={fromCurrency} onChange={setFromCurrency} options={['USDC']} />
             </Field>
           </div>
         )}
@@ -135,11 +162,11 @@ export default function SendView() {
         {action === 'swap' && (
           <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-end">
             <Field label="From currency">
-              <Select value={fromCurrency} onChange={setFromCurrency} options={CURRENCIES} />
+              <Select value={fromCurrency} onChange={setFromCurrency} options={SWAP_CURRENCIES} />
             </Field>
             <div className="pb-3 text-text-secondary"><Repeat size={18} /></div>
             <Field label="To currency">
-              <Select value={toCurrency} onChange={setToCurrency} options={CURRENCIES.filter(c => c !== fromCurrency)} />
+              <Select value={toCurrency} onChange={setToCurrency} options={SWAP_CURRENCIES.filter(c => c !== fromCurrency)} />
             </Field>
           </div>
         )}
@@ -183,22 +210,35 @@ export default function SendView() {
         {status !== 'idle' && status !== 'loading' && (
           <div className={`
             flex items-start gap-2.5 p-3.5 rounded-lg text-xs leading-relaxed border
-            ${status === 'success' ? 'bg-accent-mint/10 border-accent-mint/25 text-accent-mint' : 'bg-accent-error/10 border-accent-error/25 text-accent-error'}
+            ${status === 'success' ? 'bg-accent-mint/10 border-accent-mint/25 text-accent-mint' : status === 'approval' ? 'bg-amber-500/10 border-amber-500/25 text-amber-300' : 'bg-accent-error/10 border-accent-error/25 text-accent-error'}
           `}>
             {status === 'success' ? <CheckCircle size={16} className="shrink-0 mt-0.5" /> : <AlertCircle size={16} className="shrink-0 mt-0.5" />}
             <p>{resultMsg}</p>
           </div>
         )}
 
+        {status === 'approval' && (
+          <input
+            value={approvalCode}
+            onChange={event => setApprovalCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="6-digit approval code"
+            className="w-full p-3 rounded-lg bg-surface border border-border text-text-primary text-sm outline-none"
+          />
+        )}
+
         {/* Submit Button */}
         <button
-          onClick={handleSubmit}
+          onClick={status === 'approval' ? handleApprove : handleSubmit}
           disabled={isProcessing || status === 'loading'}
           className="w-full py-3.5 rounded-lg bg-[#BFFF00] text-black font-semibold text-sm border-0 cursor-pointer flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-md"
         >
           {isProcessing || status === 'loading'
             ? <><Loader size={16} className="animate-spin" /> Processing...</>
-            : <>{action === 'send' ? `Send ${fromCurrency}` : action === 'bridge' ? `Bridge ${fromCurrency}` : `Swap ${fromCurrency} ↔ ${toCurrency}`} <ArrowRight size={16} /></>
+            : status === 'approval'
+              ? <>Approve & Execute <ArrowRight size={16} /></>
+              : <>{action === 'send' ? `Review ${fromCurrency} transfer` : action === 'bridge' ? `Prepare ${fromCurrency} route` : `Review ${fromCurrency} swap`} <ArrowRight size={16} /></>
           }
         </button>
       </div>

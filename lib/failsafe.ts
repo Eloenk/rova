@@ -30,11 +30,11 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
         cctpDomain: null,
         bridgeType: "native"
       }],
-      gasEstimate: { totalTxCount: 1, totalGasUsdc: 0.006 },
-      reasoning: "Hello! I am Rova, your autonomous AI financial agent built on Arc Testnet. I can execute instant USDC/EURC transfers, StableFX swaps, yield staking, or set up 24/7 automated rules. How can I assist you today?",
+      gasEstimate: { totalTxCount: 0, totalGasUsdc: 0 },
+      reasoning: "Hello! I am Rova, a policy-gated financial planning agent on Arc Mainnet. I can prepare bounded USDC transfer, StableFX, and bridge plans for review. Fund-moving execution, yield, staking, and new autonomous policies are not enabled in this release.",
       confidence: 100,
       risk: "low",
-      strategy: "Hello! I am Rova, your autonomous AI financial agent on Arc Testnet.",
+      strategy: "Hello! I am Rova, a policy-gated financial planning agent on Arc Mainnet.",
       reserveAmount: 0
     };
   }
@@ -63,7 +63,7 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
         bridgeType: "native"
       }],
       gasEstimate: { totalTxCount: 0, totalGasUsdc: 0 },
-      reasoning: "Your wallet balances on Arc Testnet (USDC / EURC) are displayed in real-time in the top balance bar and portfolio drawer.",
+      reasoning: "Your Arc Mainnet wallet balances (USDC / EURC) are displayed in real time in the top balance bar and portfolio drawer.",
       confidence: 100,
       risk: "low",
       strategy: "Balance Query (Arc RPC)",
@@ -77,7 +77,7 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
     return {
       totalAmount: 0,
       splits: [{
-        recipient: "Autonomous Daemon",
+        recipient: "Policy Watcher",
         address: "0x0000000000000000000000000000000000000000",
         amount: 0,
         currency: "USDC",
@@ -89,13 +89,13 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
       routes: [{
         from: "Rova Daemon Engine",
         to: "Arc Chain State",
-        via: "24/7 Standing Rule Monitor",
+        via: "Fail-Closed Policy Monitor",
         fee: 0,
         cctpDomain: null,
         bridgeType: "native"
       }],
       gasEstimate: { totalTxCount: 0, totalGasUsdc: 0 },
-      reasoning: "Rova 24/7 background execution daemon is ACTIVE on Arc Testnet (Chain ID 5042002). All armed rate rules are monitored continuously.",
+      reasoning: "The Rova engine is configured fail-closed on Arc Mainnet. Managed-wallet and autonomous execution remain disabled for this release.",
       confidence: 100,
       risk: "low",
       strategy: "Daemon System Status",
@@ -125,7 +125,7 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
   }
 
   // OUT-OF-SCOPE / UNRELATED NON-FINANCIAL PROMPTS (No amount & no financial keywords)
-  const financialKeywords = ['send', 'pay', 'transfer', 'swap', 'convert', 'exchange', 'bridge', 'cctp', 'move', 'stake', 'yield', 'usyc', 'rule', 'rules', 'automate', 'recurring', 'job', 'hire', 'balance', 'wallet', 'status', 'watcher', 'daemon', 'check'];
+  const financialKeywords = ['send', 'pay', 'transfer', 'swap', 'convert', 'exchange', 'bridge', 'cctp', 'move', 'balance', 'wallet', 'status', 'watcher', 'daemon', 'check'];
   const hasFinancialKeyword = financialKeywords.some(k => text.includes(k));
 
   if (amount <= 0 && !hasFinancialKeyword) {
@@ -149,11 +149,11 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
         cctpDomain: null,
         bridgeType: "native"
       }],
-      gasEstimate: { totalTxCount: 1, totalGasUsdc: 0.006 },
-      reasoning: "I am Rova, an autonomous AI financial agent dedicated exclusively to financial operations on Arc Testnet. Please use me for sending payments, currency swaps (USDC/EURC), CCTP cross-chain bridging, treasury yield, or setting up 24/7 automation rules.",
+      gasEstimate: { totalTxCount: 0, totalGasUsdc: 0 },
+      reasoning: "I am Rova, a policy-gated financial planning agent for Arc Mainnet USDC transfers, USDC/EURC swaps, and reviewed bridge plans. Unsupported or unrelated requests are not converted into transactions.",
       confidence: 100,
       risk: "low",
-      strategy: "I am Rova, an autonomous AI financial agent dedicated exclusively to financial operations on Arc Testnet.",
+      strategy: "I am Rova, a policy-gated financial planning agent on Arc Mainnet.",
       reserveAmount: 0
     };
   }
@@ -227,6 +227,10 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
   }
 
   // 3. TRANSFER INTENT (Fallback for 'send', 'pay', 'route', or generic statements)
+  if (address === "0x0000000000000000000000000000000000000000") {
+    return null;
+  }
+
   return {
       totalAmount: amount,
       splits: [{
@@ -248,7 +252,7 @@ export function getFailsafePlan(intent: string): FlowPlan | null {
         bridgeType: "native"
       }],
       gasEstimate: { totalTxCount: 1, totalGasUsdc: 0.006 },
-      reasoning: `High-speed ${currency} flow detected. Utilizing Arc's native sub-second finality to settlement the intent instantly with minimal gas overhead.`,
+      reasoning: `A bounded ${currency} transfer plan was prepared for deterministic validation. This release does not submit managed-wallet Arc Mainnet transactions.`,
       confidence: 100,
       risk: "low",
       strategy: "Arc Native Fast-Path",
